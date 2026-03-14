@@ -4,3 +4,4 @@ APScheduler==3.10.4
 requests==2.31.0
 beautifulsoup4==4.12.3
 playwright==1.52.0
+gunicorn==23.0.0

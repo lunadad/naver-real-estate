@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: naver-real-estate
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /api/crawl-status
+    envVars:
+      - key: DB_PATH
+        value: /var/data/real_estate.db
+      - key: ENABLE_SCHEDULER
+        value: "true"
+      - key: SEED_DEMO_DATA
+        value: "false"
+    disk:
+      name: real-estate-data
+      mountPath: /var/data
+      sizeGB: 5

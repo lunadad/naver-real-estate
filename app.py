@@ -15,10 +15,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+def env_flag(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+BASE_DIR = os.path.dirname(__file__)
+DEFAULT_DB_PATH = os.path.join(BASE_DIR, "real_estate.db")
+DB_PATH = os.getenv("DB_PATH", DEFAULT_DB_PATH)
+ENABLE_SCHEDULER = env_flag("ENABLE_SCHEDULER", True)
+SEED_DEMO_DATA = env_flag("SEED_DEMO_DATA", True)
+
 app = Flask(__name__)
 CORS(app)
 
-db = Database(db_path=os.path.join(os.path.dirname(__file__), "real_estate.db"))
+db = Database(db_path=DB_PATH)
 crawler = NaverRealEstateCrawler(db)
 
 # ── Scheduler ───────────────────────────────────────────────────────────────
@@ -39,7 +53,27 @@ scheduler.add_job(
     id="daily_crawl",
     replace_existing=True,
 )
-scheduler.start()
+if ENABLE_SCHEDULER:
+    scheduler.start()
+else:
+    logger.info("자동 스케줄러 비활성화됨 (ENABLE_SCHEDULER=false)")
+
+
+def ensure_initial_data():
+    if db.get_last_crawl() or not SEED_DEMO_DATA:
+        return
+
+    logger.info("초기 데이터 없음 → 데모 데이터 로드")
+    demo = crawler.generate_demo_data()
+    import uuid as _uuid
+
+    sid = str(_uuid.uuid4())[:8]
+    db.insert_listings(demo, sid)
+    db.log_crawl(sid, len(demo), len(demo), "success", "demo")
+    logger.info(f"데모 데이터 {len(demo)}개 로드 완료")
+
+
+ensure_initial_data()
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
@@ -114,7 +148,7 @@ def trigger_crawl():
 @app.route("/api/crawl-status")
 def crawl_status():
     last = db.get_last_crawl()
-    job = scheduler.get_job("daily_crawl")
+    job = scheduler.get_job("daily_crawl") if ENABLE_SCHEDULER else None
     next_run = job.next_run_time.isoformat() if job and job.next_run_time else None
     return jsonify(
         {
@@ -128,6 +162,9 @@ def crawl_status():
 @app.route("/api/update-schedule", methods=["POST"])
 def update_schedule():
     global SCHEDULED_HOUR
+    if not ENABLE_SCHEDULER:
+        return jsonify({"status": "error", "message": "scheduler disabled"}), 400
+
     data = request.get_json() or {}
     hour = int(data.get("hour", SCHEDULED_HOUR))
     hour = max(0, min(23, hour))
@@ -142,12 +179,5 @@ def update_schedule():
 
 # ── Startup ──────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    if not db.get_last_crawl():
-        logger.info("초기 데이터 없음 → 데모 데이터 로드 후 서버 시작")
-        demo = crawler.generate_demo_data()
-        import uuid as _uuid
-        sid = str(_uuid.uuid4())[:8]
-        db.insert_listings(demo, sid)
-        db.log_crawl(sid, len(demo), len(demo), "success", "demo")
-        logger.info(f"데모 데이터 {len(demo)}개 로드 완료")
-    app.run(debug=False, port=5101, host="0.0.0.0")
+    port = int(os.getenv("PORT", "5101"))
+    app.run(debug=False, port=port, host="0.0.0.0")
