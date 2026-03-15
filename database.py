@@ -72,7 +72,7 @@ class ConnectionWrapper:
 
     def _convert_sql(self, sql: str) -> str:
         if self.driver == "postgres":
-            return sql.replace("?", "%s")
+            return sql.replace("%", "%%").replace("?", "%s")
         return sql
 
     def execute(self, sql: str, params: Optional[Sequence[object]] = None):
@@ -82,6 +82,20 @@ class ConnectionWrapper:
             cursor.execute(self._convert_sql(sql), params)
             return CursorWrapper(cursor)
         return CursorWrapper(self.conn.execute(sql, params))
+
+    def executemany(self, sql: str, seq_of_params: Sequence[Sequence[object]]):
+        rows = [tuple(params) for params in seq_of_params]
+        if not rows:
+            return None
+
+        if self.driver == "postgres":
+            cursor = self.conn.cursor()
+            cursor.executemany(self._convert_sql(sql), rows)
+            return CursorWrapper(cursor)
+
+        cursor = self.conn.cursor()
+        cursor.executemany(sql, rows)
+        return CursorWrapper(cursor)
 
     def executescript(self, script: str):
         if self.driver == "sqlite":
@@ -95,10 +109,16 @@ class ConnectionWrapper:
 
 
 class Database:
-    def __init__(self, db_path="real_estate.db", database_url: Optional[str] = None):
+    def __init__(
+        self,
+        db_path="real_estate.db",
+        database_url: Optional[str] = None,
+        skip_price_backfill: bool = False,
+    ):
         self.db_path = db_path
         self.database_url = (database_url or "").strip()
         self.driver = "postgres" if self.database_url else "sqlite"
+        self.skip_price_backfill = skip_price_backfill
         self.init_db()
 
     def get_connection(self):
@@ -107,7 +127,8 @@ class Database:
                 raise RuntimeError(
                     "Postgres support requires psycopg. Install requirements first."
                 )
-            conn = psycopg.connect(self.database_url)
+            connect_timeout = int((__import__("os").getenv("PGCONNECT_TIMEOUT") or "10").strip())
+            conn = psycopg.connect(self.database_url, connect_timeout=connect_timeout)
             return ConnectionWrapper("postgres", conn)
 
         conn = sqlite3.connect(self.db_path)
@@ -132,7 +153,8 @@ class Database:
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_price_sort ON listings(price_sort_value)"
             )
-            self._backfill_price_sort_values(conn)
+            if not self.skip_price_backfill:
+                self._backfill_price_sort_values(conn)
 
     def _init_sqlite(self, conn: ConnectionWrapper):
         conn.executescript(

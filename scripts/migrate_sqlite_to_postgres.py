@@ -1,8 +1,16 @@
 import argparse
 import os
 import sqlite3
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from database import Database
+
+CHUNK_SIZE = 500
 
 
 TABLES = [
@@ -112,15 +120,19 @@ def reset_sequence(conn, table_name):
 
 
 def migrate(sqlite_path: str, database_url: str, truncate: bool):
+    print(f"Opening SQLite: {sqlite_path}", flush=True)
     source = sqlite3.connect(sqlite_path)
     source.row_factory = sqlite3.Row
-    destination = Database(database_url=database_url)
+    print("Connecting to Postgres...", flush=True)
+    destination = Database(database_url=database_url, skip_price_backfill=True)
+    print("Connected to Postgres.", flush=True)
 
     if destination.driver != "postgres":
         raise RuntimeError("destination must be a Postgres DATABASE_URL")
 
     with destination.get_connection() as conn:
         if truncate:
+            print("Clearing destination tables...", flush=True)
             for table in [
                 "alert_deliveries",
                 "push_subscriptions",
@@ -131,6 +143,7 @@ def migrate(sqlite_path: str, database_url: str, truncate: bool):
                 conn.execute(f"DELETE FROM {table}")
 
         for table in TABLES:
+            print(f"Reading {table['name']} from SQLite...", flush=True)
             rows = source.execute(
                 f"SELECT {quote_columns(table['columns'])} FROM {table['name']}"
             ).fetchall()
@@ -139,8 +152,17 @@ def migrate(sqlite_path: str, database_url: str, truncate: bool):
                 continue
 
             sql = build_upsert_sql(table["name"], table["columns"])
-            for row in rows:
-                conn.execute(sql, tuple(row[column] for column in table["columns"]))
+            print(f"Writing {table['name']} to Postgres...", flush=True)
+            for start in range(0, len(rows), CHUNK_SIZE):
+                batch = rows[start : start + CHUNK_SIZE]
+                conn.executemany(
+                    sql,
+                    [tuple(row[column] for column in table["columns"]) for row in batch],
+                )
+                print(
+                    f"{table['name']}: {min(start + len(batch), len(rows))}/{len(rows)}",
+                    flush=True,
+                )
 
             reset_sequence(conn, table["name"])
             print(f"{table['name']}: {len(rows)} rows")
