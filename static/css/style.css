@@ -2070,3 +2070,210 @@ body.sidebar-overlay-open {
   opacity: 0.4;
   pointer-events: none;
 }
+
+/* ══════════════ EDITORIAL IMAGE STAT CARDS (walld.art) ═══════════════════ */
+
+/* Image card base */
+.stat-card {
+  position: relative !important;
+  overflow: hidden !important;
+  height: 145px !important;
+  padding: 0 !important;
+  justify-content: flex-end !important;
+  align-items: stretch !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  background: #111 !important;
+  border-radius: 20px !important;
+}
+.stat-card + .stat-card {
+  border-left: 1px solid rgba(255,255,255,0.07) !important;
+}
+
+/* Photo layer */
+.stat-bg-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.45s ease;
+  will-change: transform;
+  filter: brightness(0.72) saturate(1.1);
+}
+.stat-card:hover .stat-bg-img {
+  transform: scale(1.09);
+  filter: brightness(0.92) saturate(1.3);
+}
+
+/* Dark gradient overlay */
+.stat-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    155deg,
+    rgba(0,0,0,0.10) 0%,
+    rgba(0,0,0,0.52) 42%,
+    rgba(0,0,0,0.90) 100%
+  );
+}
+.stat-overlay-urgent {
+  background: linear-gradient(
+    155deg,
+    rgba(220,38,38,0.25) 0%,
+    rgba(0,0,0,0.50) 42%,
+    rgba(0,0,0,0.90) 100%
+  );
+}
+.stat-overlay-price {
+  background: linear-gradient(
+    155deg,
+    rgba(37,99,235,0.22) 0%,
+    rgba(0,0,0,0.50) 42%,
+    rgba(0,0,0,0.90) 100%
+  );
+}
+
+/* Text content */
+.stat-content {
+  position: relative;
+  z-index: 1;
+  padding: 12px 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  margin-top: auto;
+}
+
+/* walld.art "/ 01" numbering */
+.stat-num {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 2px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+/* White text on photo */
+.stat-val {
+  font-size: 26px !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  letter-spacing: -0.6px !important;
+  line-height: 1 !important;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.55) !important;
+}
+.stat-lbl {
+  color: rgba(255,255,255,0.55) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.55) !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  margin-top: 5px !important;
+  letter-spacing: 0.3px !important;
+}
+.urgent-card .stat-val {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Hover: dramatic lift */
+.stat-clickable:hover {
+  transform: translateY(-5px) scale(1.01) !important;
+  box-shadow: 0 22px 48px rgba(0,0,0,0.35) !important;
+}
+.stat-clickable:active {
+  transform: translateY(-2px) scale(1.005) !important;
+}
+
+/* Active: brand accent ring */
+.stat-active {
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.3),
+              0 0 28px var(--brand-glow) !important;
+  animation: statPop 0.3s ease;
+}
+.stat-active .stat-val {
+  color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand) !important;
+}
+.stat-active .stat-lbl {
+  color: rgba(255,255,255,0.75) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
+}
+.stat-active .stat-num {
+  color: rgba(255,255,255,0.55) !important;
+}
+
+/* Responsive heights */
+@media (max-width: 900px) {
+  .stat-card { height: 122px !important; }
+  .stat-val  { font-size: 22px !important; }
+}
+@media (max-width: 640px) {
+  .stat-card { height: 108px !important; }
+  .stat-val  { font-size: 20px !important; }
+}
+
+/* ══════════════ HERO: two-column layout + property mosaic ════════════════ */
+
+#hero-panel {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 22px !important;
+  align-items: flex-start !important;
+}
+
+.hero-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Property mosaic grid (desktop only) */
+.hero-visual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  width: 224px;
+  flex-shrink: 0;
+  align-self: stretch;
+  min-height: 220px;
+}
+
+.hvg-item {
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  filter: brightness(0.80) saturate(1.1);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.35s ease;
+}
+.hvg-item:hover {
+  transform: scale(1.05);
+  filter: brightness(1.0) saturate(1.25);
+}
+.hvg-item::after {
+  content: attr(data-label);
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 22px 10px 9px;
+  background: linear-gradient(to top, rgba(0,0,0,0.82), transparent);
+  color: rgba(255,255,255,0.92);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Hide mosaic on medium/small screens */
+@media (max-width: 1180px) {
+  .hero-visual-grid { display: none !important; }
+  #hero-panel {
+    flex-direction: column !important;
+  }
+}
