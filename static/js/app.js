@@ -99,15 +99,8 @@ function buildCurrentFilterLabel() {
 
 function updateHeroAlertCount() {
   const el = document.getElementById('hero-alert-rule-count');
-  if (el) el.textContent = `${fmtNum(state.alertRules.length || 0)}개`;
-
-  // 모바일 하단 네비 배지
-  const badge = document.getElementById('nav-alert-badge');
-  if (badge) {
-    const count = state.alertRules.length || 0;
-    badge.textContent = count;
-    badge.classList.toggle('hidden', count === 0);
-  }
+  if (!el) return;
+  el.textContent = `${fmtNum(state.alertRules.length || 0)}개`;
 }
 
 function updateHeroFocusRegion() {
@@ -277,18 +270,15 @@ function selectDistrict(district) {
 // ── Listings ─────────────────────────────────────────────────────────────────
 async function loadListings() {
   const grid = document.getElementById('listings-grid');
-  grid.classList.add('loading');
   grid.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>불러오는 중...</p></div>';
   refreshAlertDraftSummary();
   updateListingsSummary();
 
   try {
     const data = await api(`/api/listings?${buildQuery()}`);
-    grid.classList.remove('loading');
     renderListings(data);
     updateStats(data);
   } catch (e) {
-    grid.classList.remove('loading');
     grid.innerHTML = '<div class="empty-state">데이터를 불러올 수 없습니다.</div>';
     updateListingsSummary(0);
   }
@@ -325,11 +315,6 @@ function renderListings(data) {
     grid.innerHTML = '<div class="empty-state">조건에 맞는 급매가 없습니다.</div>';
     return;
   }
-
-  // 카드 입장 애니메이션 트리거
-  grid.classList.remove('animating');
-  void grid.offsetWidth; // reflow
-  grid.classList.add('animating');
 
   grid.innerHTML = listings.map(l => {
     const tags = parseTags(l.tags);
@@ -1139,74 +1124,6 @@ function wireEvents() {
       state.mapExpanded = true;
       applyMapVisibility();
     }
-  });
-
-  // ── Mobile bottom navigation ──────────────────────────────────────────────
-  function setMobileNavActive(tab) {
-    document.querySelectorAll('.mobile-nav-btn').forEach(b => {
-      b.classList.remove('active', 'nav-map-active-brand');
-    });
-    const btn = document.getElementById(`nav-btn-${tab}`);
-    if (!btn) return;
-    if (tab === 'map') btn.classList.add('nav-map-active-brand');
-    else btn.classList.add('active');
-  }
-
-  document.getElementById('nav-btn-home')?.addEventListener('click', () => {
-    setMobileNavActive('home');
-    if (state.mobileSidebarOpen) setMobileSidebar(false);
-    // 목록 상단으로 스크롤
-    document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-
-  document.getElementById('nav-btn-map')?.addEventListener('click', () => {
-    if (state.mobileSidebarOpen) setMobileSidebar(false);
-    // 지도가 접혀 있으면 펼치고, 지도 위치로 스크롤
-    if (!state.mapExpanded) {
-      state.mapExpanded = true;
-      applyMapVisibility();
-    }
-    document.getElementById('map-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setMobileNavActive('map');
-    // 지도 탭 재클릭 시 접기 토글
-    const btn = document.getElementById('nav-btn-map');
-    btn.addEventListener('click', function onceMore() {
-      btn.removeEventListener('click', onceMore);
-      if (state.mapExpanded) {
-        state.mapExpanded = false;
-        applyMapVisibility();
-        setMobileNavActive('home');
-      }
-    }, { once: true });
-  });
-
-  document.getElementById('nav-btn-alert')?.addEventListener('click', () => {
-    setMobileNavActive('alert');
-    // 알림 섹션 펼치기
-    const panel = document.getElementById('alert-panel-body');
-    const toggle = document.getElementById('alert-section-toggle');
-    if (panel?.classList.contains('collapsed')) {
-      panel.classList.remove('collapsed');
-      toggle?.classList.remove('collapsed');
-      localStorage.setItem('alertSectionCollapsed', 'false');
-    }
-    setMobileSidebar(true);
-    setTimeout(() => {
-      document.getElementById('alert-panel-body')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 280);
-  });
-
-  document.getElementById('nav-btn-filter')?.addEventListener('click', () => {
-    setMobileNavActive('filter');
-    setMobileSidebar(true);
-    setTimeout(() => {
-      document.getElementById('list-region-stats')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 280);
-  });
-
-  // 사이드바 닫힐 때 nav 상태 홈으로 복귀
-  document.getElementById('mobile-dim')?.addEventListener('click', () => {
-    setMobileNavActive('home');
   });
 }
 
