@@ -163,7 +163,7 @@
   <main id="main-content">
     <section id="hero-panel">
       <div class="hero-copy">
-        <span class="hero-kicker">FASTSELL WATCH</span>
+        <span class="hero-kicker"><span class="live-dot"></span>FASTSELL WATCH</span>
         <h1 class="hero-title">조건이 맞는 급매가 뜨면 바로 확인하고 바로 알림받습니다.</h1>
         <p class="hero-desc">아파트명이나 지역을 검색하고 현재 필터를 저장하면, 새 매물이 들어오는 순간 브라우저 알림으로 받아볼 수 있습니다.</p>
       </div>
@@ -216,26 +216,32 @@
     <!-- Stats bar -->
     <div id="stats-bar">
       <div class="stat-card urgent-card stat-clickable" data-filter="all">
+        <span class="stat-icon">⚡</span>
         <span class="stat-val" id="stat-total">—</span>
         <span class="stat-lbl">전체 급매</span>
       </div>
       <div class="stat-card stat-clickable" data-filter="아파트">
+        <span class="stat-icon">🏢</span>
         <span class="stat-val" id="stat-apt">—</span>
         <span class="stat-lbl">아파트</span>
       </div>
       <div class="stat-card stat-clickable" data-filter="오피스텔">
+        <span class="stat-icon">🏬</span>
         <span class="stat-val" id="stat-opst">—</span>
         <span class="stat-lbl">오피스텔</span>
       </div>
       <div class="stat-card stat-clickable" data-filter="빌라/연립">
+        <span class="stat-icon">🏘</span>
         <span class="stat-val" id="stat-villa">—</span>
         <span class="stat-lbl">빌라/연립</span>
       </div>
       <div class="stat-card stat-clickable" data-filter="__OTHER__">
+        <span class="stat-icon">🏗</span>
         <span class="stat-val" id="stat-other">—</span>
         <span class="stat-lbl">기타</span>
       </div>
       <div class="stat-card stat-clickable" data-filter="price-down">
+        <span class="stat-icon">📉</span>
         <span class="stat-val" id="stat-price-down">—</span>
         <span class="stat-lbl">가격인하</span>
       </div>
@@ -286,6 +292,35 @@
     <div id="modal-body"></div>
   </div>
 </div>
+
+<!-- ══════════════════════ MOBILE BOTTOM NAVIGATION ════════════════════════ -->
+<nav id="mobile-bottom-nav">
+  <button class="mobile-nav-btn active" data-nav="home" id="nav-btn-home">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    <span>목록</span>
+  </button>
+  <button class="mobile-nav-btn" data-nav="map" id="nav-btn-map">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>
+    </svg>
+    <span>지도</span>
+  </button>
+  <button class="mobile-nav-btn" data-nav="alert" id="nav-btn-alert">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"/><path d="M10 20a2 2 0 0 0 4 0"/>
+    </svg>
+    <span id="nav-alert-label">알림</span>
+    <span id="nav-alert-badge" class="nav-badge hidden">0</span>
+  </button>
+  <button class="mobile-nav-btn" data-nav="filter" id="nav-btn-filter">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+    </svg>
+    <span>필터</span>
+  </button>
+</nav>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/js/app.js"></script>
