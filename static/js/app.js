@@ -394,19 +394,25 @@ function updateStats(data) {
 
 // ── Sidebar ──────────────────────────────────────────────────────────────────
 async function loadSidebar() {
-  try {
-    const [trends, regionStats] = await Promise.all([
-      api('/api/trends'),
-      api('/api/region-stats'),
-    ]);
+  const regionStatsPromise = api('/api/region-stats')
+    .then(regionStats => {
+      state.regionStats = regionStats;
+      renderMapMarkers(regionStats);
+      renderRegionStats(regionStats);
+    })
+    .catch(e => {
+      console.warn('Region stats load error:', e);
+    });
 
-    state.regionStats = regionStats;
-    renderMapMarkers(regionStats);
-    renderTrends(trends);
-    renderRegionStats(regionStats);
-  } catch (e) {
-    console.warn('Sidebar load error:', e);
-  }
+  const trendsPromise = api('/api/trends')
+    .then(trends => {
+      renderTrends(trends);
+    })
+    .catch(e => {
+      console.warn('Trends load error:', e);
+    });
+
+  await Promise.allSettled([regionStatsPromise, trendsPromise]);
 }
 
 function renderTrends(trends) {
@@ -1222,15 +1228,28 @@ async function init() {
   refreshAlertDraftSummary();
   updateHeroAlertCount();
   updateListingsSummary();
-  await loadPushConfig();
-  await ensureNotificationsReady(false);
-  updateHeroNotifBtn();
-  await loadAlertRules();
-  startAlertPolling();
-  await loadCrawlStatus();
-  await loadSidebar();
-  await loadListings();
-  await checkAlertMatches();
+
+  const primaryLoads = [
+    loadCrawlStatus(),
+    loadListings(),
+    loadSidebar(),
+  ];
+
+  const alertsBootstrap = (async () => {
+    try {
+      await loadPushConfig();
+      await ensureNotificationsReady(false);
+      updateHeroNotifBtn();
+      await loadAlertRules();
+      startAlertPolling();
+      await checkAlertMatches();
+    } catch (e) {
+      console.warn('Alert bootstrap error:', e);
+    }
+  })();
+
+  await Promise.allSettled(primaryLoads);
+  void alertsBootstrap;
 }
 
 document.addEventListener('DOMContentLoaded', init);
