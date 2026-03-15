@@ -41,6 +41,7 @@ VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "").strip()
 VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:alerts@example.com").strip()
 
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
 CORS(app)
 
 db = Database(db_path=DB_PATH, database_url=DATABASE_URL)
@@ -216,6 +217,12 @@ def service_worker():
 
 @app.route("/api/listings")
 def get_listings():
+    try:
+        page = max(1, int(request.args.get("page", 1)))
+        per_page = min(100, max(1, int(request.args.get("per_page", 20))))
+    except (ValueError, TypeError):
+        page, per_page = 1, 20
+
     result = db.get_listings(
         region=request.args.get("region", ""),
         district=request.args.get("district", ""),
@@ -223,8 +230,8 @@ def get_listings():
         trade_type=request.args.get("trade_type", ""),
         urgent_only=request.args.get("urgent_only", "false").lower() == "true",
         search=request.args.get("search", ""),
-        page=int(request.args.get("page", 1)),
-        per_page=int(request.args.get("per_page", 20)),
+        page=page,
+        per_page=per_page,
         sort_by=request.args.get("sort_by", "urgent"),
         price_down_only=request.args.get("price_down_only", "false").lower() == "true",
     )

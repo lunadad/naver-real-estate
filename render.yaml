@@ -15,6 +15,14 @@ services:
         value: "true"
       - key: SEED_DEMO_DATA
         value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
 databases:
   - name: naver-real-estate-db
     plan: basic-256mb

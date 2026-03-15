@@ -1,0 +1,31 @@
+# Database
+*.db
+*.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment
+.env
+.env.*
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Git / Claude
+.git/
+.claude/
+
+# Temp / Cache
+tmp_geocode_cache.json
+venv/
+.venv/
+
+# Local scripts output
+scripts/__pycache__/
