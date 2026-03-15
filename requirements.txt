@@ -5,3 +5,5 @@ requests==2.31.0
 beautifulsoup4==4.12.3
 playwright==1.52.0
 gunicorn==23.0.0
+pywebpush==2.0.1
+psycopg[binary]>=3.2,<3.3

@@ -1,10 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   부동산 급매 터미널 — Frontend App (급매 전용)
+   부동산 급매 알리미 — Frontend App
    ═══════════════════════════════════════════════════════════════════════════ */
+
+const APP_NAME = '부동산 급매 알리미';
+const ALERT_POLL_MS = 60000;
 
 // ── State ──────────────────────────────────────────────────────────────────
 const state = {
-  theme: localStorage.getItem('theme') || 'dark',
+  theme: localStorage.getItem('theme') || 'light',
   filters: {
     trade_type: '',
     property_type: '',
@@ -21,6 +24,19 @@ const state = {
   mapMarkers: {},   // district → Leaflet circle
   map: null,
   sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false',
+  clientId: '',
+  alertRules: [],
+  notificationPermission: typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
+  swRegistration: null,
+  pushConfigured: false,
+  pushPublicKey: '',
+  pushSubscribed: false,
+  pushConfigLoaded: false,
+  alertPollTimer: null,
+  mobileSidebarOpen: false,
+  mapExpanded: localStorage.getItem('mapExpanded') === null
+    ? !window.matchMedia('(max-width: 900px)').matches
+    : localStorage.getItem('mapExpanded') !== 'false',
 };
 
 // ── API helpers ─────────────────────────────────────────────────────────────
@@ -35,6 +51,115 @@ function buildQuery(extra = {}) {
   const q = new URLSearchParams();
   Object.entries(p).forEach(([k, v]) => { if (v !== '' && v !== false) q.set(k, v); });
   return q.toString();
+}
+
+function getClientId() {
+  const key = 'real-estate-alert-client-id';
+  let clientId = localStorage.getItem(key);
+  if (!clientId) {
+    clientId = window.crypto?.randomUUID?.() || `client-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem(key, clientId);
+  }
+  return clientId;
+}
+
+function isMobileViewport() {
+  return window.matchMedia('(max-width: 900px)').matches;
+}
+
+function isLocalhost() {
+  return ['localhost', '127.0.0.1'].includes(location.hostname);
+}
+
+function isPushSupported() {
+  return 'serviceWorker' in navigator && 'PushManager' in window;
+}
+
+function canUsePushTransport() {
+  return isPushSupported() && (window.isSecureContext || isLocalhost());
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+function buildCurrentFilterLabel() {
+  const parts = [];
+  if (state.filters.search) parts.push(`검색 ${state.filters.search}`);
+  if (state.filters.district) parts.push(`지역 ${state.filters.district}`);
+  if (state.filters.property_type && state.filters.property_type !== '__OTHER__') parts.push(`유형 ${state.filters.property_type}`);
+  if (state.filters.property_type === '__OTHER__') parts.push('유형 기타');
+  if (state.filters.trade_type) parts.push(`거래 ${state.filters.trade_type}`);
+  if (state.filters.price_down_only) parts.push('가격인하만');
+  return parts.length ? parts.join(' · ') : '전체 급매';
+}
+
+function updateHeroAlertCount() {
+  const el = document.getElementById('hero-alert-rule-count');
+  if (!el) return;
+  el.textContent = `${fmtNum(state.alertRules.length || 0)}개`;
+}
+
+function updateHeroFocusRegion() {
+  const el = document.getElementById('hero-focus-region');
+  if (!el) return;
+  if (state.filters.district) {
+    el.textContent = state.filters.district;
+    return;
+  }
+  if (state.filters.search) {
+    el.textContent = state.filters.search;
+    return;
+  }
+  el.textContent = '전국';
+}
+
+function updateHeroCrawlSummary(text) {
+  const el = document.getElementById('hero-crawl-summary');
+  if (el && text) el.textContent = text;
+}
+
+function updateListingsSummary(total = null) {
+  const el = document.getElementById('listings-summary');
+  if (!el) return;
+  const label = buildCurrentFilterLabel();
+  if (total == null) {
+    el.textContent = `${label} 조건의 급매를 불러오는 중입니다.`;
+    return;
+  }
+  el.textContent = `${label} 조건 결과 ${fmtNum(total)}건`;
+}
+
+function applyMapVisibility() {
+  const wrap = document.getElementById('map-wrap');
+  const btn = document.getElementById('btn-map-toggle');
+  const legend = document.getElementById('map-legend');
+  if (!wrap || !btn) return;
+  wrap.classList.toggle('collapsed', !state.mapExpanded);
+  btn.textContent = state.mapExpanded ? '지도 접기' : '지도 펼치기';
+  if (legend) legend.classList.toggle('hidden', !state.mapExpanded);
+  localStorage.setItem('mapExpanded', state.mapExpanded);
+  if (state.map && state.mapExpanded) {
+    setTimeout(() => state.map.invalidateSize(), 260);
+  }
+}
+
+function toggleMap() {
+  state.mapExpanded = !state.mapExpanded;
+  applyMapVisibility();
+}
+
+function setMobileSidebar(open) {
+  const sidebar = document.getElementById('sidebar');
+  const dim = document.getElementById('mobile-dim');
+  if (!sidebar || !dim) return;
+  state.mobileSidebarOpen = open;
+  sidebar.classList.toggle('mobile-open', open);
+  dim.classList.toggle('hidden', !open);
+  document.body.classList.toggle('sidebar-overlay-open', open);
 }
 
 // ── Map ─────────────────────────────────────────────────────────────────────
@@ -135,6 +260,10 @@ function selectDistrict(district) {
     el.classList.toggle('active', el.dataset.district === district);
   });
 
+  refreshAlertDraftSummary();
+  updateHeroFocusRegion();
+  updateListingsSummary();
+  if (state.mobileSidebarOpen) setMobileSidebar(false);
   loadListings();
 }
 
@@ -142,6 +271,8 @@ function selectDistrict(district) {
 async function loadListings() {
   const grid = document.getElementById('listings-grid');
   grid.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>불러오는 중...</p></div>';
+  refreshAlertDraftSummary();
+  updateListingsSummary();
 
   try {
     const data = await api(`/api/listings?${buildQuery()}`);
@@ -149,6 +280,7 @@ async function loadListings() {
     updateStats(data);
   } catch (e) {
     grid.innerHTML = '<div class="empty-state">데이터를 불러올 수 없습니다.</div>';
+    updateListingsSummary(0);
   }
 }
 
@@ -187,6 +319,7 @@ function renderListings(data) {
   grid.innerHTML = listings.map(l => {
     const tags = parseTags(l.tags);
     const hasPriceDown = tags.includes('가격인하');
+    const compactRegion = `${l.region ? l.region.replace('특별시','').replace('광역시','').replace('특별자치시','') : ''} ${l.district}`.trim();
     return `
     <div class="listing-card urgent-card-item"
          onclick="openNaver('${l.article_no}')"
@@ -199,14 +332,22 @@ function renderListings(data) {
         <span class="badge badge-type">${l.property_type}</span>
         <span class="badge ${tradeBadgeClass(l.trade_type)}">${l.trade_type}</span>
         <span class="badge badge-date">${formatDate(l.confirmed_date)}</span>
-        <span class="naver-link-icon" title="네이버 부동산">🔗</span>
+        <span class="naver-link-icon" title="네이버 부동산">네이버 보기</span>
       </div>
-      <div class="card-name" title="${l.building_name}">${l.building_name}</div>
-      <div class="card-location">📍 ${l.region ? l.region.replace('특별시','').replace('광역시','').replace('특별자치시','') : ''} ${l.district}</div>
-      <div class="card-price">${l.price || '—'}</div>
+      <div class="card-main">
+        <div class="card-price-block">
+          <div class="card-price">${l.price || '—'}</div>
+          <div class="card-location">${escHtml(compactRegion)}</div>
+        </div>
+        <div class="card-date-chip">확인 ${formatDate(l.confirmed_date) || '—'}</div>
+      </div>
+      <div class="card-name-row">
+        <div class="card-name" title="${l.building_name}">${l.building_name}</div>
+      </div>
       <div class="card-meta">
-        <span>📐 ${l.area || '—'}</span>
-        <span>🏢 ${l.floor || '—'}층</span>
+        <span>면적 ${l.area || '—'}</span>
+        <span>층 ${l.floor || '—'}</span>
+        <span>${l.trade_type}</span>
       </div>
       ${l.description ? `<div class="card-desc">${escHtml(l.description)}</div>` : ''}
       <div class="card-tags">
@@ -228,6 +369,12 @@ function updateStats(data) {
   // 가격인하 수 (서버에서 안 내려오면 0)
   const pdEl = document.getElementById('stat-price-down');
   if (pdEl) pdEl.textContent = fmtNum(data.price_down_count || 0);
+  const heroTotal = document.getElementById('hero-total-count');
+  if (heroTotal) heroTotal.textContent = fmtNum(data.total || 0);
+  const heroPriceDown = document.getElementById('hero-price-down-count');
+  if (heroPriceDown) heroPriceDown.textContent = fmtNum(data.price_down_count || 0);
+  updateHeroFocusRegion();
+  updateListingsSummary(data.total || 0);
 }
 
 // ── Sidebar ──────────────────────────────────────────────────────────────────
@@ -324,43 +471,299 @@ function openNaver(articleNo) {
   }
 }
 
-// ── Crawl ─────────────────────────────────────────────────────────────────────
-async function triggerCrawl() {
-  const btn = document.getElementById('btn-crawl');
-  const label = document.getElementById('crawl-label');
+function getNotificationStatusMessage() {
+  if (!('Notification' in window)) return { text: '이 브라우저는 알림을 지원하지 않습니다.', cls: 'blocked' };
+  if (state.notificationPermission === 'granted' && state.pushConfigured && state.pushSubscribed) {
+    return { text: '모바일 푸시가 활성화되어 있습니다. 앱이 닫혀 있어도 새 급매를 보낼 수 있습니다.', cls: 'ready' };
+  }
+  if (state.notificationPermission === 'granted' && state.pushConfigured && !state.pushSubscribed) {
+    return { text: '알림 권한은 허용됐지만 푸시 구독 연결이 아직 완료되지 않았습니다.', cls: 'blocked' };
+  }
+  if (state.notificationPermission === 'granted' && !state.pushConfigured) {
+    return { text: '브라우저 알림은 활성화되어 있지만 서버 푸시는 아직 설정되지 않았습니다.', cls: 'ready' };
+  }
+  if (state.notificationPermission === 'granted') return { text: '브라우저 알림이 활성화되어 있습니다.', cls: 'ready' };
+  if (state.notificationPermission === 'denied') return { text: '브라우저에서 알림이 차단되어 있습니다. 브라우저 설정에서 허용하세요.', cls: 'blocked' };
+  return { text: '알림 권한이 필요합니다. 권한 요청 후 알림을 등록하세요.', cls: '' };
+}
 
-  btn.disabled = true;
-  btn.classList.add('loading');
-  label.textContent = '급매 크롤링 중...';
-
-  try {
-    const result = await api('/api/crawl', { method: 'POST' });
-    label.textContent = '지금 크롤링';
-    btn.classList.remove('loading');
+function updateHeroNotifBtn() {
+  const btn = document.getElementById('btn-hero-notif');
+  if (!btn) return;
+  const perm = state.notificationPermission;
+  if (perm === 'granted' && state.pushConfigured && state.pushSubscribed) {
+    btn.textContent = '📲 모바일 푸시 연결됨';
+    btn.disabled = true;
+    btn.classList.add('notif-granted');
+    btn.classList.remove('notif-denied');
+  } else if (perm === 'granted') {
+    btn.textContent = '🔔 알림 허용됨';
+    btn.disabled = true;
+    btn.classList.add('notif-granted');
+    btn.classList.remove('notif-denied');
+  } else if (perm === 'denied') {
+    btn.textContent = '🔕 알림 차단됨';
     btn.disabled = false;
-
-    const demoBadge = document.getElementById('demo-badge');
-    if (result.source === 'demo') {
-      demoBadge.classList.remove('hidden');
-    } else {
-      demoBadge.classList.add('hidden');
-    }
-
-    document.getElementById('info-last-crawl').textContent =
-      `마지막 크롤링: 방금 (급매 ${result.total}개)`;
-
-    await loadSidebar();
-    state.page = 1;
-    await loadListings();
-
-    showToast(result.message || '업데이트 완료', 'success');
-  } catch (e) {
-    label.textContent = '지금 크롤링';
-    btn.classList.remove('loading');
+    btn.classList.add('notif-denied');
+  } else {
+    btn.textContent = '🔔 알림 허용';
     btn.disabled = false;
-    showToast('크롤링 실패: ' + e.message, 'error');
+    btn.classList.remove('notif-granted', 'notif-denied');
   }
 }
+
+function updateNotificationStatus() {
+  const el = document.getElementById('notification-status');
+  if (!el) return;
+  const { text, cls } = getNotificationStatusMessage();
+  el.textContent = text;
+  el.classList.remove('ready', 'blocked');
+  if (cls) el.classList.add(cls);
+}
+
+function buildAlertDraft() {
+  const keywordInput = document.getElementById('alert-keyword');
+  const keyword = keywordInput?.value.trim() || state.filters.search;
+  const propertyType = state.filters.property_type === '__OTHER__' ? '' : state.filters.property_type;
+  return {
+    client_id: state.clientId,
+    keyword,
+    district: state.filters.district,
+    property_type: propertyType,
+    trade_type: state.filters.trade_type,
+  };
+}
+
+function refreshAlertDraftSummary() {
+  const el = document.getElementById('alert-current-filters');
+  const heroEl = document.getElementById('hero-filter-summary');
+  if (!el) return;
+  const draft = buildAlertDraft();
+  const parts = [];
+  if (draft.keyword) parts.push(`키워드: ${draft.keyword}`);
+  if (draft.district) parts.push(`지역: ${draft.district}`);
+  if (draft.property_type) parts.push(`유형: ${draft.property_type}`);
+  if (draft.trade_type) parts.push(`거래: ${draft.trade_type}`);
+  const summary = parts.length
+    ? `저장될 조건: ${parts.join(' · ')}`
+    : '검색어나 지역/유형/거래 필터를 먼저 선택하세요.';
+  el.textContent = summary;
+  if (heroEl) heroEl.textContent = `현재 조건: ${buildCurrentFilterLabel()}`;
+  updateHeroFocusRegion();
+}
+
+function renderAlertRules() {
+  const list = document.getElementById('alert-rules-list');
+  if (!list) return;
+
+  if (!state.alertRules.length) {
+    list.innerHTML = '<li class="alert-empty">등록된 알림이 없습니다.</li>';
+    updateHeroAlertCount();
+    return;
+  }
+
+  list.innerHTML = state.alertRules.map(rule => {
+    const meta = [
+      rule.keyword ? `키워드 ${rule.keyword}` : '',
+      rule.district ? `지역 ${rule.district}` : '',
+      rule.property_type ? `유형 ${rule.property_type}` : '',
+      rule.trade_type ? `거래 ${rule.trade_type}` : '',
+    ].filter(Boolean).join(' · ');
+
+    return `
+      <li class="alert-rule-item">
+        <div>
+          <div class="alert-rule-name">${escHtml(rule.name)}</div>
+          <div class="alert-rule-meta">${escHtml(meta || '전체 조건')}</div>
+        </div>
+        <button class="alert-rule-remove" data-alert-id="${rule.id}">삭제</button>
+      </li>
+    `;
+  }).join('');
+  updateHeroAlertCount();
+}
+
+async function loadAlertRules() {
+  const data = await api(`/api/alert-rules?client_id=${encodeURIComponent(state.clientId)}`);
+  state.alertRules = data.rules || [];
+  renderAlertRules();
+}
+
+async function loadPushConfig(force = false) {
+  if (state.pushConfigLoaded && !force) {
+    return state.pushConfigured;
+  }
+
+  try {
+    const data = await api('/api/push/public-key');
+    state.pushConfigured = !!data.configured;
+    state.pushPublicKey = data.public_key || '';
+  } catch (e) {
+    state.pushConfigured = false;
+    state.pushPublicKey = '';
+  }
+
+  state.pushConfigLoaded = true;
+  return state.pushConfigured;
+}
+
+async function syncPushSubscriptionWithServer(subscription) {
+  await api('/api/push/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: state.clientId,
+      subscription: subscription.toJSON(),
+    }),
+  });
+}
+
+async function ensurePushSubscription(interactive = false) {
+  state.pushSubscribed = false;
+
+  if (!canUsePushTransport()) return false;
+  if (!state.swRegistration) return false;
+
+  await loadPushConfig();
+  if (!state.pushConfigured || !state.pushPublicKey) return false;
+  if (state.notificationPermission !== 'granted') return false;
+
+  try {
+    let subscription = await state.swRegistration.pushManager.getSubscription();
+    if (!subscription && interactive) {
+      subscription = await state.swRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(state.pushPublicKey),
+      });
+    }
+
+    if (!subscription) return false;
+
+    await syncPushSubscriptionWithServer(subscription);
+    state.pushSubscribed = true;
+    return true;
+  } catch (e) {
+    console.warn('Push subscription failed:', e);
+    state.pushSubscribed = false;
+    return false;
+  }
+}
+
+async function ensureNotificationsReady(interactive = false) {
+  if (!('Notification' in window)) {
+    updateNotificationStatus();
+    return false;
+  }
+
+  if ('serviceWorker' in navigator && !state.swRegistration) {
+    try {
+      state.swRegistration = await navigator.serviceWorker.register('/sw.js');
+    } catch (e) {
+      console.warn('Service worker registration failed:', e);
+    }
+  }
+
+  if (interactive && Notification.permission !== 'granted') {
+    state.notificationPermission = await Notification.requestPermission();
+  } else {
+    state.notificationPermission = Notification.permission;
+  }
+
+  if (state.notificationPermission === 'granted') {
+    await ensurePushSubscription(interactive);
+  } else {
+    state.pushSubscribed = false;
+  }
+
+  updateNotificationStatus();
+  updateHeroNotifBtn();
+  return state.notificationPermission === 'granted';
+}
+
+async function saveAlertRule() {
+  const draft = buildAlertDraft();
+  if (!draft.keyword && !draft.district && !draft.property_type && !draft.trade_type) {
+    showToast('검색어나 필터를 먼저 선택하세요.', 'error');
+    return;
+  }
+
+  const ready = await ensureNotificationsReady(true);
+  if (!ready) {
+    showToast('브라우저 알림 권한이 필요합니다.', 'error');
+    return;
+  }
+
+  const result = await api('/api/alert-rules', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(draft),
+  });
+
+  const keywordInput = document.getElementById('alert-keyword');
+  if (keywordInput) keywordInput.value = '';
+  await loadAlertRules();
+  refreshAlertDraftSummary();
+  showToast(`알림 등록: ${result.rule.name}`, 'success');
+}
+
+async function removeAlertRule(alertId) {
+  await api(`/api/alert-rules/${alertId}?client_id=${encodeURIComponent(state.clientId)}`, {
+    method: 'DELETE',
+  });
+  await loadAlertRules();
+  showToast('알림이 삭제되었습니다.', 'success');
+}
+
+async function showAlertNotification(match) {
+  const title = APP_NAME;
+  const body = [
+    (match.alert_names || []).join(', '),
+    `[${match.property_type}/${match.trade_type}] ${match.building_name} ${match.price}`,
+    `${match.region} ${match.district}`,
+  ].filter(Boolean).join(' · ');
+
+  const options = {
+    body,
+    data: { url: match.naver_url || '/' },
+    tag: `listing-${match.article_no}`,
+  };
+
+  if (state.swRegistration?.showNotification) {
+    await state.swRegistration.showNotification(title, options);
+    return;
+  }
+
+  const notification = new Notification(title, options);
+  notification.onclick = () => {
+    if (match.naver_url) window.open(match.naver_url, '_blank', 'noopener,noreferrer');
+  };
+}
+
+async function checkAlertMatches() {
+  if (!state.alertRules.length || state.notificationPermission !== 'granted') return;
+
+  try {
+    const data = await api(`/api/alerts/check?client_id=${encodeURIComponent(state.clientId)}`);
+    const matches = data.matches || [];
+    if (!matches.length) return;
+
+    for (const match of matches.slice(0, 5)) {
+      await showAlertNotification(match);
+    }
+
+    if (matches.length > 5) {
+      showToast(`새 알림 ${matches.length}건이 도착했습니다.`, 'success');
+    }
+  } catch (e) {
+    console.warn('Alert check failed:', e);
+  }
+}
+
+function startAlertPolling() {
+  if (state.alertPollTimer) window.clearInterval(state.alertPollTimer);
+  state.alertPollTimer = window.setInterval(checkAlertMatches, ALERT_POLL_MS);
+}
+
 
 // ── Crawl Status ─────────────────────────────────────────────────────────────
 async function loadCrawlStatus() {
@@ -372,6 +775,7 @@ async function loadCrawlStatus() {
       const timeStr = dt.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       document.getElementById('info-last-crawl').textContent =
         `마지막 크롤링: ${timeStr} (급매 ${last.total_count}개)`;
+      updateHeroCrawlSummary(`${timeStr} 기준 최신 급매 ${fmtNum(last.total_count || 0)}개`);
 
       if (last.source === 'demo') {
         document.getElementById('demo-badge').classList.remove('hidden');
@@ -381,9 +785,6 @@ async function loadCrawlStatus() {
       const dt = new Date(data.next_crawl);
       const timeStr = dt.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       document.getElementById('info-next-crawl').textContent = `다음 크롤링: ${timeStr}`;
-    }
-    if (data.scheduled_hour !== undefined) {
-      document.getElementById('schedule-hour').value = data.scheduled_hour;
     }
   } catch (e) {
     console.warn('Status load error:', e);
@@ -408,6 +809,10 @@ function applyTheme(theme) {
 
 // ── Sidebar toggle ────────────────────────────────────────────────────────────
 function toggleSidebar() {
+  if (isMobileViewport()) {
+    setMobileSidebar(!state.mobileSidebarOpen);
+    return;
+  }
   state.sidebarOpen = !state.sidebarOpen;
   const sidebar = document.getElementById('sidebar');
   const btn = document.getElementById('sidebar-toggle');
@@ -417,6 +822,72 @@ function toggleSidebar() {
   openBtn.classList.toggle('visible', !state.sidebarOpen);
   localStorage.setItem('sidebarOpen', state.sidebarOpen);
   if (state.map) setTimeout(() => state.map.invalidateSize(), 250);
+}
+
+// ── Mobile notification guide modal ──────────────────────────────────────────
+function showMobileNotifGuide() {
+  // Remove existing guide if any
+  document.getElementById('notif-guide-overlay')?.remove();
+
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const currentUrl = location.href.replace(location.pathname, '').replace(location.search, '');
+  const isDenied = 'Notification' in window && Notification.permission === 'denied';
+
+  let steps = '';
+  if (isDenied) {
+    if (isIOS) {
+      steps = `
+        <div class="guide-step"><span class="guide-num">1</span><span>Safari 주소창 왼쪽 <b>AA</b> 버튼 탭</span></div>
+        <div class="guide-step"><span class="guide-num">2</span><span><b>웹사이트 설정</b> → <b>알림: 허용</b>으로 변경</span></div>
+        <div class="guide-step"><span class="guide-num">3</span><span>페이지를 새로고침 후 다시 시도</span></div>`;
+    } else {
+      steps = `
+        <div class="guide-step"><span class="guide-num">1</span><span>주소창 왼쪽 <b>자물쇠 🔒</b> 탭</span></div>
+        <div class="guide-step"><span class="guide-num">2</span><span><b>권한</b> → <b>알림: 허용</b>으로 변경</span></div>
+        <div class="guide-step"><span class="guide-num">3</span><span>페이지를 새로고침 후 다시 시도</span></div>`;
+    }
+  } else if (isIOS) {
+    steps = `
+      <p class="guide-note">📱 iPhone/iPad에서 모바일 푸시를 받으려면 <b>HTTPS</b>가 필요하고, 앱을 홈 화면에 추가해야 합니다.</p>
+      <div class="guide-step"><span class="guide-num">1</span><span>PC에서 <code>brew install ngrok && ngrok http 5101</code> 실행 후 <b>https://…ngrok-free.app</b> 주소 복사</span></div>
+      <div class="guide-step"><span class="guide-num">2</span><span>Safari에서 해당 HTTPS 주소로 접속</span></div>
+      <div class="guide-step"><span class="guide-num">3</span><span>하단 <b>공유 버튼 □↑</b> → <b>홈 화면에 추가</b></span></div>
+      <div class="guide-step"><span class="guide-num">4</span><span>홈 화면에 생긴 <b>급매 알리미</b> 앱 아이콘으로 실행</span></div>
+      <div class="guide-step"><span class="guide-num">5</span><span>앱 안에서 <b>🔔 알림 허용</b> 버튼 다시 탭해 푸시를 연결</span></div>`;
+  } else if (isAndroid) {
+    steps = `
+      <p class="guide-note">📱 Android에서 모바일 푸시를 받으려면 <b>HTTPS</b> 주소로 접속해야 합니다.</p>
+      <div class="guide-step"><span class="guide-num">1</span><span>PC에서 <code>brew install ngrok && ngrok http 5101</code> 실행</span></div>
+      <div class="guide-step"><span class="guide-num">2</span><span>출력된 <b>https://…ngrok-free.app</b> 주소를 폰으로 열기</span></div>
+      <div class="guide-step"><span class="guide-num">3</span><span>Chrome 주소창 오른쪽 <b>⋮</b> → <b>홈 화면에 추가</b> (선택)</span></div>
+      <div class="guide-step"><span class="guide-num">4</span><span>페이지에서 <b>🔔 알림 허용</b> 버튼 탭 → 팝업에서 <b>허용</b> → 푸시 연결 완료</span></div>`;
+  } else {
+    // Desktop but Notification not supported (e.g., Safari < 16)
+    steps = `
+      <p class="guide-note">이 브라우저는 알림을 지원하지 않습니다.</p>
+      <div class="guide-step"><span class="guide-num">1</span><span><b>Chrome</b> 또는 <b>Edge</b> 브라우저로 접속하세요.</span></div>
+      <div class="guide-step"><span class="guide-num">2</span><span>주소창에서 자물쇠 🔒 아이콘 → 알림 허용</span></div>`;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'notif-guide-overlay';
+  overlay.innerHTML = `
+    <div class="notif-guide-modal">
+      <div class="notif-guide-header">
+        <span>🔔 알림 설정 방법</span>
+        <button class="notif-guide-close" onclick="document.getElementById('notif-guide-overlay').remove()">✕</button>
+      </div>
+      <div class="notif-guide-body">
+        ${steps}
+      </div>
+      ${(!isDenied && (isIOS || isAndroid)) ? `
+      <div class="notif-guide-footer">
+        <p style="font-size:11px;color:var(--text3);margin:0;">현재 주소: <code>${currentUrl}</code></p>
+      </div>` : ''}
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 // ── Toast notification ────────────────────────────────────────────────────────
@@ -460,6 +931,38 @@ function wireEvents() {
   // Sidebar toggle
   document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
   document.getElementById('sidebar-open-btn').addEventListener('click', toggleSidebar);
+  document.getElementById('btn-mobile-sidebar').addEventListener('click', toggleSidebar);
+  document.getElementById('mobile-dim').addEventListener('click', () => setMobileSidebar(false));
+  document.getElementById('btn-map-toggle').addEventListener('click', toggleMap);
+  document.getElementById('btn-hero-notif').addEventListener('click', async () => {
+    // On HTTP (non-localhost), mobile browsers block Notification API — show guide
+    const isHttp = location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const notifSupported = 'Notification' in window;
+
+    if (!notifSupported || (isMobile && isHttp)) {
+      showMobileNotifGuide();
+      return;
+    }
+
+    // Desktop or HTTPS mobile — try requesting permission normally
+    const ready = await ensureNotificationsReady(true);
+    if (ready) {
+      showToast(state.pushSubscribed ? '📲 모바일 푸시가 연결되었습니다.' : '✅ 브라우저 알림이 활성화되었습니다.', 'success');
+      updateHeroNotifBtn();
+    } else if (state.notificationPermission === 'denied') {
+      showMobileNotifGuide();
+    } else {
+      showToast('알림 권한이 허용되지 않았습니다.', 'error');
+    }
+  });
+  document.getElementById('btn-hero-alert').addEventListener('click', async () => {
+    try {
+      await saveAlertRule();
+    } catch (e) {
+      showToast('알림 등록 실패: ' + e.message, 'error');
+    }
+  });
 
   // Search
   const searchInput = document.getElementById('search-input');
@@ -468,6 +971,7 @@ function wireEvents() {
     state.filters.search = e.target.value.trim();
     state.page = 1;
     searchClear.classList.toggle('hidden', !e.target.value);
+    refreshAlertDraftSummary();
     loadListings();
   }, 350));
   searchClear.addEventListener('click', () => {
@@ -475,6 +979,7 @@ function wireEvents() {
     searchClear.classList.add('hidden');
     state.filters.search = '';
     state.page = 1;
+    refreshAlertDraftSummary();
     loadListings();
   });
 
@@ -487,6 +992,7 @@ function wireEvents() {
         const param = group.dataset.param;
         state.filters[param] = pill.dataset.value;
         state.page = 1;
+        refreshAlertDraftSummary();
         loadListings();
       });
     });
@@ -531,6 +1037,7 @@ function wireEvents() {
       });
 
       state.page = 1;
+      refreshAlertDraftSummary();
       loadListings();
     });
   });
@@ -555,38 +1062,70 @@ function wireEvents() {
     selectDistrict(state.filters.district);
   });
 
-  // Crawl button
-  document.getElementById('btn-crawl').addEventListener('click', triggerCrawl);
-
-  // Save schedule
-  document.getElementById('btn-save-schedule').addEventListener('click', async () => {
-    const hour = parseInt(document.getElementById('schedule-hour').value, 10);
+  // Alert controls
+  document.getElementById('btn-alert-enable').addEventListener('click', async () => {
+    const ready = await ensureNotificationsReady(true);
+    showToast(
+      ready
+        ? (state.pushSubscribed ? '모바일 푸시가 연결되었습니다.' : '브라우저 알림이 활성화되었습니다.')
+        : '알림 권한이 허용되지 않았습니다.',
+      ready ? 'success' : 'error'
+    );
+  });
+  document.getElementById('btn-alert-save').addEventListener('click', async () => {
     try {
-      const res = await api('/api/update-schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hour }),
-      });
-      showToast(`자동 크롤링 시간 변경: 매일 ${hour}시`, 'success');
-      if (res.next_crawl) {
-        const dt = new Date(res.next_crawl);
-        document.getElementById('info-next-crawl').textContent =
-          `다음 크롤링: ${dt.toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })}`;
-      }
+      await saveAlertRule();
     } catch (e) {
-      showToast('저장 실패', 'error');
+      showToast('알림 등록 실패: ' + e.message, 'error');
     }
+  });
+  document.getElementById('alert-keyword').addEventListener('input', refreshAlertDraftSummary);
+  document.getElementById('alert-rules-list').addEventListener('click', async (event) => {
+    const button = event.target.closest('.alert-rule-remove');
+    if (!button) return;
+    try {
+      await removeAlertRule(button.dataset.alertId);
+    } catch (e) {
+      showToast('알림 삭제 실패: ' + e.message, 'error');
+    }
+  });
+
+  // Alert section collapse toggle
+  const alertToggleBtn = document.getElementById('alert-section-toggle');
+  const alertPanelBody = document.getElementById('alert-panel-body');
+  const alertCollapsed = localStorage.getItem('alertSectionCollapsed') === 'true';
+  if (alertCollapsed) {
+    alertPanelBody.classList.add('collapsed');
+    alertToggleBtn.classList.add('collapsed');
+  }
+  alertToggleBtn.addEventListener('click', () => {
+    const isNowCollapsed = alertPanelBody.classList.toggle('collapsed');
+    alertToggleBtn.classList.toggle('collapsed', isNowCollapsed);
+    localStorage.setItem('alertSectionCollapsed', isNowCollapsed);
   });
 
   // ESC 키
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') document.getElementById('modal-overlay')?.classList.add('hidden');
+    if (e.key === 'Escape' && state.mobileSidebarOpen) setMobileSidebar(false);
+  });
+
+  window.addEventListener('resize', () => {
+    if (!isMobileViewport() && state.mobileSidebarOpen) {
+      setMobileSidebar(false);
+    }
+    if (!isMobileViewport() && !state.mapExpanded) {
+      state.mapExpanded = true;
+      applyMapVisibility();
+    }
   });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
+  state.clientId = getClientId();
   applyTheme(state.theme);
+  updateNotificationStatus();
 
   if (!state.sidebarOpen) {
     document.getElementById('sidebar').classList.add('collapsed');
@@ -596,9 +1135,19 @@ async function init() {
 
   wireEvents();
   initMap();
+  applyMapVisibility();
+  refreshAlertDraftSummary();
+  updateHeroAlertCount();
+  updateListingsSummary();
+  await loadPushConfig();
+  await ensureNotificationsReady(false);
+  updateHeroNotifBtn();
+  await loadAlertRules();
+  startAlertPolling();
   await loadCrawlStatus();
   await loadSidebar();
   await loadListings();
+  await checkAlertMatches();
 }
 
 document.addEventListener('DOMContentLoaded', init);

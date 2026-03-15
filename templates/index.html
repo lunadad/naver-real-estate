@@ -1,13 +1,19 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="dark">
+<html lang="ko" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>부동산 급매 터미널</title>
+  <title>부동산 급매 알리미</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="급매 알리미" />
+  <meta name="theme-color" content="#f6f7fb" />
 </head>
 <body>
 
@@ -19,13 +25,13 @@
         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
-      <span class="logo-text">부동산 급매 터미널</span>
+      <span class="logo-text">부동산 급매 알리미</span>
     </div>
     <div class="search-wrap">
       <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <input id="search-input" type="text" placeholder="지역 검색  (예: 강남구, 수원시, 해운대)" autocomplete="off" />
+      <input id="search-input" type="text" placeholder="지역/아파트 검색  (예: 강남구, 트리지움, 해운대)" autocomplete="off" />
       <button id="search-clear" class="search-clear hidden">✕</button>
     </div>
   </div>
@@ -71,6 +77,7 @@
 
   <!-- 사이드바 접혔을 때 열기 버튼 -->
   <button id="sidebar-open-btn" title="사이드바 열기">▶</button>
+  <div id="mobile-dim" class="hidden"></div>
 
   <!-- ══════════════ SIDEBAR ══════════════ -->
   <aside id="sidebar">
@@ -79,12 +86,42 @@
       <button id="sidebar-toggle" title="사이드바 접기">◀</button>
     </div>
 
+    <div class="sidebar-section alert-section">
+      <div class="section-title alert-title" id="alert-section-title">
+        <span class="alert-title-left">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"/>
+            <path d="M10 20a2 2 0 0 0 4 0"/>
+          </svg>
+          알림 구독
+        </span>
+        <button id="alert-section-toggle" class="section-collapse-btn" title="접기/펼치기">
+          <svg id="alert-toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="18 15 12 9 6 15"/>
+          </svg>
+        </button>
+      </div>
+      <div class="alert-panel" id="alert-panel-body">
+        <div class="alert-panel-inner">
+          <p class="alert-helper">상단 검색창과 현재 필터 조건을 저장하고, 새 급매가 들어오면 브라우저 알림을 보냅니다.</p>
+          <div id="notification-status" class="alert-status">브라우저 알림 상태 확인 중...</div>
+          <input id="alert-keyword" class="alert-input" type="text" placeholder="아파트명 또는 지역명 직접 입력" />
+          <div id="alert-current-filters" class="alert-current-filters"></div>
+          <div class="alert-actions">
+            <button id="btn-alert-enable" class="alert-btn secondary">알림 권한 요청</button>
+            <button id="btn-alert-save" class="alert-btn">현재 조건 알림 등록</button>
+          </div>
+          <ul id="alert-rules-list" class="alert-rule-list"></ul>
+        </div>
+      </div>
+    </div>
+
     <div class="sidebar-section">
       <div class="section-title trend-up">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
         </svg>
-        급매 증가 지역
+        급매 증가 지역 (1일 기준)
       </div>
       <ul id="list-increasing" class="trend-list"></ul>
     </div>
@@ -94,7 +131,7 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>
         </svg>
-        급매 감소 지역
+        급매 감소 지역 (1일 기준)
       </div>
       <ul id="list-decreasing" class="trend-list"></ul>
     </div>
@@ -124,6 +161,41 @@
 
   <!-- ══════════════ MAIN ══════════════ -->
   <main id="main-content">
+    <section id="hero-panel">
+      <div class="hero-copy">
+        <span class="hero-kicker">FASTSELL WATCH</span>
+        <h1 class="hero-title">조건이 맞는 급매가 뜨면 바로 확인하고 바로 알림받습니다.</h1>
+        <p class="hero-desc">아파트명이나 지역을 검색하고 현재 필터를 저장하면, 새 매물이 들어오는 순간 브라우저 알림으로 받아볼 수 있습니다.</p>
+      </div>
+      <div class="hero-meta">
+        <div id="hero-filter-summary" class="hero-filter-summary">현재 조건: 전체 급매</div>
+        <div id="hero-crawl-summary" class="hero-crawl-summary">최신 크롤링 정보를 불러오는 중...</div>
+      </div>
+      <div class="hero-actions">
+        <button id="btn-mobile-sidebar" class="hero-btn secondary">필터 · 트렌드</button>
+        <button id="btn-map-toggle" class="hero-btn ghost">지도 접기</button>
+        <button id="btn-hero-notif" class="hero-btn ghost" title="브라우저 알림 권한 요청">🔔 알림 허용</button>
+        <button id="btn-hero-alert" class="hero-btn">현재 조건 알림</button>
+      </div>
+      <div class="hero-stats-grid">
+        <div class="hero-stat-card">
+          <span class="hero-stat-label">전체 급매</span>
+          <strong id="hero-total-count" class="hero-stat-value">—</strong>
+        </div>
+        <div class="hero-stat-card">
+          <span class="hero-stat-label">가격인하</span>
+          <strong id="hero-price-down-count" class="hero-stat-value urgent">—</strong>
+        </div>
+        <div class="hero-stat-card">
+          <span class="hero-stat-label">등록 알림</span>
+          <strong id="hero-alert-rule-count" class="hero-stat-value">0개</strong>
+        </div>
+        <div class="hero-stat-card">
+          <span class="hero-stat-label">현재 지역</span>
+          <strong id="hero-focus-region" class="hero-stat-value region">전국</strong>
+        </div>
+      </div>
+    </section>
 
     <!-- Map -->
     <div id="map-wrap">
@@ -167,13 +239,18 @@
         <span class="stat-val" id="stat-price-down">—</span>
         <span class="stat-lbl">가격인하</span>
       </div>
-      <div class="stat-card" style="margin-left:auto;">
-        <select id="sort-select" class="sort-select">
-          <option value="recent">최신순</option>
-          <option value="price-asc">가격 낮은순</option>
-          <option value="price-desc">가격 높은순</option>
-        </select>
+    </div>
+
+    <div id="listings-toolbar">
+      <div class="listings-toolbar-copy">
+        <h2>실시간 급매 목록</h2>
+        <p id="listings-summary">현재 조건에 맞는 급매를 불러오는 중입니다.</p>
       </div>
+      <select id="sort-select" class="sort-select">
+        <option value="recent">최신순</option>
+        <option value="price-asc">가격 낮은순</option>
+        <option value="price-desc">가격 높은순</option>
+      </select>
     </div>
 
     <!-- Listings -->
@@ -196,21 +273,6 @@
     <span class="dot-sep">·</span>
     <span id="info-next-crawl">다음 크롤링: —</span>
     <span id="demo-badge" class="demo-badge hidden">DEMO 데이터</span>
-  </div>
-  <div class="status-center">
-    <label>자동 크롤링 시간</label>
-    <input id="schedule-hour" type="number" min="0" max="23" value="9" />
-    <span>시</span>
-    <button id="btn-save-schedule">저장</button>
-  </div>
-  <div class="status-right">
-    <button id="btn-crawl" class="btn-crawl">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-      </svg>
-      <span id="crawl-label">지금 크롤링</span>
-    </button>
   </div>
 </footer>
 

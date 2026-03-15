@@ -5,6 +5,7 @@ import random
 import uuid
 import logging
 import threading
+from pathlib import Path
 from urllib.parse import quote
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
@@ -21,16 +22,26 @@ logger = logging.getLogger(__name__)
 # ── JavaScript: 단일 페이지 fetch ─────────────────────────────────────────
 JS_FETCH_PAGE = """
 async (args) => {
-    const r = await fetch("/api/articles?cortarNo=" + args.cortarNo + "&realEstateType=" + args.ptype + "&tradeType=" + args.ttype + "&tag=" + encodeURIComponent(args.tag) + "&priceType=RETAIL&sameAddressGroup=true&page=" + args.page + "&perPage=20&sortBy=RECENT&showHidden=false", {
-        headers: {"Authorization": args.token, "Accept": "application/json"}
-    });
-    if (!r.ok) return null;
-    return await r.json();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), args.timeoutMs || 8000);
+    try {
+        const r = await fetch("/api/articles?cortarNo=" + args.cortarNo + "&realEstateType=" + args.ptype + "&tradeType=" + args.ttype + "&tag=" + encodeURIComponent(args.tag) + "&priceType=RETAIL&sameAddressGroup=true&page=" + args.page + "&perPage=20&sortBy=RECENT&showHidden=false", {
+            headers: {"Authorization": args.token, "Accept": "application/json"},
+            signal: controller.signal
+        });
+        if (!r.ok) return null;
+        return await r.json();
+    } catch (e) {
+        return null;
+    } finally {
+        clearTimeout(timeoutId);
+    }
 }
 """
 
 
 class NaverRealEstateCrawler:
+    REGIONS_FILE = Path(__file__).resolve().parent / "data" / "regions.json"
     API_BASE = "https://new.land.naver.com/api"
     FASTSELL_TAG = ":::::::::FASTSELL"
 
@@ -179,7 +190,82 @@ class NaverRealEstateCrawler:
                 "북구": {"code": "3117000000", "lat": 35.5824, "lng": 129.3612},
             },
         },
+        "세종특별자치시": {
+            "code": "3600000000",
+            "lat": 36.4800,
+            "lng": 127.2890,
+            "districts": {
+                "세종특별자치시": {"code": "3600000000", "lat": 36.4800, "lng": 127.2890},
+            },
+        },
+        "강원특별자치도": {
+            "code": "4200000000",
+            "lat": 37.8228,
+            "lng": 128.1555,
+            "districts": {
+                "강원특별자치도": {"code": "4200000000", "lat": 37.8228, "lng": 128.1555},
+            },
+        },
+        "충청북도": {
+            "code": "4300000000",
+            "lat": 36.6357,
+            "lng": 127.4917,
+            "districts": {
+                "충청북도": {"code": "4300000000", "lat": 36.6357, "lng": 127.4917},
+            },
+        },
+        "충청남도": {
+            "code": "4400000000",
+            "lat": 36.5184,
+            "lng": 126.8000,
+            "districts": {
+                "충청남도": {"code": "4400000000", "lat": 36.5184, "lng": 126.8000},
+            },
+        },
+        "전북특별자치도": {
+            "code": "5200000000",
+            "lat": 35.7175,
+            "lng": 127.1530,
+            "districts": {
+                "전북특별자치도": {"code": "5200000000", "lat": 35.7175, "lng": 127.1530},
+            },
+        },
+        "전라남도": {
+            "code": "4600000000",
+            "lat": 34.8161,
+            "lng": 126.4630,
+            "districts": {
+                "전라남도": {"code": "4600000000", "lat": 34.8161, "lng": 126.4630},
+            },
+        },
+        "경상북도": {
+            "code": "4700000000",
+            "lat": 36.5760,
+            "lng": 128.5056,
+            "districts": {
+                "경상북도": {"code": "4700000000", "lat": 36.5760, "lng": 128.5056},
+            },
+        },
+        "경상남도": {
+            "code": "4800000000",
+            "lat": 35.4606,
+            "lng": 128.2132,
+            "districts": {
+                "경상남도": {"code": "4800000000", "lat": 35.4606, "lng": 128.2132},
+            },
+        },
+        "제주특별자치도": {
+            "code": "5000000000",
+            "lat": 33.4996,
+            "lng": 126.5312,
+            "districts": {
+                "제주특별자치도": {"code": "5000000000", "lat": 33.4996, "lng": 126.5312},
+            },
+        },
     }
+
+    if REGIONS_FILE.exists():
+        REGIONS = json.loads(REGIONS_FILE.read_text(encoding="utf-8"))
 
     URGENT_KEYWORDS = ["급매", "급처", "급급매", "급처분", "긴급매물", "시세이하", "손해보고", "급하게"]
 
@@ -240,6 +326,7 @@ class NaverRealEstateCrawler:
                     "ttype": ttype,
                     "page": pg,
                     "tag": self.FASTSELL_TAG,
+                    "timeoutMs": 8000,
                 })
             except Exception:
                 break
