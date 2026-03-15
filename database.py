@@ -1,3 +1,4 @@
+import os
 import json
 import sqlite3
 import re
@@ -8,6 +9,11 @@ try:
     import psycopg
 except ImportError:  # pragma: no cover - optional for sqlite-only use
     psycopg = None
+
+try:
+    from psycopg_pool import ConnectionPool
+except ImportError:  # pragma: no cover - optional for sqlite-only use
+    ConnectionPool = None
 
 
 class CompatRow(dict):
@@ -54,9 +60,10 @@ class CursorWrapper:
 
 
 class ConnectionWrapper:
-    def __init__(self, driver: str, conn):
+    def __init__(self, driver: str, conn, release=None):
         self.driver = driver
         self.conn = conn
+        self.release = release
 
     def __enter__(self):
         return self
@@ -68,7 +75,10 @@ class ConnectionWrapper:
             else:
                 self.conn.commit()
         finally:
-            self.conn.close()
+            if self.release:
+                self.release(exc_type, exc, tb)
+            else:
+                self.conn.close()
 
     def _convert_sql(self, sql: str) -> str:
         if self.driver == "postgres":
@@ -119,6 +129,17 @@ class Database:
         self.database_url = (database_url or "").strip()
         self.driver = "postgres" if self.database_url else "sqlite"
         self.skip_price_backfill = skip_price_backfill
+        self.connect_timeout = int((os.getenv("PGCONNECT_TIMEOUT") or "10").strip())
+        self.pool = None
+        if self.driver == "postgres" and ConnectionPool is not None:
+            self.pool = ConnectionPool(
+                self.database_url,
+                kwargs={"connect_timeout": self.connect_timeout},
+                min_size=int((os.getenv("DB_POOL_MIN_SIZE") or "1").strip()),
+                max_size=int((os.getenv("DB_POOL_MAX_SIZE") or "5").strip()),
+                timeout=float((os.getenv("DB_POOL_TIMEOUT") or "10").strip()),
+                open=True,
+            )
         self.init_db()
 
     def get_connection(self):
@@ -127,8 +148,18 @@ class Database:
                 raise RuntimeError(
                     "Postgres support requires psycopg. Install requirements first."
                 )
-            connect_timeout = int((__import__("os").getenv("PGCONNECT_TIMEOUT") or "10").strip())
-            conn = psycopg.connect(self.database_url, connect_timeout=connect_timeout)
+            if self.pool is not None:
+                pool_conn = self.pool.connection()
+                conn = pool_conn.__enter__()
+                return ConnectionWrapper(
+                    "postgres",
+                    conn,
+                    release=lambda exc_type, exc, tb: pool_conn.__exit__(
+                        exc_type, exc, tb
+                    ),
+                )
+
+            conn = psycopg.connect(self.database_url, connect_timeout=self.connect_timeout)
             return ConnectionWrapper("postgres", conn)
 
         conn = sqlite3.connect(self.db_path)
