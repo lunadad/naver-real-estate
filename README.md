@@ -12,6 +12,34 @@ Flask + Playwright app for browsing urgent listings from Naver Real Estate.
 - The app uses `DATABASE_URL` first and falls back to local SQLite via `DB_PATH`.
 - The default Render setup in this repo provisions a managed Postgres database and keeps the in-app scheduler enabled.
 
+## Production Safety (Important)
+
+To prevent fake/demo listings from replacing real crawl data in production:
+
+- `SEED_DEMO_DATA=false`
+- `ALLOW_DEMO_FALLBACK=false`
+
+With this setup:
+
+- Live crawl failure is recorded as `failed` (not silent success)
+- Demo data is not injected into production listings
+- `/api/crawl` returns a truthful `status` (`success|degraded|failed`)
+
+## Deploy Verification Checklist
+
+After each Render deploy, run:
+
+```bash
+./scripts/verify_deploy.sh https://naver-real-estate.onrender.com
+```
+
+The script validates:
+
+1. `/api/crawl-status`: `source=demo` must not be `status=success`
+2. `/api/crawl`: success should come from `source=naver`
+3. Re-check crawl status consistency
+4. `/api/listings` sample endpoint health
+
 ## Postgres Migration
 
 - Generate or provision a Postgres `DATABASE_URL`.
