@@ -21,6 +21,13 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+STEALTH_INIT_SCRIPT = """
+Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+window.chrome = window.chrome || { runtime: {} };
+Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+Object.defineProperty(navigator, 'languages', { get: () => ['ko-KR', 'ko', 'en-US', 'en'] });
+"""
+
 
 # ── JavaScript: 단일 페이지 fetch ─────────────────────────────────────────
 JS_FETCH_PAGE = """
@@ -273,10 +280,15 @@ class NaverRealEstateCrawler:
     URGENT_KEYWORDS = ["급매", "급처", "급급매", "급처분", "긴급매물", "시세이하", "손해보고", "급하게"]
     MIN_LIVE_CRAWL_RATIO = float((os.getenv("MIN_LIVE_CRAWL_RATIO") or "0.5").strip())
     TOKEN_BOOTSTRAP_URLS = [
+        "https://new.land.naver.com/complexes/867?ms=37.5209277,126.9710095,17&a=APT:PRE:ABYG:JGC&e=RETAIL&y=FASTSELL&ad=true",
         "https://new.land.naver.com/",
         "https://new.land.naver.com/complexes",
-        "https://new.land.naver.com/complexes/867?ms=37.5209277,126.9710095,17&a=APT:PRE:ABYG:JGC&e=RETAIL&y=FASTSELL&ad=true",
     ]
+    BROWSER_USER_AGENT = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/122.0.0.0 Safari/537.36"
+    )
 
     def __init__(self, db):
         self.db = db
@@ -391,19 +403,23 @@ class NaverRealEstateCrawler:
             with sync_playwright() as p:
                 browser = p.chromium.launch(
                     headless=True,
-                    args=["--disable-dev-shm-usage", "--disable-gpu"],
+                    args=[
+                        "--disable-blink-features=AutomationControlled",
+                        "--disable-dev-shm-usage",
+                        "--disable-gpu",
+                    ],
                 )
                 context = browser.new_context(
-                    user_agent=(
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                        "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/122.0.0.0 Safari/537.36"
-                    ),
-                    viewport={"width": 1280, "height": 800},
+                    user_agent=self.BROWSER_USER_AGENT,
+                    viewport={"width": 1365, "height": 900},
                     locale="ko-KR",
+                    extra_http_headers={
+                        "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+                    },
                 )
                 page = context.new_page()
                 page.set_default_timeout(60000)
+                page.add_init_script(STEALTH_INIT_SCRIPT)
 
                 # ── 토큰 포착 ──────────────────────────────
                 auth_token = [None]
