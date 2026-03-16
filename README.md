@@ -65,6 +65,7 @@ The generated logs go to:
 
 - `logs/launchd-crawl.out.log`
 - `logs/launchd-crawl.err.log`
+- `logs/run_remote_crawl.log`
 
 ## Postgres Migration
 
