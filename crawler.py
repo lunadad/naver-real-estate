@@ -13,10 +13,11 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 
 try:
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, sync_playwright
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
+    PlaywrightTimeoutError = Exception
 
 logger = logging.getLogger(__name__)
 
@@ -271,6 +272,11 @@ class NaverRealEstateCrawler:
 
     URGENT_KEYWORDS = ["급매", "급처", "급급매", "급처분", "긴급매물", "시세이하", "손해보고", "급하게"]
     MIN_LIVE_CRAWL_RATIO = float((os.getenv("MIN_LIVE_CRAWL_RATIO") or "0.5").strip())
+    TOKEN_BOOTSTRAP_URLS = [
+        "https://new.land.naver.com/",
+        "https://new.land.naver.com/complexes",
+        "https://new.land.naver.com/complexes/867?ms=37.5209277,126.9710095,17&a=APT:PRE:ABYG:JGC&e=RETAIL&y=FASTSELL&ad=true",
+    ]
 
     def __init__(self, db):
         self.db = db
@@ -383,7 +389,10 @@ class NaverRealEstateCrawler:
         try:
             logger.info("Playwright 급매 전용 크롤링 시작...")
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=["--disable-dev-shm-usage", "--disable-gpu"],
+                )
                 context = browser.new_context(
                     user_agent=(
                         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -394,7 +403,7 @@ class NaverRealEstateCrawler:
                     locale="ko-KR",
                 )
                 page = context.new_page()
-                page.set_default_timeout(30000)
+                page.set_default_timeout(60000)
 
                 # ── 토큰 포착 ──────────────────────────────
                 auth_token = [None]
@@ -406,12 +415,27 @@ class NaverRealEstateCrawler:
                             auth_token[0] = h
 
                 page.on("request", on_request)
-                page.goto(
-                    "https://new.land.naver.com/complexes",
-                    wait_until="load",
-                    timeout=30000,
-                )
-                time.sleep(4)
+
+                for bootstrap_url in self.TOKEN_BOOTSTRAP_URLS:
+                    try:
+                        logger.info("토큰 부트스트랩 페이지 진입: %s", bootstrap_url)
+                        page.goto(
+                            bootstrap_url,
+                            wait_until="domcontentloaded",
+                            timeout=45000,
+                        )
+                    except PlaywrightTimeoutError:
+                        logger.warning("부트스트랩 페이지 로드 타임아웃: %s", bootstrap_url)
+                    except Exception as e:
+                        logger.warning("부트스트랩 페이지 진입 실패 (%s): %s", bootstrap_url, e)
+
+                    for _ in range(8):
+                        if auth_token[0]:
+                            break
+                        page.wait_for_timeout(1000)
+
+                    if auth_token[0]:
+                        break
 
                 if not auth_token[0]:
                     logger.warning("Authorization 토큰 획득 실패")
