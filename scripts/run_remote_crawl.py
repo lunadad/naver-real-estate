@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import sys
 from pathlib import Path
@@ -9,6 +10,12 @@ if str(ROOT_DIR) not in sys.path:
 
 from crawler import NaverRealEstateCrawler
 from database import Database
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
 
 
 def build_parser():
