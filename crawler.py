@@ -4,6 +4,7 @@ import time
 import random
 import uuid
 import logging
+import os
 import threading
 import os
 from pathlib import Path
@@ -269,6 +270,7 @@ class NaverRealEstateCrawler:
         REGIONS = json.loads(REGIONS_FILE.read_text(encoding="utf-8"))
 
     URGENT_KEYWORDS = ["급매", "급처", "급급매", "급처분", "긴급매물", "시세이하", "손해보고", "급하게"]
+    MIN_LIVE_CRAWL_RATIO = float((os.getenv("MIN_LIVE_CRAWL_RATIO") or "0.5").strip())
 
     def __init__(self, db):
         self.db = db
@@ -635,9 +637,7 @@ class NaverRealEstateCrawler:
         all_listings = []
         source = "naver"
         allow_demo_fallback = os.getenv("ALLOW_DEMO_FALLBACK", "false").strip().lower() in {"1", "true", "yes", "on"}
-
         logger.info("급매 전용 크롤링 시작 (Playwright)...")
-
         all_listings = self._crawl_with_playwright()
 
         if not all_listings:
@@ -655,9 +655,23 @@ class NaverRealEstateCrawler:
             self.db.log_crawl(session_id, 0, 0, "failed", source)
             return {"total": 0, "urgent": 0, "source": source, "status": "failed"}
 
+        previous_live = self.db.get_last_successful_live_crawl()
+        previous_total = int((previous_live or {}).get("total_count") or 0)
+        min_allowed = int(previous_total * self.MIN_LIVE_CRAWL_RATIO) if previous_total else 0
+
+        if previous_total and len(all_listings) < min_allowed:
+            logger.error(
+                "라이브 크롤링 결과가 비정상적으로 적음: current=%s, previous=%s, min_allowed=%s",
+                len(all_listings),
+                previous_total,
+                min_allowed,
+            )
+            self.db.log_crawl(session_id, len(all_listings), len(all_listings), "failed", source)
+            return {"total": len(all_listings), "urgent": len(all_listings), "source": source, "status": "failed"}
+
         urgent_count = len(all_listings)
         self.db.insert_listings(all_listings, session_id)
-        self.db.log_crawl(session_id, len(all_listings), urgent_count, "success", source)
+        self.db.log_crawl(session_id, len(all_listings), urgent_count, "success", "naver")
 
         logger.info(f"급매 크롤링 완료: {len(all_listings)}개 급매 [출처: {source}]")
         return {"total": len(all_listings), "urgent": urgent_count, "source": source, "status": "success"}

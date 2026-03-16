@@ -776,14 +776,18 @@ async function loadCrawlStatus() {
   try {
     const data = await api('/api/crawl-status');
     const last = data.last_crawl;
+    const lastAttempt = data.last_attempt;
     if (last) {
       const dt = new Date(last.crawled_at);
       const timeStr = dt.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const label = lastAttempt && lastAttempt.session_id !== last.session_id
+        ? '마지막 정상 크롤링'
+        : '마지막 크롤링';
       document.getElementById('info-last-crawl').textContent =
-        `마지막 크롤링: ${timeStr} (급매 ${last.total_count}개)`;
+        `${label}: ${timeStr} (급매 ${last.total_count}개)`;
       updateHeroCrawlSummary(`${timeStr} 기준 최신 급매 ${fmtNum(last.total_count || 0)}개`);
 
-      if (last.source === 'demo') {
+      if ((lastAttempt && lastAttempt.source === 'demo') || (lastAttempt && lastAttempt.status !== 'success')) {
         document.getElementById('demo-badge').classList.remove('hidden');
       }
     }

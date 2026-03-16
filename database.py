@@ -454,18 +454,42 @@ class Database:
                 (price_value, rent_value, row["id"]),
             )
 
-    def _get_latest_session_id(self, conn: ConnectionWrapper) -> Optional[str]:
+    def _get_latest_session_id(
+        self,
+        conn: ConnectionWrapper,
+        *,
+        success_only: bool = False,
+        exclude_demo: bool = False,
+    ) -> Optional[str]:
+        joins = ""
+        conditions = ["l.crawl_session IS NOT NULL"]
+
+        if success_only or exclude_demo:
+            joins = "LEFT JOIN crawl_history h ON h.session_id = l.crawl_session"
+        if success_only:
+            conditions.append("h.status = 'success'")
+        if exclude_demo:
+            conditions.append("COALESCE(h.source, 'naver') <> 'demo'")
+
         row = conn.execute(
-            """
-            SELECT crawl_session, MAX(crawled_at) AS last_seen
-            FROM listings
-            WHERE crawl_session IS NOT NULL
-            GROUP BY crawl_session
+            f"""
+            SELECT l.crawl_session, MAX(l.crawled_at) AS last_seen
+            FROM listings l
+            {joins}
+            WHERE {" AND ".join(conditions)}
+            GROUP BY l.crawl_session
             ORDER BY last_seen DESC
             LIMIT 1
             """
         ).fetchone()
         return row["crawl_session"] if row else None
+
+    def _get_latest_visible_session_id(self, conn: ConnectionWrapper) -> Optional[str]:
+        return self._get_latest_session_id(
+            conn,
+            success_only=True,
+            exclude_demo=True,
+        ) or self._get_latest_session_id(conn)
 
     def _normalize_alert_value(self, value: Optional[str]) -> str:
         return str(value or "").strip()
@@ -589,7 +613,7 @@ class Database:
             return True
 
     def _collect_alert_matches(self, conn: ConnectionWrapper, client_id: str, limit: int = 10):
-        latest_session = self._get_latest_session_id(conn)
+        latest_session = self._get_latest_visible_session_id(conn)
         if not latest_session:
             return []
 
@@ -944,7 +968,7 @@ class Database:
         order = order_map.get(sort_by, "is_urgent DESC, crawled_at DESC")
 
         with self.get_connection() as conn:
-            latest_session = self._get_latest_session_id(conn)
+            latest_session = self._get_latest_visible_session_id(conn)
             session_params = [latest_session] if latest_session else []
             combined_conditions = list(conditions)
             if latest_session:
@@ -994,7 +1018,7 @@ class Database:
 
     def get_region_stats(self):
         with self.get_connection() as conn:
-            latest_session = self._get_latest_session_id(conn)
+            latest_session = self._get_latest_visible_session_id(conn)
             params = [latest_session] if latest_session else []
             where = "WHERE crawl_session = ?" if latest_session else ""
             rows = conn.execute(
@@ -1018,7 +1042,12 @@ class Database:
     def get_trends(self):
         with self.get_connection() as conn:
             latest_date_row = conn.execute(
-                "SELECT DATE(MAX(crawled_at)) AS latest_date FROM listings"
+                """
+                SELECT DATE(MAX(crawled_at)) AS latest_date
+                FROM crawl_history
+                WHERE status = 'success'
+                  AND COALESCE(source, 'naver') <> 'demo'
+                """
             ).fetchone()
 
             latest_date = latest_date_row["latest_date"] if latest_date_row else None
@@ -1034,16 +1063,23 @@ class Database:
 
             rows = conn.execute(
                 """
-                WITH curr AS (
+                WITH visible AS (
+                    SELECT l.region, l.district, l.tags, DATE(h.crawled_at) AS crawl_date
+                    FROM listings l
+                    INNER JOIN crawl_history h ON h.session_id = l.crawl_session
+                    WHERE h.status = 'success'
+                      AND COALESCE(h.source, 'naver') <> 'demo'
+                ),
+                curr AS (
                     SELECT region, district, COUNT(*) as cnt
-                    FROM listings
-                    WHERE DATE(crawled_at) = ?
+                    FROM visible
+                    WHERE crawl_date = ?
                     GROUP BY region, district
                 ),
                 prev AS (
                     SELECT region, district, COUNT(*) as cnt
-                    FROM listings
-                    WHERE DATE(crawled_at) = ?
+                    FROM visible
+                    WHERE crawl_date = ?
                     GROUP BY region, district
                 ),
                 keys AS (
@@ -1062,10 +1098,10 @@ class Database:
                        COALESCE(c.cnt, 0) - COALESCE(p.cnt, 0) as diff,
                        COALESCE((
                            SELECT SUM(CASE WHEN tags LIKE '%가격인하%' THEN 1 ELSE 0 END)
-                           FROM listings l
+                           FROM visible l
                            WHERE l.region = k.region
                              AND l.district = k.district
-                             AND DATE(l.crawled_at) = ?
+                             AND l.crawl_date = ?
                        ), 0) as price_down_count,
                        ? as current_date,
                        ? as previous_date
@@ -1078,10 +1114,37 @@ class Database:
             ).fetchall()
         return [dict(row) for row in rows]
 
-    def get_last_crawl(self):
+    def get_last_crawl(self, prefer_visible: bool = False):
+        with self.get_connection() as conn:
+            row = None
+            if prefer_visible:
+                row = conn.execute(
+                    """
+                    SELECT *
+                    FROM crawl_history
+                    WHERE status = 'success'
+                      AND COALESCE(source, 'naver') <> 'demo'
+                    ORDER BY crawled_at DESC
+                    LIMIT 1
+                    """
+                ).fetchone()
+            if not row:
+                row = conn.execute(
+                    "SELECT * FROM crawl_history ORDER BY crawled_at DESC LIMIT 1"
+                ).fetchone()
+        return dict(row) if row else None
+
+    def get_last_successful_live_crawl(self):
         with self.get_connection() as conn:
             row = conn.execute(
-                "SELECT * FROM crawl_history ORDER BY crawled_at DESC LIMIT 1"
+                """
+                SELECT *
+                FROM crawl_history
+                WHERE status = 'success'
+                  AND COALESCE(source, 'naver') <> 'demo'
+                ORDER BY crawled_at DESC
+                LIMIT 1
+                """
             ).fetchone()
         return dict(row) if row else None
 

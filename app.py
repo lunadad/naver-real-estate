@@ -55,7 +55,10 @@ SCHEDULED_HOUR = 9  # default: 9 AM KST
 def scheduled_crawl():
     logger.info("⏰ 자동 크롤링 시작...")
     result = crawler.crawl_all()
-    dispatch_push_alerts()
+    if result.get("status") == "success":
+        dispatch_push_alerts()
+    else:
+        logger.warning("자동 크롤링이 %s 상태로 종료되어 푸시 전송을 생략합니다.", result.get("status"))
     return result
 
 
@@ -395,12 +398,14 @@ def trigger_crawl():
 
 @app.route("/api/crawl-status")
 def crawl_status():
-    last = db.get_last_crawl()
+    last = db.get_last_crawl(prefer_visible=True)
+    last_attempt = db.get_last_crawl()
     job = scheduler.get_job("daily_crawl") if ENABLE_SCHEDULER else None
     next_run = job.next_run_time.isoformat() if job and job.next_run_time else None
     return jsonify(
         {
             "last_crawl": last,
+            "last_attempt": last_attempt,
             "next_crawl": next_run,
             "scheduled_hour": SCHEDULED_HOUR,
         }
