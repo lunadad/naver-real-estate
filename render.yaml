@@ -12,7 +12,7 @@ services:
           name: naver-real-estate-db
           property: connectionString
       - key: ENABLE_SCHEDULER
-        value: "true"
+        value: "false"
       - key: SEED_DEMO_DATA
         value: "false"
       - key: ALLOW_DEMO_FALLBACK
