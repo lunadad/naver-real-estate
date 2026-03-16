@@ -35,7 +35,7 @@ DEFAULT_DB_PATH = os.path.join(BASE_DIR, "real_estate.db")
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 DB_PATH = os.getenv("DB_PATH", DEFAULT_DB_PATH)
 ENABLE_SCHEDULER = env_flag("ENABLE_SCHEDULER", True)
-SEED_DEMO_DATA = env_flag("SEED_DEMO_DATA", True)
+SEED_DEMO_DATA = env_flag("SEED_DEMO_DATA", False)
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "").strip()
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "").strip()
 VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:alerts@example.com").strip()
@@ -74,17 +74,21 @@ else:
 
 
 def ensure_initial_data():
-    if db.get_last_crawl() or not SEED_DEMO_DATA:
+    if db.get_last_crawl():
         return
 
-    logger.info("초기 데이터 없음 → 데모 데이터 로드")
+    if not SEED_DEMO_DATA:
+        logger.info("초기 데이터 없음 (SEED_DEMO_DATA=false): 데모 데이터 시드 생략")
+        return
+
+    logger.warning("초기 데이터 없음 → 데모 데이터 로드 (운영환경에서는 비권장)")
     demo = crawler.generate_demo_data()
     import uuid as _uuid
 
     sid = str(_uuid.uuid4())[:8]
     db.insert_listings(demo, sid)
-    db.log_crawl(sid, len(demo), len(demo), "success", "demo")
-    logger.info(f"데모 데이터 {len(demo)}개 로드 완료")
+    db.log_crawl(sid, len(demo), len(demo), "degraded", "demo")
+    logger.warning(f"데모 데이터 {len(demo)}개 로드 완료 [status=degraded, source=demo]")
 
 
 ensure_initial_data()
@@ -371,14 +375,16 @@ def trigger_crawl():
     try:
         result = crawler.crawl_all()
         push_result = dispatch_push_alerts()
+        run_status = result.get("status", "success")
+        message_prefix = "✅" if run_status == "success" else ("⚠️" if run_status == "degraded" else "❌")
         return jsonify(
             {
-                "status": "success",
+                "status": run_status,
                 "total": result["total"],
                 "urgent": result["urgent"],
                 "source": result["source"],
                 "push": push_result,
-                "message": f"✅ 급매 {result['total']}개 수집 완료",
+                "message": f"{message_prefix} 급매 {result['total']}개 수집 ({run_status})",
                 "crawled_at": datetime.now().isoformat(),
             }
         )

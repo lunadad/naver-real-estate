@@ -5,6 +5,7 @@ import random
 import uuid
 import logging
 import threading
+import os
 from pathlib import Path
 from urllib.parse import quote
 from datetime import datetime, timedelta
@@ -633,19 +634,30 @@ class NaverRealEstateCrawler:
         session_id = str(uuid.uuid4())[:8]
         all_listings = []
         source = "naver"
+        allow_demo_fallback = os.getenv("ALLOW_DEMO_FALLBACK", "false").strip().lower() in {"1", "true", "yes", "on"}
 
         logger.info("급매 전용 크롤링 시작 (Playwright)...")
 
         all_listings = self._crawl_with_playwright()
 
         if not all_listings:
-            logger.info("라이브 크롤링 데이터 없음 → 데모 데이터 생성")
-            all_listings = self.generate_demo_data()
-            source = "demo"
+            if allow_demo_fallback:
+                logger.warning("라이브 크롤링 데이터 없음 → 데모 데이터 폴백 사용")
+                all_listings = self.generate_demo_data()
+                source = "demo"
+                urgent_count = len(all_listings)
+                self.db.insert_listings(all_listings, session_id)
+                self.db.log_crawl(session_id, len(all_listings), urgent_count, "degraded", source)
+                logger.warning(f"급매 크롤링 폴백 완료: {len(all_listings)}개 [출처: {source}, status=degraded]")
+                return {"total": len(all_listings), "urgent": urgent_count, "source": source, "status": "degraded"}
+
+            logger.error("라이브 크롤링 데이터 없음: 데모 폴백 비활성화 상태. 기존 데이터 유지")
+            self.db.log_crawl(session_id, 0, 0, "failed", source)
+            return {"total": 0, "urgent": 0, "source": source, "status": "failed"}
 
         urgent_count = len(all_listings)
         self.db.insert_listings(all_listings, session_id)
         self.db.log_crawl(session_id, len(all_listings), urgent_count, "success", source)
 
         logger.info(f"급매 크롤링 완료: {len(all_listings)}개 급매 [출처: {source}]")
-        return {"total": len(all_listings), "urgent": urgent_count, "source": source}
+        return {"total": len(all_listings), "urgent": urgent_count, "source": source, "status": "success"}
