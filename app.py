@@ -377,8 +377,12 @@ def get_regions():
 def trigger_crawl():
     try:
         result = crawler.crawl_all()
-        push_result = dispatch_push_alerts()
         run_status = result.get("status", "success")
+        push_result = (
+            dispatch_push_alerts()
+            if run_status == "success"
+            else {"clients": 0, "sent": 0, "matches": 0}
+        )
         message_prefix = "✅" if run_status == "success" else ("⚠️" if run_status == "degraded" else "❌")
         return jsonify(
             {
