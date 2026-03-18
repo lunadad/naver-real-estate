@@ -1,8 +1,7 @@
 import logging
 import os
 import json
-from datetime import date, datetime
-from zoneinfo import ZoneInfo
+from datetime import date, datetime, timedelta, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, jsonify, render_template, request, send_from_directory
@@ -22,7 +21,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
-KST = ZoneInfo("Asia/Seoul")
+KST = timezone(timedelta(hours=9), name="KST")
 
 
 def env_flag(name: str, default: bool) -> bool:
@@ -68,7 +67,7 @@ db = Database(db_path=DB_PATH, database_url=DATABASE_URL)
 crawler = NaverRealEstateCrawler(db)
 
 # ── Scheduler ───────────────────────────────────────────────────────────────
-scheduler = BackgroundScheduler(timezone="Asia/Seoul")
+scheduler = BackgroundScheduler(timezone=KST)
 SCHEDULED_HOUR = 9  # default: 9 AM KST
 
 
