@@ -68,6 +68,18 @@ export RENDER_SERVICE_ID=<your-render-web-service-id>
 scripts/deploy_render.sh
 ```
 
+Push and deploy the current branch in one step:
+
+```bash
+scripts/publish.sh
+```
+
+Optional overrides:
+
+```bash
+REMOTE_NAME=origin BRANCH_NAME=main scripts/publish.sh
+```
+
 ## Recommended Production Crawl Setup
 
 Render should serve the web app only. Run the crawler from your local Mac mini and write directly to Render Postgres.
