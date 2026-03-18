@@ -41,6 +41,33 @@ The script validates:
 3. Re-check crawl status consistency
 4. `/api/listings` sample endpoint health
 
+## Render CLI Deploy
+
+After `render login`, you can deploy by service name. The script defaults to `naver-real-estate`:
+
+```bash
+scripts/deploy_render.sh
+```
+
+If your Render service name is different, set it once:
+
+```bash
+export RENDER_SERVICE_NAME=<your-render-service-name>
+```
+
+Deploy a specific commit:
+
+```bash
+scripts/deploy_render.sh <commit-sha>
+```
+
+If auto-discovery fails, set the service ID directly:
+
+```bash
+export RENDER_SERVICE_ID=<your-render-web-service-id>
+scripts/deploy_render.sh
+```
+
 ## Recommended Production Crawl Setup
 
 Render should serve the web app only. Run the crawler from your local Mac mini and write directly to Render Postgres.

@@ -10,3 +10,4 @@ venv/
 tmp_geocode_cache.json
 .env
 .env.*
+logs/
