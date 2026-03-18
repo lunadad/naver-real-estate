@@ -22,17 +22,16 @@ if [[ -z "$SERVICE_ID" ]]; then
   SERVICE_ID="$(
     render services list --output json | python3 -c '
 import json
-import os
 import sys
 
-service_name = os.environ["SERVICE_NAME"]
+service_name = sys.argv[1]
 services = json.load(sys.stdin)
 for service in services:
     if service.get("service", {}).get("name") == service_name:
         print(service["service"]["id"])
         raise SystemExit(0)
 raise SystemExit(1)
-' 2>/dev/null || true
+' "$SERVICE_NAME" 2>/dev/null || true
   )"
 fi
 
