@@ -846,6 +846,35 @@ class Database:
             )
 
     def insert_listings(self, listings: List[Dict], session_id: str):
+        insert_sql = """
+            INSERT INTO listings
+            (article_no, region, district, property_type, trade_type, price,
+             area, floor, building_name, description, is_urgent, tags,
+             confirmed_date, crawled_at, crawl_session, latitude, longitude, naver_url,
+             price_sort_value, rent_sort_value)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(article_no) DO UPDATE SET
+                region = excluded.region,
+                district = excluded.district,
+                property_type = excluded.property_type,
+                trade_type = excluded.trade_type,
+                price = excluded.price,
+                area = excluded.area,
+                floor = excluded.floor,
+                building_name = excluded.building_name,
+                description = excluded.description,
+                is_urgent = excluded.is_urgent,
+                tags = excluded.tags,
+                confirmed_date = excluded.confirmed_date,
+                crawled_at = excluded.crawled_at,
+                crawl_session = excluded.crawl_session,
+                latitude = excluded.latitude,
+                longitude = excluded.longitude,
+                naver_url = excluded.naver_url,
+                price_sort_value = excluded.price_sort_value,
+                rent_sort_value = excluded.rent_sort_value
+        """
+
         with self.get_connection() as conn:
             sessions = conn.execute(
                 """
@@ -861,39 +890,13 @@ class Database:
                 old_session = sessions[-1]["crawl_session"]
                 conn.execute("DELETE FROM listings WHERE crawl_session = ?", (old_session,))
 
+            now = datetime.now().isoformat()
+            rows = []
             for listing in listings:
                 price_value, rent_value = self._parse_price_sort_values(
                     listing.get("price"), listing.get("trade_type")
                 )
-                conn.execute(
-                    """
-                    INSERT INTO listings
-                    (article_no, region, district, property_type, trade_type, price,
-                     area, floor, building_name, description, is_urgent, tags,
-                     confirmed_date, crawled_at, crawl_session, latitude, longitude, naver_url,
-                     price_sort_value, rent_sort_value)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(article_no) DO UPDATE SET
-                        region = excluded.region,
-                        district = excluded.district,
-                        property_type = excluded.property_type,
-                        trade_type = excluded.trade_type,
-                        price = excluded.price,
-                        area = excluded.area,
-                        floor = excluded.floor,
-                        building_name = excluded.building_name,
-                        description = excluded.description,
-                        is_urgent = excluded.is_urgent,
-                        tags = excluded.tags,
-                        confirmed_date = excluded.confirmed_date,
-                        crawled_at = excluded.crawled_at,
-                        crawl_session = excluded.crawl_session,
-                        latitude = excluded.latitude,
-                        longitude = excluded.longitude,
-                        naver_url = excluded.naver_url,
-                        price_sort_value = excluded.price_sort_value,
-                        rent_sort_value = excluded.rent_sort_value
-                    """,
+                rows.append(
                     (
                         listing.get("article_no"),
                         listing.get("region"),
@@ -908,15 +911,23 @@ class Database:
                         1 if listing.get("is_urgent") else 0,
                         json.dumps(listing.get("tags", []), ensure_ascii=False),
                         listing.get("confirmed_date"),
-                        datetime.now().isoformat(),
+                        now,
                         session_id,
                         listing.get("latitude"),
                         listing.get("longitude"),
                         listing.get("naver_url"),
                         price_value,
                         rent_value,
-                    ),
+                    )
                 )
+
+            if self.driver == "postgres":
+                chunk_size = 500
+                for start in range(0, len(rows), chunk_size):
+                    conn.executemany(insert_sql, rows[start : start + chunk_size])
+            else:
+                for row in rows:
+                    conn.execute(insert_sql, row)
 
     def get_listings(
         self,
