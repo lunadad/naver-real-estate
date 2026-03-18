@@ -1,7 +1,8 @@
 import logging
 import os
 import json
-from datetime import datetime
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, jsonify, render_template, request, send_from_directory
@@ -21,6 +22,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+KST = ZoneInfo("Asia/Seoul")
 
 
 def env_flag(name: str, default: bool) -> bool:
@@ -28,6 +30,22 @@ def env_flag(name: str, default: bool) -> bool:
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def serialize_api_value(value):
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=KST)
+        else:
+            value = value.astimezone(KST)
+        return value.isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {key: serialize_api_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [serialize_api_value(item) for item in value]
+    return value
 
 
 BASE_DIR = os.path.dirname(__file__)
@@ -242,7 +260,7 @@ def get_listings():
         sort_by=request.args.get("sort_by", "urgent"),
         price_down_only=request.args.get("price_down_only", "false").lower() == "true",
     )
-    return jsonify(result)
+    return jsonify(serialize_api_value(result))
 
 
 @app.route("/api/alert-rules", methods=["GET"])
@@ -250,7 +268,7 @@ def get_alert_rules():
     client_id = (request.args.get("client_id") or "").strip()
     if not client_id:
         return jsonify({"status": "error", "message": "client_id required"}), 400
-    return jsonify({"rules": db.get_alert_rules(client_id)})
+    return jsonify(serialize_api_value({"rules": db.get_alert_rules(client_id)}))
 
 
 @app.route("/api/alert-rules", methods=["POST"])
@@ -278,7 +296,7 @@ def create_alert_rule():
         trade_type=data.get("trade_type", ""),
         name=data.get("name", ""),
     )
-    return jsonify({"status": "success", "rule": rule})
+    return jsonify(serialize_api_value({"status": "success", "rule": rule}))
 
 
 @app.route("/api/alert-rules/<int:alert_id>", methods=["DELETE"])
@@ -301,7 +319,7 @@ def check_alerts():
         return jsonify({"status": "error", "message": "client_id required"}), 400
 
     matches = db.get_new_alert_matches(client_id)
-    return jsonify({"status": "success", "matches": matches})
+    return jsonify(serialize_api_value({"status": "success", "matches": matches}))
 
 
 @app.route("/api/push/public-key")
@@ -348,12 +366,12 @@ def unsubscribe_push():
 
 @app.route("/api/region-stats")
 def get_region_stats():
-    return jsonify(db.get_region_stats())
+    return jsonify(serialize_api_value(db.get_region_stats()))
 
 
 @app.route("/api/trends")
 def get_trends():
-    return jsonify(db.get_trends())
+    return jsonify(serialize_api_value(db.get_trends()))
 
 
 @app.route("/api/regions")
@@ -392,7 +410,7 @@ def trigger_crawl():
                 "source": result["source"],
                 "push": push_result,
                 "message": f"{message_prefix} 급매 {result['total']}개 수집 ({run_status})",
-                "crawled_at": datetime.now().isoformat(),
+                "crawled_at": datetime.now(KST).isoformat(),
             }
         )
     except Exception as e:
@@ -407,12 +425,14 @@ def crawl_status():
     job = scheduler.get_job("daily_crawl") if ENABLE_SCHEDULER else None
     next_run = job.next_run_time.isoformat() if job and job.next_run_time else None
     return jsonify(
-        {
-            "last_crawl": last,
-            "last_attempt": last_attempt,
-            "next_crawl": next_run,
-            "scheduled_hour": SCHEDULED_HOUR,
-        }
+        serialize_api_value(
+            {
+                "last_crawl": last,
+                "last_attempt": last_attempt,
+                "next_crawl": next_run,
+                "scheduled_hour": SCHEDULED_HOUR,
+            }
+        )
     )
 
 
@@ -430,7 +450,7 @@ def update_schedule():
     job = scheduler.get_job("daily_crawl")
     next_run = job.next_run_time.isoformat() if job and job.next_run_time else None
     return jsonify(
-        {"status": "success", "scheduled_hour": hour, "next_crawl": next_run}
+        serialize_api_value({"status": "success", "scheduled_hour": hour, "next_crawl": next_run})
     )
 
 

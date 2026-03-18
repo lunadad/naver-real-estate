@@ -779,7 +779,13 @@ async function loadCrawlStatus() {
     const lastAttempt = data.last_attempt;
     if (last) {
       const dt = new Date(last.crawled_at);
-      const timeStr = dt.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const timeStr = dt.toLocaleString('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
       const label = lastAttempt && lastAttempt.session_id !== last.session_id
         ? '마지막 정상 크롤링'
         : '마지막 크롤링';
@@ -793,7 +799,13 @@ async function loadCrawlStatus() {
     }
     if (data.next_crawl) {
       const dt = new Date(data.next_crawl);
-      const timeStr = dt.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const timeStr = dt.toLocaleString('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
       document.getElementById('info-next-crawl').textContent = `다음 크롤링: ${timeStr}`;
     }
   } catch (e) {
