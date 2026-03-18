@@ -57,6 +57,8 @@ SEED_DEMO_DATA = env_flag("SEED_DEMO_DATA", False)
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "").strip()
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "").strip()
 VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:alerts@example.com").strip()
+EXTERNAL_CRAWL_HOUR = int((os.getenv("LOCAL_CRAWL_SCHEDULE_HOUR") or "9").strip())
+EXTERNAL_CRAWL_MINUTE = int((os.getenv("LOCAL_CRAWL_SCHEDULE_MINUTE") or "0").strip())
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
@@ -117,6 +119,21 @@ ensure_initial_data()
 
 def push_configured() -> bool:
     return bool(webpush and VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY)
+
+
+def get_next_external_crawl_time():
+    now = datetime.now(KST)
+    next_run = now.replace(
+        hour=max(0, min(23, EXTERNAL_CRAWL_HOUR)),
+        minute=max(0, min(59, EXTERNAL_CRAWL_MINUTE)),
+        second=0,
+        microsecond=0,
+    )
+    if next_run <= now:
+        from datetime import timedelta as _timedelta
+
+        next_run = next_run + _timedelta(days=1)
+    return next_run
 
 
 def build_push_payload(matches):
@@ -423,14 +440,18 @@ def crawl_status():
     last = db.get_last_crawl(prefer_visible=True)
     last_attempt = db.get_last_crawl()
     job = scheduler.get_job("daily_crawl") if ENABLE_SCHEDULER else None
-    next_run = job.next_run_time.isoformat() if job and job.next_run_time else None
+    next_run = (
+        job.next_run_time.isoformat()
+        if job and job.next_run_time
+        else get_next_external_crawl_time().isoformat()
+    )
     return jsonify(
         serialize_api_value(
             {
                 "last_crawl": last,
                 "last_attempt": last_attempt,
                 "next_crawl": next_run,
-                "scheduled_hour": SCHEDULED_HOUR,
+                "scheduled_hour": SCHEDULED_HOUR if ENABLE_SCHEDULER else EXTERNAL_CRAWL_HOUR,
             }
         )
     )
