@@ -777,6 +777,7 @@ async function loadCrawlStatus() {
     const data = await api('/api/crawl-status');
     const last = data.last_crawl;
     const lastAttempt = data.last_attempt;
+    const scheduleState = data.schedule_state || {};
     if (last) {
       const dt = new Date(last.crawled_at);
       const timeStr = dt.toLocaleString('ko-KR', {
@@ -786,12 +787,17 @@ async function loadCrawlStatus() {
         hour: '2-digit',
         minute: '2-digit'
       });
-      const label = lastAttempt && lastAttempt.session_id !== last.session_id
+      const label = scheduleState.stale || (lastAttempt && lastAttempt.session_id !== last.session_id)
         ? '마지막 정상 크롤링'
         : '마지막 크롤링';
       document.getElementById('info-last-crawl').textContent =
         `${label}: ${timeStr} (급매 ${last.total_count}개)`;
-      updateHeroCrawlSummary(`${timeStr} 기준 최신 급매 ${fmtNum(last.total_count || 0)}개`);
+      const summary = `${timeStr} 기준 최신 급매 ${fmtNum(last.total_count || 0)}개`;
+      updateHeroCrawlSummary(
+        scheduleState.stale && scheduleState.message
+          ? `${summary} · ${scheduleState.message}`
+          : summary
+      );
 
       if ((lastAttempt && lastAttempt.source === 'demo') || (lastAttempt && lastAttempt.status !== 'success')) {
         document.getElementById('demo-badge').classList.remove('hidden');
@@ -806,7 +812,10 @@ async function loadCrawlStatus() {
         hour: '2-digit',
         minute: '2-digit'
       });
-      document.getElementById('info-next-crawl').textContent = `다음 크롤링: ${timeStr}`;
+      const prefix = scheduleState.message
+        ? `${scheduleState.message} · 다음 크롤링`
+        : '다음 크롤링';
+      document.getElementById('info-next-crawl').textContent = `${prefix}: ${timeStr}`;
     }
   } catch (e) {
     console.warn('Status load error:', e);

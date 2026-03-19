@@ -40,9 +40,38 @@ def build_parser():
         help="launchd label",
     )
     parser.add_argument(
+        "--mode",
+        choices=("daemon", "agent"),
+        default="daemon",
+        help="Install as a LaunchDaemon (login-independent) or LaunchAgent.",
+    )
+    parser.add_argument(
+        "--user-name",
+        default=os.getenv("SUDO_USER") or os.getenv("USER", "").strip(),
+        help="User account to run the job under when mode=daemon.",
+    )
+    parser.add_argument(
+        "--group-name",
+        default="staff",
+        help="Group name to use when mode=daemon.",
+    )
+    parser.add_argument(
+        "--run-at-load",
+        dest="run_at_load",
+        action="store_true",
+        help="Run once when the job is loaded.",
+    )
+    parser.add_argument(
+        "--no-run-at-load",
+        dest="run_at_load",
+        action="store_false",
+        help="Do not run automatically when the job is loaded.",
+    )
+    parser.set_defaults(run_at_load=None)
+    parser.add_argument(
         "--install",
         action="store_true",
-        help="Write the plist into ~/Library/LaunchAgents and print the launchctl commands.",
+        help="Install the plist into LaunchDaemons/LaunchAgents and print the launchctl commands.",
     )
     return parser
 
@@ -51,7 +80,11 @@ def make_plist(args):
     logs_dir = ROOT_DIR / "logs"
     logs_dir.mkdir(exist_ok=True)
 
-    return {
+    run_at_load = args.run_at_load
+    if run_at_load is None:
+        run_at_load = args.mode == "daemon"
+
+    plist = {
         "Label": args.label,
         "ProgramArguments": [
             args.python,
@@ -73,8 +106,37 @@ def make_plist(args):
         },
         "StandardOutPath": str(logs_dir / "launchd-crawl.out.log"),
         "StandardErrorPath": str(logs_dir / "launchd-crawl.err.log"),
-        "RunAtLoad": False,
+        "RunAtLoad": run_at_load,
     }
+    if args.mode == "daemon":
+        if args.user_name:
+            plist["UserName"] = args.user_name
+        if args.group_name:
+            plist["GroupName"] = args.group_name
+        plist["ProcessType"] = "Background"
+    return plist
+
+
+def install_target(args):
+    if args.install and args.mode == "daemon":
+        return Path("/Library/LaunchDaemons") / f"{args.label}.plist"
+    if args.install:
+        return Path.home() / "Library" / "LaunchAgents" / f"{args.label}.plist"
+    suffix = "daemon" if args.mode == "daemon" else "agent"
+    return ROOT_DIR / "scripts" / f"{args.label}.{suffix}.plist"
+
+
+def print_install_commands(target, args):
+    if args.mode == "daemon":
+        print(f"sudo chown root:wheel {target}")
+        print(f"sudo chmod 644 {target}")
+        print(f"sudo launchctl bootout system/{args.label} 2>/dev/null || true")
+        print(f"sudo launchctl bootstrap system {target}")
+        print(f"sudo launchctl kickstart -k system/{args.label}")
+    else:
+        print(f"launchctl bootout gui/$(id -u) {target} 2>/dev/null || true")
+        print(f"launchctl bootstrap gui/$(id -u) {target}")
+        print(f"launchctl kickstart -k gui/$(id -u)/{args.label}")
 
 
 def main():
@@ -85,20 +147,21 @@ def main():
         raise SystemExit("DATABASE_URL is required")
 
     plist_data = make_plist(args)
+    target = install_target(args)
 
-    if args.install:
-        target = Path.home() / "Library" / "LaunchAgents" / f"{args.label}.plist"
-    else:
-        target = ROOT_DIR / "scripts" / f"{args.label}.plist"
-
-    target.parent.mkdir(parents=True, exist_ok=True)
-    with target.open("wb") as fp:
-        plistlib.dump(plist_data, fp, sort_keys=False)
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("wb") as fp:
+            plistlib.dump(plist_data, fp, sort_keys=False)
+    except PermissionError as exc:
+        if args.mode == "daemon":
+            raise SystemExit(
+                f"{exc}. Re-run with sudo for --mode daemon, or use --mode agent."
+            ) from exc
+        raise
 
     print(f"wrote {target}")
-    print(f"launchctl unload {target} 2>/dev/null || true")
-    print(f"launchctl load {target}")
-    print(f"launchctl start {args.label}")
+    print_install_commands(target, args)
 
 
 if __name__ == "__main__":

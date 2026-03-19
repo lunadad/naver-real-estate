@@ -91,13 +91,24 @@ Render should serve the web app only. Run the crawler from your local Mac mini a
 python3 scripts/run_remote_crawl.py --database-url "$DATABASE_URL"
 ```
 
-3. To install a daily macOS `launchd` job for 09:00:
+3. To install a daily macOS job for 09:00:
 
 ```bash
-python3 scripts/install_launchd_crawl.py --database-url "$DATABASE_URL" --install
-launchctl unload ~/Library/LaunchAgents/com.lunadad.naver-real-estate-crawl.plist 2>/dev/null || true
-launchctl load ~/Library/LaunchAgents/com.lunadad.naver-real-estate-crawl.plist
-launchctl start com.lunadad.naver-real-estate-crawl
+sudo python3 scripts/install_launchd_crawl.py --database-url "$DATABASE_URL" --install --mode daemon
+sudo chown root:wheel /Library/LaunchDaemons/com.lunadad.naver-real-estate-crawl.plist
+sudo chmod 644 /Library/LaunchDaemons/com.lunadad.naver-real-estate-crawl.plist
+sudo launchctl bootout system/com.lunadad.naver-real-estate-crawl 2>/dev/null || true
+sudo launchctl bootstrap system /Library/LaunchDaemons/com.lunadad.naver-real-estate-crawl.plist
+sudo launchctl kickstart -k system/com.lunadad.naver-real-estate-crawl
+```
+
+If you intentionally want a user-login-bound LaunchAgent instead:
+
+```bash
+python3 scripts/install_launchd_crawl.py --database-url "$DATABASE_URL" --install --mode agent --run-at-load
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.lunadad.naver-real-estate-crawl.plist 2>/dev/null || true
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.lunadad.naver-real-estate-crawl.plist
+launchctl kickstart -k gui/$(id -u)/com.lunadad.naver-real-estate-crawl
 ```
 
 The generated logs go to:

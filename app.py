@@ -58,6 +58,7 @@ VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "").strip()
 VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:alerts@example.com").strip()
 EXTERNAL_CRAWL_HOUR = int((os.getenv("LOCAL_CRAWL_SCHEDULE_HOUR") or "9").strip())
 EXTERNAL_CRAWL_MINUTE = int((os.getenv("LOCAL_CRAWL_SCHEDULE_MINUTE") or "0").strip())
+EXTERNAL_CRAWL_GRACE_MINUTES = int((os.getenv("LOCAL_CRAWL_GRACE_MINUTES") or "120").strip())
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
@@ -120,8 +121,26 @@ def push_configured() -> bool:
     return bool(webpush and VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY)
 
 
-def get_next_external_crawl_time():
-    now = datetime.now(KST)
+def coerce_kst_datetime(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        dt = value
+    elif isinstance(value, str):
+        try:
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    else:
+        return None
+
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=KST)
+    return dt.astimezone(KST)
+
+
+def get_next_external_crawl_time(now=None):
+    now = now or datetime.now(KST)
     next_run = now.replace(
         hour=max(0, min(23, EXTERNAL_CRAWL_HOUR)),
         minute=max(0, min(59, EXTERNAL_CRAWL_MINUTE)),
@@ -133,6 +152,55 @@ def get_next_external_crawl_time():
 
         next_run = next_run + _timedelta(days=1)
     return next_run
+
+
+def get_external_schedule_state(last_attempt):
+    now = datetime.now(KST)
+    next_run = get_next_external_crawl_time(now)
+    expected_last_run = next_run - timedelta(days=1)
+    grace_until = expected_last_run + timedelta(
+        minutes=max(0, EXTERNAL_CRAWL_GRACE_MINUTES)
+    )
+
+    last_attempt_at = coerce_kst_datetime((last_attempt or {}).get("crawled_at"))
+    attempted_current_slot = bool(last_attempt_at and last_attempt_at >= expected_last_run)
+
+    if attempted_current_slot:
+        if (last_attempt or {}).get("status") == "success":
+            status = "healthy"
+            stale = False
+            message = ""
+        else:
+            status = "failed"
+            stale = True
+            message = (
+                f"오늘 {expected_last_run.strftime('%m/%d %H:%M')} 크롤링 실패로 "
+                "이전 정상 데이터 표시 중"
+            )
+    elif now <= grace_until:
+        status = "pending"
+        stale = False
+        message = (
+            f"오늘 {expected_last_run.strftime('%m/%d %H:%M')} 크롤링 대기/진행 중"
+        )
+    else:
+        status = "missed"
+        stale = True
+        message = (
+            f"오늘 {expected_last_run.strftime('%m/%d %H:%M')} 크롤링 미실행으로 "
+            "이전 정상 데이터 표시 중"
+        )
+
+    return {
+        "mode": "external",
+        "status": status,
+        "stale": stale,
+        "message": message,
+        "expected_last_run": expected_last_run,
+        "grace_until": grace_until,
+        "next_run": next_run,
+        "last_attempt_at": last_attempt_at,
+    }
 
 
 def build_push_payload(matches):
@@ -439,11 +507,22 @@ def crawl_status():
     last = db.get_last_crawl(prefer_visible=True)
     last_attempt = db.get_last_crawl()
     job = scheduler.get_job("daily_crawl") if ENABLE_SCHEDULER else None
-    next_run = (
-        job.next_run_time.isoformat()
-        if job and job.next_run_time
-        else get_next_external_crawl_time().isoformat()
-    )
+    schedule_state = None
+    if job and job.next_run_time:
+        next_run = job.next_run_time
+        schedule_state = {
+            "mode": "internal",
+            "status": "healthy",
+            "stale": False,
+            "message": "",
+            "expected_last_run": None,
+            "grace_until": None,
+            "next_run": next_run,
+            "last_attempt_at": coerce_kst_datetime((last_attempt or {}).get("crawled_at")),
+        }
+    else:
+        schedule_state = get_external_schedule_state(last_attempt)
+        next_run = schedule_state["next_run"]
     return jsonify(
         serialize_api_value(
             {
@@ -451,6 +530,7 @@ def crawl_status():
                 "last_attempt": last_attempt,
                 "next_crawl": next_run,
                 "scheduled_hour": SCHEDULED_HOUR if ENABLE_SCHEDULER else EXTERNAL_CRAWL_HOUR,
+                "schedule_state": schedule_state,
             }
         )
     )
