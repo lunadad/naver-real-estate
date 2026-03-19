@@ -341,7 +341,7 @@ def get_listings():
         search=request.args.get("search", ""),
         page=page,
         per_page=per_page,
-        sort_by=request.args.get("sort_by", "urgent"),
+        sort_by=request.args.get("sort_by", "price-desc"),
         price_down_only=request.args.get("price_down_only", "false").lower() == "true",
     )
     return jsonify(serialize_api_value(result))

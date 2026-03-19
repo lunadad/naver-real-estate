@@ -13,7 +13,7 @@ const state = {
     property_type: '',
     search: '',
     district: '',
-    sort_by: 'recent',
+    sort_by: 'price-desc',
     price_down_only: false,
   },
   activeStatFilter: '',  // tracks which stat card is active
