@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "부동산 급매 터미널",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["app.py"],
+      "port": 5101,
+      "env": {
+        "DATABASE_URL": ""
+      }
+    }
+  ]
+}
