@@ -1,7 +1,7 @@
 /* ═══════════════════════ CSS VARIABLES (THEMES) ═══════════════════════════ */
 :root {
-  --font-sans: 'Noto Sans KR', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --font-sans: 'Gowun Dodum', system-ui, sans-serif;
+  --font-mono: 'Gowun Dodum', system-ui, sans-serif;
   --radius: 6px;
   --radius-lg: 10px;
   --transition: 0.2s ease;
@@ -1296,7 +1296,7 @@ body {
   margin-top: 1px;
 }
 .guide-step code {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 11px;
   background: var(--bg3);
   border: 1px solid var(--border);
