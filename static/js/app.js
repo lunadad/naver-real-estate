@@ -37,6 +37,11 @@ const state = {
   mapExpanded: localStorage.getItem('mapExpanded') === null
     ? !window.matchMedia('(max-width: 900px)').matches
     : localStorage.getItem('mapExpanded') !== 'false',
+  dashboard: {
+    total: 0,
+    priceDownCount: 0,
+    crawlSummary: '',
+  },
 };
 
 // ── API helpers ─────────────────────────────────────────────────────────────
@@ -108,18 +113,25 @@ function updateHeroFocusRegion() {
   if (!el) return;
   if (state.filters.district) {
     el.textContent = state.filters.district;
+    updateHeroInsight();
     return;
   }
   if (state.filters.search) {
     el.textContent = state.filters.search;
+    updateHeroInsight();
     return;
   }
   el.textContent = '전국';
+  updateHeroInsight();
 }
 
 function updateHeroCrawlSummary(text) {
   const el = document.getElementById('hero-crawl-summary');
-  if (el && text) el.textContent = text;
+  if (el && text) {
+    el.textContent = text;
+    state.dashboard.crawlSummary = text;
+    updateHeroInsight();
+  }
 }
 
 function updateListingsSummary(total = null) {
@@ -133,13 +145,41 @@ function updateListingsSummary(total = null) {
   el.textContent = `${label} 조건 결과 ${fmtNum(total)}건`;
 }
 
+function updateHeroInsight() {
+  const el = document.getElementById('hero-insight-text');
+  if (!el) return;
+
+  const total = Number(state.dashboard.total || 0);
+  const priceDown = Number(state.dashboard.priceDownCount || 0);
+  const alertCount = Number(state.alertRules.length || 0);
+  const focus = state.filters.district || state.filters.search || '전국';
+
+  if (!total) {
+    el.textContent = '전국 급매 흐름과 알림 현황을 계산 중입니다.';
+    return;
+  }
+
+  const priceDownRatio = priceDown ? Math.round((priceDown / total) * 100) : 0;
+  const focusLabel = focus === '전국' ? '전국' : `${focus}`;
+  const alertLabel = alertCount ? `알림 ${fmtNum(alertCount)}개가 새 매물을 감시 중입니다.` : '아직 등록된 알림은 없습니다.';
+
+  if (state.filters.price_down_only) {
+    el.textContent = `${focusLabel}에서 가격인하 매물 ${fmtNum(priceDown)}건을 보고 있습니다. ${alertLabel}`;
+    return;
+  }
+
+  el.textContent = `${focusLabel} 기준 급매 ${fmtNum(total)}건, 그중 가격인하 ${fmtNum(priceDown)}건(${priceDownRatio}%)입니다. ${alertLabel}`;
+}
+
 function applyMapVisibility() {
   const wrap = document.getElementById('map-wrap');
   const btn = document.getElementById('btn-map-toggle');
+  const mobileBtn = document.getElementById('btn-mobile-map-fab');
   const legend = document.getElementById('map-legend');
   if (!wrap || !btn) return;
   wrap.classList.toggle('collapsed', !state.mapExpanded);
   btn.textContent = state.mapExpanded ? '지도 접기' : '지도 펼치기';
+  if (mobileBtn) mobileBtn.textContent = state.mapExpanded ? '지도 이동' : '지도 보기';
   if (legend) legend.classList.toggle('hidden', !state.mapExpanded);
   localStorage.setItem('mapExpanded', state.mapExpanded);
   if (state.map && state.mapExpanded) {
@@ -320,6 +360,12 @@ function renderListings(data) {
     const tags = parseTags(l.tags);
     const hasPriceDown = tags.includes('가격인하');
     const compactRegion = `${l.region ? l.region.replace('특별시','').replace('광역시','').replace('특별자치시','') : ''} ${l.district}`.trim();
+    const metaBits = [
+      l.area ? `면적 ${l.area}` : '',
+      l.floor ? `층 ${l.floor}` : '',
+      l.trade_type || '',
+    ].filter(Boolean);
+    const visibleTags = tags.filter(tag => tag !== '급매').slice(0, 4);
     return `
     <div class="listing-card urgent-card-item"
          onclick="openNaver('${l.article_no}')"
@@ -327,31 +373,30 @@ function renderListings(data) {
          data-article-no="${l.article_no}"
          data-naver-url="${l.naver_url || ''}"
          title="네이버 부동산에서 보기">
-      <div class="card-badges">
-        <span class="badge badge-urgent">${hasPriceDown ? '📉 가격인하' : '⚡ 급매'}</span>
-        <span class="badge badge-type">${l.property_type}</span>
-        <span class="badge ${tradeBadgeClass(l.trade_type)}">${l.trade_type}</span>
-        <span class="badge badge-date">${formatDate(l.confirmed_date)}</span>
-        <span class="naver-link-icon" title="네이버 부동산">네이버 보기</span>
-      </div>
-      <div class="card-main">
-        <div class="card-price-block">
-          <div class="card-price">${l.price || '—'}</div>
-          <div class="card-location">${escHtml(compactRegion)}</div>
+      <div class="card-topline">
+        <div class="card-badges">
+          <span class="badge badge-urgent">${hasPriceDown ? '가격인하' : '급매'}</span>
+          <span class="badge ${tradeBadgeClass(l.trade_type)}">${l.trade_type}</span>
+          <span class="badge badge-type">${l.property_type}</span>
         </div>
         <div class="card-date-chip">확인 ${formatDate(l.confirmed_date) || '—'}</div>
       </div>
-      <div class="card-name-row">
-        <div class="card-name" title="${l.building_name}">${l.building_name}</div>
+      <div class="card-price-row">
+        <div class="card-price-block">
+          <div class="card-price">${l.price || '—'}</div>
+          <div class="card-price-caption">${escHtml(l.trade_type)} ${hasPriceDown ? '· 가격인하 감지' : '· 급매 포착'}</div>
+        </div>
+        <span class="naver-link-icon" title="네이버 부동산">네이버 보기</span>
       </div>
+      <div class="card-name" title="${l.building_name}">${l.building_name}</div>
+      <div class="card-location-line">${escHtml(compactRegion)}</div>
       <div class="card-meta">
-        <span>면적 ${l.area || '—'}</span>
-        <span>층 ${l.floor || '—'}</span>
-        <span>${l.trade_type}</span>
+        ${metaBits.map(bit => `<span>${escHtml(bit)}</span>`).join('')}
       </div>
       ${l.description ? `<div class="card-desc">${escHtml(l.description)}</div>` : ''}
       <div class="card-tags">
-        ${tags.map(t => `<span class="tag ${t === '급매' ? 'urgent-tag' : t === '가격인하' ? 'price-down-tag' : ''}">${t}</span>`).join('')}
+        <span class="tag urgent-tag">${hasPriceDown ? '가격인하' : '급매'}</span>
+        ${visibleTags.map(t => `<span class="tag ${t === '가격인하' ? 'price-down-tag' : ''}">${escHtml(t)}</span>`).join('')}
       </div>
     </div>`;
   }).join('');
@@ -373,8 +418,11 @@ function updateStats(data) {
   if (heroTotal) heroTotal.textContent = fmtNum(data.total || 0);
   const heroPriceDown = document.getElementById('hero-price-down-count');
   if (heroPriceDown) heroPriceDown.textContent = fmtNum(data.price_down_count || 0);
+  state.dashboard.total = data.total || 0;
+  state.dashboard.priceDownCount = data.price_down_count || 0;
   updateHeroFocusRegion();
   updateListingsSummary(data.total || 0);
+  updateHeroInsight();
 }
 
 // ── Sidebar ──────────────────────────────────────────────────────────────────
@@ -419,36 +467,40 @@ function renderTrendList(id, items, type) {
   const ul = document.getElementById(id);
   if (!ul) return;
   if (!items.length) {
-    ul.innerHTML = '<li style="padding:5px 12px;color:var(--text3);font-size:11px;">데이터 없음</li>';
+    ul.innerHTML = '<li class="trend-empty">데이터 없음</li>';
     return;
   }
-  ul.innerHTML = items.map(item => {
+  ul.innerHTML = items.map((item, index) => {
     let badge, badgeClass, sub;
     if (type === 'up') {
       badge = `+${item.diff}`;
       badgeClass = 'up';
-      sub = `급매 ${item.current_cnt}개`;
+      sub = `전일 ${fmtNum(item.prev_cnt || 0)}개 → 오늘 ${fmtNum(item.current_cnt || 0)}개`;
     } else if (type === 'down') {
       badge = `${item.diff}`;
       badgeClass = 'down';
-      sub = `급매 ${item.current_cnt}개`;
+      sub = `전일 ${fmtNum(item.prev_cnt || 0)}개 → 오늘 ${fmtNum(item.current_cnt || 0)}개`;
     } else if (type === 'price-down') {
       badge = `${item.price_down_count || 0}개`;
       badgeClass = 'urgent';
-      sub = `급매 ${item.current_cnt}개`;
+      sub = `가격인하 ${fmtNum(item.price_down_count || 0)}개 · 급매 ${fmtNum(item.current_cnt || 0)}개`;
     } else {
-      badge = `${item.current_cnt || 0}`;
+      badge = fmtNum(item.current_cnt || 0);
       badgeClass = 'urgent';
-      sub = `급매 ${item.current_cnt}개`;
+      sub = `급매 ${fmtNum(item.current_cnt || 0)}개`;
     }
     const name = item.display_name || `${item.region} ${item.district}`;
     return `
     <li class="trend-item" data-district="${item.district}" onclick="selectDistrict('${item.district}')">
-      <div>
+      <div class="trend-rank">${String(index + 1).padStart(2, '0')}</div>
+      <div class="trend-copy">
         <div class="trend-name">${name}</div>
         <div class="trend-sub">${sub}</div>
       </div>
-      <span class="trend-badge ${badgeClass}">${badge}</span>
+      <div class="trend-side">
+        <span class="trend-badge ${badgeClass}">${badge}</span>
+        <span class="trend-current">${fmtNum(item.current_cnt || 0)}건</span>
+      </div>
     </li>`;
   }).join('');
 }
@@ -456,8 +508,9 @@ function renderTrendList(id, items, type) {
 function renderRegionStats(stats) {
   const ul = document.getElementById('list-region-stats');
   const maxTotal = Math.max(...stats.map(s => s.total), 1);
-  ul.innerHTML = stats.slice(0, 20).map(s => `
+  ul.innerHTML = stats.slice(0, 20).map((s, index) => `
     <li class="region-item" data-district="${s.district}" onclick="selectDistrict('${s.district}')">
+      <div class="region-rank">${String(index + 1).padStart(2, '0')}</div>
       <div class="region-bar-wrap">
         <div class="region-name">${s.display_name || `${s.region} ${s.district}`}</div>
         <div class="region-bar">
@@ -565,6 +618,8 @@ function renderAlertRules() {
   if (!state.alertRules.length) {
     list.innerHTML = '<li class="alert-empty">등록된 알림이 없습니다.</li>';
     updateHeroAlertCount();
+    renderHeroAlertPreview();
+    updateHeroInsight();
     return;
   }
 
@@ -587,6 +642,23 @@ function renderAlertRules() {
     `;
   }).join('');
   updateHeroAlertCount();
+  renderHeroAlertPreview();
+  updateHeroInsight();
+}
+
+function renderHeroAlertPreview() {
+  const wrap = document.getElementById('hero-alert-preview');
+  if (!wrap) return;
+
+  if (!state.alertRules.length) {
+    wrap.innerHTML = '<span class="hero-alert-chip muted">등록된 알림이 없습니다</span>';
+    return;
+  }
+
+  wrap.innerHTML = state.alertRules.slice(0, 4).map(rule => {
+    const meta = rule.district || rule.keyword || rule.property_type || rule.trade_type || '전체';
+    return `<span class="hero-alert-chip">${escHtml(rule.name)} · ${escHtml(meta)}</span>`;
+  }).join('');
 }
 
 async function loadAlertRules() {
@@ -817,6 +889,7 @@ async function loadCrawlStatus() {
         : '다음 크롤링';
       document.getElementById('info-next-crawl').textContent = `${prefix}: ${timeStr}`;
     }
+    updateHeroInsight();
   } catch (e) {
     console.warn('Status load error:', e);
   }
@@ -963,8 +1036,16 @@ function wireEvents() {
   document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
   document.getElementById('sidebar-open-btn').addEventListener('click', toggleSidebar);
   document.getElementById('btn-mobile-sidebar').addEventListener('click', toggleSidebar);
+  document.getElementById('btn-mobile-filter-fab').addEventListener('click', toggleSidebar);
   document.getElementById('mobile-dim').addEventListener('click', () => setMobileSidebar(false));
   document.getElementById('btn-map-toggle').addEventListener('click', toggleMap);
+  document.getElementById('btn-mobile-map-fab').addEventListener('click', () => {
+    if (!state.mapExpanded) {
+      state.mapExpanded = true;
+      applyMapVisibility();
+    }
+    document.getElementById('map-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   document.getElementById('btn-hero-notif').addEventListener('click', async () => {
     // On HTTP (non-localhost), mobile browsers block Notification API — show guide
     const isHttp = location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
@@ -988,6 +1069,13 @@ function wireEvents() {
     }
   });
   document.getElementById('btn-hero-alert').addEventListener('click', async () => {
+    try {
+      await saveAlertRule();
+    } catch (e) {
+      showToast('알림 등록 실패: ' + e.message, 'error');
+    }
+  });
+  document.getElementById('btn-mobile-alert-fab').addEventListener('click', async () => {
     try {
       await saveAlertRule();
     } catch (e) {

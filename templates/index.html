@@ -164,18 +164,50 @@
     <section id="hero-panel">
       <div class="hero-copy">
         <span class="hero-kicker">FASTSELL WATCH</span>
-        <h1 class="hero-title">조건이 맞는 급매가 뜨면 바로 알림받기!</h1>
-        <p class="hero-desc">아파트명이나 지역을 검색하고 현재 필터를 저장하면, 새 매물이 들어오는 순간 브라우저 알림으로 받아볼 수 있습니다.</p>
+        <h1 class="hero-title">내 조건에 맞는 급매를 실시간으로 감시하는 대시보드</h1>
+        <p class="hero-desc">검색, 지역, 거래 유형을 잡아두면 새 급매와 가격인하 매물을 빠르게 골라 보고 바로 알림까지 연결할 수 있습니다.</p>
       </div>
-      <div class="hero-meta">
-        <div id="hero-filter-summary" class="hero-filter-summary">현재 조건: 전체 급매</div>
-        <div id="hero-crawl-summary" class="hero-crawl-summary">최신 크롤링 정보를 불러오는 중...</div>
-      </div>
-      <div class="hero-actions">
-        <button id="btn-mobile-sidebar" class="hero-btn secondary">필터 · 트렌드</button>
-        <button id="btn-map-toggle" class="hero-btn ghost">지도 접기</button>
-        <button id="btn-hero-notif" class="hero-btn ghost" title="브라우저 알림 권한 요청">🔔 알림 허용</button>
-        <button id="btn-hero-alert" class="hero-btn">현재 조건 알림</button>
+      <div class="hero-shell">
+        <div class="hero-dashboard">
+          <div class="hero-meta">
+            <div id="hero-filter-summary" class="hero-filter-summary">현재 조건: 전체 급매</div>
+            <div id="hero-crawl-summary" class="hero-crawl-summary">최신 크롤링 정보를 불러오는 중...</div>
+          </div>
+          <div class="hero-stats-grid">
+            <article class="hero-stat-card">
+              <span class="hero-stat-label">감시 중인 급매</span>
+              <strong id="hero-total-count" class="hero-stat-value">—</strong>
+            </article>
+            <article class="hero-stat-card accent-coral">
+              <span class="hero-stat-label">가격인하</span>
+              <strong id="hero-price-down-count" class="hero-stat-value urgent">—</strong>
+            </article>
+            <article class="hero-stat-card accent-blue">
+              <span class="hero-stat-label">등록 알림</span>
+              <strong id="hero-alert-rule-count" class="hero-stat-value">0개</strong>
+            </article>
+            <article class="hero-stat-card accent-green">
+              <span class="hero-stat-label">집중 지역</span>
+              <strong id="hero-focus-region" class="hero-stat-value region">전국</strong>
+            </article>
+          </div>
+          <div id="hero-insight-banner" class="hero-insight-banner">
+            <span class="hero-insight-label">오늘의 급매 온도</span>
+            <p id="hero-insight-text" class="hero-insight-text">전국 급매 흐름과 알림 현황을 계산 중입니다.</p>
+          </div>
+          <div class="hero-alert-rail">
+            <span class="hero-rail-label">내 알림</span>
+            <div id="hero-alert-preview" class="hero-alert-preview">
+              <span class="hero-alert-chip muted">등록된 알림이 없습니다</span>
+            </div>
+          </div>
+          <div class="hero-actions">
+            <button id="btn-mobile-sidebar" class="hero-btn secondary">필터 · 트렌드</button>
+            <button id="btn-map-toggle" class="hero-btn ghost">지도 접기</button>
+            <button id="btn-hero-notif" class="hero-btn ghost" title="브라우저 알림 권한 요청">🔔 알림 허용</button>
+            <button id="btn-hero-alert" class="hero-btn">현재 조건 알림</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -246,6 +278,12 @@
     </div>
 
   </main>
+</div>
+
+<div id="mobile-quickbar">
+  <button id="btn-mobile-filter-fab" class="quickbar-btn">필터</button>
+  <button id="btn-mobile-map-fab" class="quickbar-btn">지도</button>
+  <button id="btn-mobile-alert-fab" class="quickbar-btn primary">알림 등록</button>
 </div>
 
 <!-- ══════════════════════════════ STATUS BAR ═══════════════════════════════ -->

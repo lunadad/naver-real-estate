@@ -1,7 +1,9 @@
 import logging
 import os
 import json
+import plistlib
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, jsonify, render_template, request, send_from_directory
@@ -22,6 +24,83 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 KST = timezone(timedelta(hours=9), name="KST")
+UTC = timezone.utc
+
+
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def load_env_file(path: Path):
+    if not path.exists() or not path.is_file():
+        return
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key:
+            os.environ.setdefault(key, value)
+
+
+def load_local_runtime_env():
+    for name in (".env.local", ".env"):
+        load_env_file(BASE_DIR / name)
+
+    if os.getenv("DATABASE_URL", "").strip():
+        return
+
+    plist_candidates = [
+        Path.home() / "Library/LaunchAgents/com.lunadad.naver-real-estate-crawl.plist",
+        Path("/Library/LaunchDaemons/com.lunadad.naver-real-estate-crawl.plist"),
+    ]
+
+    for plist_path in plist_candidates:
+        if not plist_path.exists():
+            continue
+        try:
+            with plist_path.open("rb") as fp:
+                payload = plistlib.load(fp)
+        except Exception:
+            continue
+
+        env_vars = payload.get("EnvironmentVariables") or {}
+        for key, value in env_vars.items():
+            if isinstance(value, str):
+                os.environ.setdefault(key, value)
+
+        schedule = payload.get("StartCalendarInterval") or {}
+        if isinstance(schedule, dict):
+            if "Hour" in schedule:
+                os.environ.setdefault("LOCAL_CRAWL_SCHEDULE_HOUR", str(schedule["Hour"]))
+            if "Minute" in schedule:
+                os.environ.setdefault("LOCAL_CRAWL_SCHEDULE_MINUTE", str(schedule["Minute"]))
+
+        if os.getenv("DATABASE_URL", "").strip():
+            os.environ.setdefault("ENABLE_SCHEDULER", "false")
+            return
+
+        args = payload.get("ProgramArguments") or []
+        for index, arg in enumerate(args[:-1]):
+            if arg == "--database-url" and isinstance(args[index + 1], str):
+                os.environ.setdefault("DATABASE_URL", args[index + 1])
+                os.environ.setdefault("ENABLE_SCHEDULER", "false")
+                return
+
+
+def get_naive_db_timezone():
+    override = os.getenv("NAIVE_DB_TIMEZONE", "").strip().upper()
+    if override == "UTC":
+        return UTC
+    if override == "KST":
+        return KST
+    return KST if os.getenv("DATABASE_URL", "").strip() else UTC
+
+
+load_local_runtime_env()
+NAIVE_DB_TZ = get_naive_db_timezone()
 
 
 def env_flag(name: str, default: bool) -> bool:
@@ -34,9 +113,10 @@ def env_flag(name: str, default: bool) -> bool:
 def serialize_api_value(value):
     if isinstance(value, datetime):
         if value.tzinfo is None:
-            value = value.replace(tzinfo=KST)
+            value = value.replace(tzinfo=NAIVE_DB_TZ)
         else:
             value = value.astimezone(KST)
+        value = value.astimezone(KST)
         return value.isoformat()
     if isinstance(value, date):
         return value.isoformat()
@@ -46,9 +126,7 @@ def serialize_api_value(value):
         return [serialize_api_value(item) for item in value]
     return value
 
-
-BASE_DIR = os.path.dirname(__file__)
-DEFAULT_DB_PATH = os.path.join(BASE_DIR, "real_estate.db")
+DEFAULT_DB_PATH = str(BASE_DIR / "real_estate.db")
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 DB_PATH = os.getenv("DB_PATH", DEFAULT_DB_PATH)
 ENABLE_SCHEDULER = env_flag("ENABLE_SCHEDULER", True)
@@ -135,7 +213,7 @@ def coerce_kst_datetime(value):
         return None
 
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=KST)
+        return dt.replace(tzinfo=NAIVE_DB_TZ).astimezone(KST)
     return dt.astimezone(KST)
 
 
