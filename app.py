@@ -114,8 +114,6 @@ def serialize_api_value(value):
     if isinstance(value, datetime):
         if value.tzinfo is None:
             value = value.replace(tzinfo=NAIVE_DB_TZ)
-        else:
-            value = value.astimezone(KST)
         value = value.astimezone(KST)
         return value.isoformat()
     if isinstance(value, date):
@@ -226,9 +224,7 @@ def get_next_external_crawl_time(now=None):
         microsecond=0,
     )
     if next_run <= now:
-        from datetime import timedelta as _timedelta
-
-        next_run = next_run + _timedelta(days=1)
+        next_run = next_run + timedelta(days=1)
     return next_run
 
 
