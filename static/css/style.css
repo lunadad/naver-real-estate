@@ -1,28 +1,7 @@
-@font-face {
-  font-family: 'GmarketSans';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansLight.woff') format('woff');
-  font-weight: 300;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GmarketSans';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GmarketSans';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
-  font-weight: 700;
-  font-display: swap;
-}
-
 /* ═══════════════════════ CSS VARIABLES (THEMES) ═══════════════════════════ */
 :root {
-  --font-sans: 'GmarketSans', system-ui, sans-serif;
-  --font-mono: 'GmarketSans', system-ui, sans-serif;
+  --font-sans: 'Pretendard', system-ui, sans-serif;
+  --font-mono: 'Pretendard', system-ui, sans-serif;
   --radius: 6px;
   --radius-lg: 10px;
   --transition: 0.2s ease;
