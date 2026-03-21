@@ -186,14 +186,6 @@ class Database:
             )
             if not self.skip_price_backfill:
                 self._backfill_price_sort_values(conn)
-            latest_visible_session = self._get_latest_visible_session_id(conn)
-            if latest_visible_session:
-                existing_stats = conn.execute(
-                    "SELECT COUNT(*) AS cnt FROM crawl_region_stats WHERE session_id = ?",
-                    (latest_visible_session,),
-                ).fetchone()["cnt"]
-                if not existing_stats:
-                    self.rebuild_crawl_region_stats_from_listings(latest_visible_session, conn)
 
     def _init_sqlite(self, conn: ConnectionWrapper):
         conn.executescript(
@@ -236,17 +228,6 @@ class Database:
                 source TEXT
             );
 
-            CREATE TABLE IF NOT EXISTS crawl_region_stats (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                session_id TEXT NOT NULL,
-                region TEXT NOT NULL,
-                district TEXT NOT NULL,
-                total_count INTEGER NOT NULL DEFAULT 0,
-                price_down_count INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT,
-                UNIQUE(session_id, region, district)
-            );
-
             CREATE TABLE IF NOT EXISTS alert_rules (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 client_id TEXT NOT NULL,
@@ -283,7 +264,6 @@ class Database:
             CREATE INDEX IF NOT EXISTS idx_is_urgent ON listings(is_urgent);
             CREATE INDEX IF NOT EXISTS idx_crawled_at ON listings(crawled_at);
             CREATE INDEX IF NOT EXISTS idx_session ON listings(crawl_session);
-            CREATE INDEX IF NOT EXISTS idx_crawl_region_stats_session ON crawl_region_stats(session_id);
             CREATE INDEX IF NOT EXISTS idx_alert_rules_client_id ON alert_rules(client_id);
             CREATE INDEX IF NOT EXISTS idx_alert_deliveries_alert_id ON alert_deliveries(alert_id);
             CREATE INDEX IF NOT EXISTS idx_push_subscriptions_client_id ON push_subscriptions(client_id);
@@ -334,18 +314,6 @@ class Database:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS crawl_region_stats (
-                id BIGSERIAL PRIMARY KEY,
-                session_id TEXT NOT NULL,
-                region TEXT NOT NULL,
-                district TEXT NOT NULL,
-                total_count INTEGER NOT NULL DEFAULT 0,
-                price_down_count INTEGER NOT NULL DEFAULT 0,
-                created_at TIMESTAMP,
-                UNIQUE(session_id, region, district)
-            )
-            """,
-            """
             CREATE TABLE IF NOT EXISTS alert_rules (
                 id BIGSERIAL PRIMARY KEY,
                 client_id TEXT NOT NULL,
@@ -384,7 +352,6 @@ class Database:
             "CREATE INDEX IF NOT EXISTS idx_is_urgent ON listings(is_urgent)",
             "CREATE INDEX IF NOT EXISTS idx_crawled_at ON listings(crawled_at)",
             "CREATE INDEX IF NOT EXISTS idx_session ON listings(crawl_session)",
-            "CREATE INDEX IF NOT EXISTS idx_crawl_region_stats_session ON crawl_region_stats(session_id)",
             "CREATE INDEX IF NOT EXISTS idx_alert_rules_client_id ON alert_rules(client_id)",
             "CREATE INDEX IF NOT EXISTS idx_alert_deliveries_alert_id ON alert_deliveries(alert_id)",
             "CREATE INDEX IF NOT EXISTS idx_push_subscriptions_client_id ON push_subscriptions(client_id)",
@@ -544,146 +511,6 @@ class Database:
         if trade_type:
             parts.append(trade_type)
         return " · ".join(parts) if parts else "전체 급매 알림"
-
-    def _build_region_stats_rows(self, session_id: str, listings: List[Dict], created_at: str):
-        grouped = {}
-        for listing in listings:
-            region = str(listing.get("region") or "").strip()
-            district = str(listing.get("district") or "").strip()
-            if not region or not district:
-                continue
-            key = (region, district)
-            entry = grouped.setdefault(
-                key,
-                {
-                    "session_id": session_id,
-                    "region": region,
-                    "district": district,
-                    "total_count": 0,
-                    "price_down_count": 0,
-                    "created_at": created_at,
-                },
-            )
-            entry["total_count"] += 1
-            tags = listing.get("tags") or []
-            if isinstance(tags, str):
-                try:
-                    tags = json.loads(tags)
-                except Exception:
-                    tags = [tags]
-            if "가격인하" in tags:
-                entry["price_down_count"] += 1
-        return list(grouped.values())
-
-    def replace_crawl_region_stats(
-        self,
-        session_id: str,
-        rows: List[Dict],
-        conn: Optional[ConnectionWrapper] = None,
-    ):
-        if not session_id:
-            return
-
-        insert_sql = """
-            INSERT INTO crawl_region_stats
-            (session_id, region, district, total_count, price_down_count, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(session_id, region, district) DO UPDATE SET
-                total_count = excluded.total_count,
-                price_down_count = excluded.price_down_count,
-                created_at = excluded.created_at
-        """
-
-        owns_connection = conn is None
-        conn = conn or self.get_connection()
-        if owns_connection:
-            conn.__enter__()
-        try:
-            conn.execute(
-                "DELETE FROM crawl_region_stats WHERE session_id = ?",
-                (session_id,),
-            )
-            payload = [
-                (
-                    row["session_id"],
-                    row["region"],
-                    row["district"],
-                    row["total_count"],
-                    row.get("price_down_count", 0),
-                    row.get("created_at", datetime.now().isoformat()),
-                )
-                for row in rows
-            ]
-            if payload:
-                conn.executemany(insert_sql, payload)
-        finally:
-            if owns_connection:
-                conn.__exit__(None, None, None)
-
-    def rebuild_crawl_region_stats_from_listings(
-        self, session_id: str, conn: Optional[ConnectionWrapper] = None
-    ) -> bool:
-        if not session_id:
-            return False
-
-        owns_connection = conn is None
-        conn = conn or self.get_connection()
-        if owns_connection:
-            conn.__enter__()
-        try:
-            history = conn.execute(
-                """
-                SELECT total_count
-                FROM crawl_history
-                WHERE session_id = ?
-                ORDER BY crawled_at DESC
-                LIMIT 1
-                """,
-                (session_id,),
-            ).fetchone()
-            if not history:
-                return False
-
-            listing_count = conn.execute(
-                "SELECT COUNT(*) AS cnt FROM listings WHERE crawl_session = ?",
-                (session_id,),
-            ).fetchone()["cnt"]
-            if int(history["total_count"] or 0) != int(listing_count or 0):
-                return False
-
-            rows = conn.execute(
-                """
-                SELECT region,
-                       district,
-                       COUNT(*) AS total_count,
-                       SUM(CASE WHEN tags LIKE '%가격인하%' THEN 1 ELSE 0 END) AS price_down_count
-                FROM listings
-                WHERE crawl_session = ?
-                GROUP BY region, district
-                """,
-                (session_id,),
-            ).fetchall()
-        finally:
-            if owns_connection:
-                conn.__exit__(None, None, None)
-
-        created_at = datetime.now().isoformat()
-        self.replace_crawl_region_stats(
-            session_id,
-            [
-                {
-                    "session_id": session_id,
-                    "region": row["region"],
-                    "district": row["district"],
-                    "total_count": row["total_count"],
-                    "price_down_count": row["price_down_count"] or 0,
-                    "created_at": created_at,
-                }
-                for row in rows
-            ],
-            conn=conn,
-        )
-        return True
 
     def create_alert_rule(
         self,
@@ -1064,7 +891,6 @@ class Database:
                 conn.execute("DELETE FROM listings WHERE crawl_session = ?", (old_session,))
 
             now = datetime.now().isoformat()
-            region_stats_rows = self._build_region_stats_rows(session_id, listings, now)
             rows = []
             for listing in listings:
                 price_value, rent_value = self._parse_price_sort_values(
@@ -1102,32 +928,6 @@ class Database:
             else:
                 for row in rows:
                     conn.execute(insert_sql, row)
-
-            conn.execute("DELETE FROM crawl_region_stats WHERE session_id = ?", (session_id,))
-            region_payload = [
-                (
-                    row["session_id"],
-                    row["region"],
-                    row["district"],
-                    row["total_count"],
-                    row["price_down_count"],
-                    row["created_at"],
-                )
-                for row in region_stats_rows
-            ]
-            if region_payload:
-                conn.executemany(
-                    """
-                    INSERT INTO crawl_region_stats
-                    (session_id, region, district, total_count, price_down_count, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(session_id, region, district) DO UPDATE SET
-                        total_count = excluded.total_count,
-                        price_down_count = excluded.price_down_count,
-                        created_at = excluded.created_at
-                    """,
-                    region_payload,
-                )
 
     def get_listings(
         self,
@@ -1252,19 +1052,16 @@ class Database:
 
     def get_trends(self):
         with self.get_connection() as conn:
-            latest_session_row = conn.execute(
+            latest_date_row = conn.execute(
                 """
-                SELECT session_id, DATE(crawled_at) AS crawl_date
+                SELECT DATE(MAX(crawled_at)) AS latest_date
                 FROM crawl_history
                 WHERE status = 'success'
                   AND COALESCE(source, 'naver') <> 'demo'
-                ORDER BY crawled_at DESC
-                LIMIT 1
                 """
             ).fetchone()
 
-            latest_session = latest_session_row["session_id"] if latest_session_row else None
-            latest_date = latest_session_row["crawl_date"] if latest_session_row else None
+            latest_date = latest_date_row["latest_date"] if latest_date_row else None
             if not latest_date:
                 return []
 
@@ -1274,32 +1071,27 @@ class Database:
                 latest_date = str(latest_date)
 
             prev_date = (date.fromisoformat(latest_date) - timedelta(days=1)).isoformat()
-            prev_session_row = conn.execute(
-                """
-                SELECT session_id
-                FROM crawl_history
-                WHERE status = 'success'
-                  AND COALESCE(source, 'naver') <> 'demo'
-                  AND DATE(crawled_at) = ?
-                ORDER BY crawled_at DESC
-                LIMIT 1
-                """,
-                (prev_date,),
-            ).fetchone()
-            prev_session = prev_session_row["session_id"] if prev_session_row else None
 
             rows = conn.execute(
                 """
-                WITH
+                WITH visible AS (
+                    SELECT l.region, l.district, l.tags, DATE(h.crawled_at) AS crawl_date
+                    FROM listings l
+                    INNER JOIN crawl_history h ON h.session_id = l.crawl_session
+                    WHERE h.status = 'success'
+                      AND COALESCE(h.source, 'naver') <> 'demo'
+                ),
                 curr AS (
-                    SELECT region, district, total_count AS cnt, price_down_count
-                    FROM crawl_region_stats
-                    WHERE session_id = ?
+                    SELECT region, district, COUNT(*) as cnt
+                    FROM visible
+                    WHERE crawl_date = ?
+                    GROUP BY region, district
                 ),
                 prev AS (
-                    SELECT region, district, total_count AS cnt
-                    FROM crawl_region_stats
-                    WHERE session_id = ?
+                    SELECT region, district, COUNT(*) as cnt
+                    FROM visible
+                    WHERE crawl_date = ?
+                    GROUP BY region, district
                 ),
                 keys AS (
                     SELECT region, district FROM curr
@@ -1315,7 +1107,13 @@ class Database:
                        COALESCE(c.cnt, 0) as current_cnt,
                        COALESCE(p.cnt, 0) as prev_cnt,
                        COALESCE(c.cnt, 0) - COALESCE(p.cnt, 0) as diff,
-                       COALESCE(c.price_down_count, 0) as price_down_count,
+                       COALESCE((
+                           SELECT SUM(CASE WHEN tags LIKE '%가격인하%' THEN 1 ELSE 0 END)
+                           FROM visible l
+                           WHERE l.region = k.region
+                             AND l.district = k.district
+                             AND l.crawl_date = ?
+                       ), 0) as price_down_count,
                        ? as current_date,
                        ? as previous_date
                 FROM keys k
@@ -1323,7 +1121,7 @@ class Database:
                 LEFT JOIN prev p ON k.region = p.region AND k.district = p.district
                 ORDER BY diff DESC, current_cnt DESC, display_name ASC
                 """,
-                (latest_session, prev_session or "", latest_date, prev_date),
+                (latest_date, prev_date, latest_date, latest_date, prev_date),
             ).fetchall()
         return [dict(row) for row in rows]
 
