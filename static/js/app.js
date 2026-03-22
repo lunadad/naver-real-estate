@@ -41,6 +41,8 @@ const state = {
     total: 0,
     priceDownCount: 0,
     crawlSummary: '',
+    trends: [],
+    dailySeries: [],
   },
 };
 
@@ -147,28 +149,135 @@ function updateListingsSummary(total = null) {
 
 function updateHeroInsight() {
   const el = document.getElementById('hero-insight-text');
-  if (!el) return;
+  const subEl = document.getElementById('hero-insight-subtext');
+  if (!el || !subEl) return;
 
   const total = Number(state.dashboard.total || 0);
   const priceDown = Number(state.dashboard.priceDownCount || 0);
   const alertCount = Number(state.alertRules.length || 0);
-  const focus = state.filters.district || state.filters.search || '전국';
+  const trends = state.dashboard.trends || [];
 
   if (!total) {
     el.textContent = '전국 급매 흐름과 알림 현황을 계산 중입니다.';
+    subEl.textContent = '서울 주요 지역과 가격인하 변화는 트렌드 집계 후 함께 보여드립니다.';
     return;
   }
 
-  const priceDownRatio = priceDown ? Math.round((priceDown / total) * 100) : 0;
-  const focusLabel = focus === '전국' ? '전국' : `${focus}`;
-  const alertLabel = alertCount ? `알림 ${fmtNum(alertCount)}개가 새 매물을 감시 중입니다.` : '아직 등록된 알림은 없습니다.';
-
-  if (state.filters.price_down_only) {
-    el.textContent = `${focusLabel}에서 가격인하 매물 ${fmtNum(priceDown)}건을 보고 있습니다. ${alertLabel}`;
+  if (!trends.length) {
+    const alertLabel = alertCount
+      ? `알림 ${fmtNum(alertCount)}개가 새 매물을 감시 중입니다.`
+      : '아직 등록된 알림은 없습니다.';
+    el.textContent = `전국 급매 ${fmtNum(total)}건, 가격인하 ${fmtNum(priceDown)}건입니다.`;
+    subEl.textContent = alertLabel;
     return;
   }
 
-  el.textContent = `${focusLabel} 기준 급매 ${fmtNum(total)}건, 그중 가격인하 ${fmtNum(priceDown)}건(${priceDownRatio}%)입니다. ${alertLabel}`;
+  const increasing = trends.filter(item => Number(item.diff) > 0);
+  const decreasing = trends.filter(item => Number(item.diff) < 0);
+  const topIncrease = [...increasing].sort((a, b) => Number(b.diff) - Number(a.diff))[0];
+  const topDecrease = [...decreasing].sort((a, b) => Number(a.diff) - Number(b.diff))[0];
+  const seoulMovers = trends
+    .filter(item => item.region === '서울특별시' && Number(item.diff) !== 0)
+    .sort((a, b) => Math.abs(Number(b.diff)) - Math.abs(Number(a.diff)))
+    .slice(0, 3);
+  const alertLabel = alertCount
+    ? `알림 ${fmtNum(alertCount)}개가 새 매물을 감시 중입니다.`
+    : '아직 등록된 알림은 없습니다.';
+  const firstLine = [
+    `1일 기준 ${fmtNum(increasing.length)}개 지역 증가, ${fmtNum(decreasing.length)}개 지역 감소입니다.`,
+    topIncrease ? `증가폭 최대는 ${formatTrendInsightName(topIncrease)}(+${fmtNum(topIncrease.diff)})입니다.` : '',
+    topDecrease ? `감소폭 최대는 ${formatTrendInsightName(topDecrease)}(${fmtNum(topDecrease.diff)})입니다.` : '',
+  ].filter(Boolean).join(' ');
+  const secondLine = [
+    seoulMovers.length ? `서울에서는 ${formatSeoulTrendSummary(seoulMovers)} 변화가 컸습니다.` : '',
+    `현재 가격인하 매물은 ${fmtNum(priceDown)}건입니다.`,
+    alertLabel,
+  ].filter(Boolean).join(' ');
+
+  el.textContent = firstLine;
+  subEl.textContent = secondLine;
+}
+
+function formatTrendInsightName(item) {
+  return item.display_name || `${item.region} ${item.district}`;
+}
+
+function formatSeoulTrendSummary(items) {
+  return items
+    .map(item => `${item.district}(${Number(item.diff) > 0 ? '+' : ''}${fmtNum(item.diff)})`)
+    .join(', ');
+}
+
+function renderHeroDailySeries(series) {
+  const chartEl = document.getElementById('hero-daily-chart');
+  const labelsEl = document.getElementById('hero-daily-labels');
+  const emptyEl = document.getElementById('hero-daily-empty');
+  const currentEl = document.getElementById('hero-daily-current');
+  const changeEl = document.getElementById('hero-daily-change');
+  if (!chartEl || !labelsEl || !emptyEl || !currentEl || !changeEl) return;
+
+  const items = Array.isArray(series) ? series.slice(-7) : [];
+  const validItems = items.filter(item => Number.isFinite(Number(item.total_count)));
+
+  if (!validItems.length) {
+    chartEl.innerHTML = '';
+    labelsEl.innerHTML = '';
+    emptyEl.classList.remove('hidden');
+    currentEl.textContent = '—';
+    changeEl.textContent = '최근 7일 성공 크롤링 데이터가 없습니다.';
+    return;
+  }
+
+  emptyEl.classList.add('hidden');
+
+  const values = validItems.map(item => Number(item.total_count));
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const range = Math.max(maxValue - minValue, 1);
+  const latestItem = validItems[validItems.length - 1];
+  const previousItem = validItems.length > 1 ? validItems[validItems.length - 2] : null;
+  const latestValue = Number(latestItem.total_count || 0);
+  const delta = previousItem ? latestValue - Number(previousItem.total_count || 0) : null;
+  const usesPreviousDay = previousItem && latestItem.date
+    && previousItem.date
+    && ((new Date(latestItem.date) - new Date(previousItem.date)) / 86400000 === 1);
+
+  currentEl.textContent = `${fmtNum(latestValue)}건`;
+  if (delta == null) {
+    changeEl.textContent = '최근 7일 중 첫 성공 크롤링입니다.';
+  } else {
+    const prefix = delta > 0 ? '+' : '';
+    changeEl.textContent = `${usesPreviousDay ? '전일' : '직전 성공일'} 대비 ${prefix}${fmtNum(delta)}건`;
+  }
+
+  let previousValidValue = null;
+  chartEl.innerHTML = items.map((item, index) => {
+    const value = Number(item.total_count);
+    const hasValue = Number.isFinite(value);
+    const showTooltip = index < items.length - 1;
+    let directionClass = 'flat';
+    if (hasValue && previousValidValue != null) {
+      if (value > previousValidValue) directionClass = 'up';
+      else if (value < previousValidValue) directionClass = 'down';
+    }
+    const height = hasValue
+      ? Math.max(18, Math.round(((value - minValue) / range) * 60) + 18)
+      : 12;
+    const tooltip = hasValue
+      ? `${item.label} ${fmtNum(value)}건`
+      : `${item.label} 성공 크롤링 없음`;
+    if (hasValue) previousValidValue = value;
+    return `
+      <div class="hero-mini-bar-wrap ${index === items.length - 1 ? 'latest' : ''} ${showTooltip ? 'has-tooltip' : ''}"${showTooltip ? ` data-tooltip="${escHtml(tooltip)}"` : ''}>
+        <div class="hero-mini-bar ${hasValue ? directionClass : 'missing'}" style="height:${height}px"></div>
+      </div>
+    `;
+  }).join('');
+
+  labelsEl.innerHTML = items.map(item => {
+    const missing = !Number.isFinite(Number(item.total_count));
+    return `<span class="hero-mini-chart-day ${missing ? 'missing' : ''}">${escHtml(item.label || '')}</span>`;
+  }).join('');
 }
 
 function applyMapVisibility() {
@@ -427,6 +536,15 @@ function updateStats(data) {
 
 // ── Sidebar ──────────────────────────────────────────────────────────────────
 async function loadSidebar() {
+  const dailySeriesPromise = api('/api/crawl-daily-series?days=7')
+    .then(series => {
+      state.dashboard.dailySeries = series;
+      renderHeroDailySeries(series);
+    })
+    .catch(e => {
+      console.warn('Daily series load error:', e);
+    });
+
   const regionStatsPromise = api('/api/region-stats')
     .then(regionStats => {
       state.regionStats = regionStats;
@@ -439,13 +557,15 @@ async function loadSidebar() {
 
   const trendsPromise = api('/api/trends')
     .then(trends => {
+      state.dashboard.trends = trends;
       renderTrends(trends);
+      updateHeroInsight();
     })
     .catch(e => {
       console.warn('Trends load error:', e);
     });
 
-  await Promise.allSettled([regionStatsPromise, trendsPromise]);
+  await Promise.allSettled([dailySeriesPromise, regionStatsPromise, trendsPromise]);
 }
 
 function renderTrends(trends) {

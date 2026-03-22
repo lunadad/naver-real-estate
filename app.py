@@ -277,6 +277,49 @@ def get_external_schedule_state(last_attempt):
     }
 
 
+def build_daily_crawl_series(days=7):
+    days = max(1, min(int(days or 7), 14))
+    today = datetime.now(KST).date()
+    rows = db.get_recent_successful_crawls(limit=max(days * 12, 30))
+    latest_by_day = {}
+
+    for row in rows:
+        crawled_at = coerce_kst_datetime(row.get("crawled_at"))
+        if not crawled_at:
+            continue
+        day_key = crawled_at.date().isoformat()
+        if day_key in latest_by_day:
+            continue
+        latest_by_day[day_key] = {
+            "date": day_key,
+            "label": f"{crawled_at.month}.{crawled_at.day}",
+            "total_count": row.get("total_count"),
+            "urgent_count": row.get("urgent_count"),
+            "session_id": row.get("session_id"),
+            "crawled_at": crawled_at,
+        }
+
+    series = []
+    for offset in range(days - 1, -1, -1):
+        target = today - timedelta(days=offset)
+        key = target.isoformat()
+        row = latest_by_day.get(key)
+        if row:
+            series.append(row)
+            continue
+        series.append(
+            {
+                "date": key,
+                "label": f"{target.month}.{target.day}",
+                "total_count": None,
+                "urgent_count": None,
+                "session_id": None,
+                "crawled_at": None,
+            }
+        )
+    return series
+
+
 def build_push_payload(matches):
     first = matches[0]
     extra_count = max(0, len(matches) - 1)
@@ -530,6 +573,12 @@ def get_region_stats():
 @app.route("/api/trends")
 def get_trends():
     return jsonify(serialize_api_value(db.get_trends()))
+
+
+@app.route("/api/crawl-daily-series")
+def get_crawl_daily_series():
+    days = request.args.get("days", default=7, type=int)
+    return jsonify(serialize_api_value(build_daily_crawl_series(days)))
 
 
 @app.route("/api/regions")

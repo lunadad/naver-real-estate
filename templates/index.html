@@ -172,27 +172,24 @@
             <div id="hero-filter-summary" class="hero-filter-summary">현재 조건: 전체 급매</div>
             <div id="hero-crawl-summary" class="hero-crawl-summary">최신 크롤링 정보를 불러오는 중...</div>
           </div>
-          <div class="hero-stats-grid">
-            <article class="hero-stat-card">
-              <span class="hero-stat-label">감시 중인 급매</span>
-              <strong id="hero-total-count" class="hero-stat-value">—</strong>
-            </article>
-            <article class="hero-stat-card accent-coral">
-              <span class="hero-stat-label">가격인하</span>
-              <strong id="hero-price-down-count" class="hero-stat-value urgent">—</strong>
-            </article>
-            <article class="hero-stat-card accent-blue">
-              <span class="hero-stat-label">등록 알림</span>
-              <strong id="hero-alert-rule-count" class="hero-stat-value">0개</strong>
-            </article>
-            <article class="hero-stat-card accent-green">
-              <span class="hero-stat-label">집중 지역</span>
-              <strong id="hero-focus-region" class="hero-stat-value region">전국</strong>
-            </article>
-          </div>
           <div id="hero-insight-banner" class="hero-insight-banner">
             <span class="hero-insight-label">오늘의 급매 온도</span>
-            <p id="hero-insight-text" class="hero-insight-text">전국 급매 흐름과 알림 현황을 계산 중입니다.</p>
+            <div class="hero-insight-copy">
+              <p id="hero-insight-text" class="hero-insight-text">전국 급매 흐름과 알림 현황을 계산 중입니다.</p>
+              <p id="hero-insight-subtext" class="hero-insight-subtext">서울 주요 지역과 가격인하 변화는 트렌드 집계 후 함께 보여드립니다.</p>
+            </div>
+          </div>
+          <div class="hero-mini-chart-card">
+            <div class="hero-mini-chart-head">
+              <span class="hero-mini-chart-label">최근 7일 급매 추이</span>
+              <div class="hero-mini-chart-summary">
+                <strong id="hero-daily-current" class="hero-mini-chart-current">—</strong>
+                <span id="hero-daily-change" class="hero-mini-chart-change">성공 크롤링 기준으로 집계합니다.</span>
+              </div>
+            </div>
+            <div id="hero-daily-chart" class="hero-mini-chart" aria-hidden="true"></div>
+            <div id="hero-daily-empty" class="hero-mini-chart-empty hidden">최근 7일 성공 크롤링 데이터가 없습니다.</div>
+            <div id="hero-daily-labels" class="hero-mini-chart-labels"></div>
           </div>
           <div class="hero-alert-rail">
             <span class="hero-rail-label">내 알림</span>
