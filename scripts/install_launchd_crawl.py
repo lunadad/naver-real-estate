@@ -1,11 +1,28 @@
 import argparse
 import os
 import plistlib
+import sys
 from pathlib import Path
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_LABEL = "com.lunadad.naver-real-estate-crawl"
+
+
+def default_python_path() -> str:
+    current = Path(sys.executable).expanduser()
+    if current.exists():
+        return str(current)
+
+    candidates = [
+        ROOT_DIR / ".venv" / "bin" / "python3",
+        ROOT_DIR / ".venv-migrate" / "bin" / "python3",
+        Path("/usr/bin/python3"),
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+    return str(candidates[0])
 
 
 def build_parser():
@@ -19,7 +36,7 @@ def build_parser():
     )
     parser.add_argument(
         "--python",
-        default=str(ROOT_DIR / ".venv-migrate" / "bin" / "python3"),
+        default=default_python_path(),
         help="Python executable to use",
     )
     parser.add_argument(
@@ -145,6 +162,12 @@ def main():
 
     if not args.database_url:
         raise SystemExit("DATABASE_URL is required")
+    python_bin = Path(args.python).expanduser()
+    if not python_bin.exists():
+        raise SystemExit(
+            f"--python path does not exist: {python_bin}. "
+            "Use --python with a valid interpreter path."
+        )
 
     plist_data = make_plist(args)
     target = install_target(args)
