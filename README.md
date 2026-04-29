@@ -102,6 +102,8 @@ sudo launchctl bootstrap system /Library/LaunchDaemons/com.lunadad.naver-real-es
 sudo launchctl kickstart -k system/com.lunadad.naver-real-estate-crawl
 ```
 
+`install_launchd_crawl.py` now defaults `--python` to the interpreter used to run the installer command. If you need a specific venv, pass `--python /path/to/python3`.
+
 If you intentionally want a user-login-bound LaunchAgent instead:
 
 ```bash
