@@ -11,6 +11,8 @@ DEFAULT_LOG_PATH = LOGS_DIR / "run_remote_crawl.log"
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+print(f"[run_remote_crawl] python={sys.executable} pid={os.getpid()}", flush=True)
+
 from crawler import NaverRealEstateCrawler
 from database import Database
 

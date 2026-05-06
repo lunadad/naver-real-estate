@@ -102,6 +102,27 @@ sudo launchctl bootstrap system /Library/LaunchDaemons/com.lunadad.naver-real-es
 sudo launchctl kickstart -k system/com.lunadad.naver-real-estate-crawl
 ```
 
+The plist now invokes `scripts/run_remote_crawl.sh`, which resolves a usable
+Python interpreter at runtime (preferring `$CRAWL_PYTHON_BIN`, then
+`.venv/bin/python3`, `.venv-migrate/bin/python3`, Homebrew, and finally
+`/usr/bin/python3`). Renaming or rebuilding the venv no longer requires
+regenerating the plist. The wrapper writes its own decision log to
+`logs/run_remote_crawl.wrapper.log`.
+
+### Troubleshooting: daily crawl silently stopped
+
+If the dashboard shows the last successful crawl frozen on a past date, the
+launchd job is almost certainly failing before Python starts. Check, in order:
+
+```bash
+tail -n 50 logs/run_remote_crawl.wrapper.log
+tail -n 50 logs/launchd-crawl.err.log
+```
+
+If the wrapper log is empty or missing, the plist is still pointing at an
+interpreter that no longer exists. Reinstall it with the commands above —
+once on the new wrapper-based plist, this failure mode is gone.
+
 If you intentionally want a user-login-bound LaunchAgent instead:
 
 ```bash
