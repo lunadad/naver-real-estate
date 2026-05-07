@@ -114,14 +114,27 @@ regenerating the plist. The wrapper writes its own decision log to
 If the dashboard shows the last successful crawl frozen on a past date, the
 launchd job is almost certainly failing before Python starts. Check, in order:
 
+**For LaunchAgent mode (user-bound):**
 ```bash
-tail -n 50 logs/run_remote_crawl.wrapper.log
-tail -n 50 logs/launchd-crawl.err.log
+tail -n 50 ~/naver-real-estate/logs/run_remote_crawl.wrapper.log
+tail -n 50 ~/naver-real-estate/logs/launchd-crawl.err.log
+```
+
+**For LaunchDaemon mode (system-wide):**
+```bash
+sudo tail -n 50 /var/log/naver-real-estate/launchd-crawl.err.log
+sudo tail -n 50 /var/log/naver-real-estate/run_remote_crawl.wrapper.log
 ```
 
 If the wrapper log is empty or missing, the plist is still pointing at an
 interpreter that no longer exists. Reinstall it with the commands above —
 once on the new wrapper-based plist, this failure mode is gone.
+
+**Daemon permission issue:** If launchd logs show `deny(1) file-read-data` or
+`Operation not permitted` when accessing logs, the daemon mode is trying to
+write to the user's home directory. The install script automatically uses
+`/var/log/naver-real-estate` for daemon mode and `./logs` for agent mode to
+avoid this sandbox issue.
 
 If you intentionally want a user-login-bound LaunchAgent instead:
 

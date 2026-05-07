@@ -95,12 +95,16 @@ def build_parser():
 
 
 def make_plist(args):
-    logs_dir = ROOT_DIR / "logs"
-    logs_dir.mkdir(exist_ok=True)
-
     run_at_load = args.run_at_load
     if run_at_load is None:
         run_at_load = args.mode == "daemon"
+
+    if args.mode == "daemon":
+        logs_dir = Path("/var/log") / "naver-real-estate"
+    else:
+        logs_dir = ROOT_DIR / "logs"
+
+    logs_dir.mkdir(parents=True, exist_ok=True)
 
     plist = {
         "Label": args.label,
@@ -147,15 +151,20 @@ def install_target(args):
 
 def print_install_commands(target, args):
     if args.mode == "daemon":
+        print(f"sudo mkdir -p /var/log/naver-real-estate")
+        print(f"sudo chown root:wheel /var/log/naver-real-estate")
+        print(f"sudo chmod 755 /var/log/naver-real-estate")
         print(f"sudo chown root:wheel {target}")
         print(f"sudo chmod 644 {target}")
         print(f"sudo launchctl bootout system/{args.label} 2>/dev/null || true")
         print(f"sudo launchctl bootstrap system {target}")
         print(f"sudo launchctl kickstart -k system/{args.label}")
+        print(f"\nDaemon logs: /var/log/naver-real-estate/launchd-crawl.*.log")
     else:
         print(f"launchctl bootout gui/$(id -u) {target} 2>/dev/null || true")
         print(f"launchctl bootstrap gui/$(id -u) {target}")
         print(f"launchctl kickstart -k gui/$(id -u)/{args.label}")
+        print(f"\nAgent logs: {ROOT_DIR}/logs/launchd-crawl.*.log")
 
 
 def main():
