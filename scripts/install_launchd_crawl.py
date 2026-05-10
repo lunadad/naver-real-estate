@@ -1,11 +1,29 @@
 import argparse
 import os
 import plistlib
+import sys
 from pathlib import Path
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_LABEL = "com.lunadad.naver-real-estate-crawl"
+WRAPPER_PATH = ROOT_DIR / "scripts" / "run_remote_crawl.sh"
+
+
+def default_python_path() -> str:
+    current = Path(sys.executable).expanduser()
+    if current.exists():
+        return str(current)
+
+    candidates = [
+        ROOT_DIR / ".venv" / "bin" / "python3",
+        ROOT_DIR / ".venv-migrate" / "bin" / "python3",
+        Path("/usr/bin/python3"),
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+    return str(candidates[0])
 
 
 def build_parser():
@@ -19,8 +37,8 @@ def build_parser():
     )
     parser.add_argument(
         "--python",
-        default=str(ROOT_DIR / ".venv-migrate" / "bin" / "python3"),
-        help="Python executable to use",
+        default=default_python_path(),
+        help="Python executable preference (passed to the wrapper as $CRAWL_PYTHON_BIN)",
     )
     parser.add_argument(
         "--hour",
@@ -77,18 +95,22 @@ def build_parser():
 
 
 def make_plist(args):
-    logs_dir = ROOT_DIR / "logs"
-    logs_dir.mkdir(exist_ok=True)
-
     run_at_load = args.run_at_load
     if run_at_load is None:
         run_at_load = args.mode == "daemon"
 
+    if args.mode == "daemon":
+        logs_dir = Path("/var/log") / "naver-real-estate"
+    else:
+        logs_dir = ROOT_DIR / "logs"
+
+    logs_dir.mkdir(parents=True, exist_ok=True)
+
     plist = {
         "Label": args.label,
         "ProgramArguments": [
-            args.python,
-            str(ROOT_DIR / "scripts" / "run_remote_crawl.py"),
+            "/bin/bash",
+            str(WRAPPER_PATH),
             "--database-url",
             args.database_url,
         ],
@@ -99,6 +121,7 @@ def make_plist(args):
             "SEED_DEMO_DATA": "false",
             "MIN_LIVE_CRAWL_RATIO": "0.5",
             "PYTHONUNBUFFERED": "1",
+            "CRAWL_PYTHON_BIN": args.python,
         },
         "StartCalendarInterval": {
             "Hour": max(0, min(23, args.hour)),
@@ -128,15 +151,21 @@ def install_target(args):
 
 def print_install_commands(target, args):
     if args.mode == "daemon":
+        print(f"sudo mkdir -p /var/log/naver-real-estate")
+        print(f"sudo chown root:wheel /var/log/naver-real-estate")
+        print(f"sudo chmod 755 /var/log/naver-real-estate")
         print(f"sudo chown root:wheel {target}")
         print(f"sudo chmod 644 {target}")
         print(f"sudo launchctl bootout system/{args.label} 2>/dev/null || true")
         print(f"sudo launchctl bootstrap system {target}")
         print(f"sudo launchctl kickstart -k system/{args.label}")
+        print(f"\nDaemon logs: /var/log/naver-real-estate/launchd-crawl.*.log")
     else:
+        print(f"mkdir -p {ROOT_DIR}/logs")
         print(f"launchctl bootout gui/$(id -u) {target} 2>/dev/null || true")
         print(f"launchctl bootstrap gui/$(id -u) {target}")
         print(f"launchctl kickstart -k gui/$(id -u)/{args.label}")
+        print(f"\nAgent logs: {ROOT_DIR}/logs/launchd-crawl.*.log")
 
 
 def main():
@@ -145,6 +174,21 @@ def main():
 
     if not args.database_url:
         raise SystemExit("DATABASE_URL is required")
+
+    if not WRAPPER_PATH.exists():
+        raise SystemExit(
+            f"wrapper script not found: {WRAPPER_PATH}. "
+            "Pull the latest repo before running the installer."
+        )
+    if not os.access(WRAPPER_PATH, os.X_OK):
+        WRAPPER_PATH.chmod(0o755)
+
+    python_bin = Path(args.python).expanduser()
+    if not python_bin.exists():
+        raise SystemExit(
+            f"--python path does not exist: {python_bin}. "
+            "Use --python with a valid interpreter path."
+        )
 
     plist_data = make_plist(args)
     target = install_target(args)
