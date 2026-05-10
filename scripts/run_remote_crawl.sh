@@ -6,7 +6,14 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 LOG_DIR="${ROOT_DIR}/logs"
-mkdir -p "${LOG_DIR}"
+
+# Use /tmp as a fallback so startup errors are always visible even when logs/
+# does not yet exist (launchd cannot write StandardOutPath before mkdir runs).
+BOOTSTRAP_ERR="/tmp/naver-real-estate-bootstrap.err"
+mkdir -p "${LOG_DIR}" 2>>"${BOOTSTRAP_ERR}" || {
+  echo "$(date '+%Y-%m-%d %H:%M:%S%z') ERROR: mkdir -p ${LOG_DIR} failed" >>"${BOOTSTRAP_ERR}"
+  exit 1
+}
 
 WRAPPER_LOG="${LOG_DIR}/run_remote_crawl.wrapper.log"
 exec >>"${WRAPPER_LOG}" 2>&1

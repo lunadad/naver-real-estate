@@ -161,6 +161,7 @@ def print_install_commands(target, args):
         print(f"sudo launchctl kickstart -k system/{args.label}")
         print(f"\nDaemon logs: /var/log/naver-real-estate/launchd-crawl.*.log")
     else:
+        print(f"mkdir -p {ROOT_DIR}/logs")
         print(f"launchctl bootout gui/$(id -u) {target} 2>/dev/null || true")
         print(f"launchctl bootstrap gui/$(id -u) {target}")
         print(f"launchctl kickstart -k gui/$(id -u)/{args.label}")
