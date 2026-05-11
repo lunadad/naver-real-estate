@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import sys
+import time
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
@@ -65,6 +66,23 @@ def build_parser():
     return parser
 
 
+def _connect_with_retry(database_url: str, max_attempts: int = 5, delay: int = 30) -> "Database":
+    last_exc: Exception = RuntimeError("no attempts made")
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return Database(database_url=database_url)
+        except Exception as exc:
+            last_exc = exc
+            if attempt >= max_attempts:
+                break
+            logger.warning(
+                "DB connection attempt %d/%d failed: %s — retrying in %ds",
+                attempt, max_attempts, exc, delay,
+            )
+            time.sleep(delay)
+    raise last_exc
+
+
 def main():
     parser = build_parser()
     args = parser.parse_args()
@@ -82,7 +100,7 @@ def main():
     logger.info("Local remote crawl starting (pid=%s)", os.getpid())
     logger.info("Local crawl log file: %s", Path(args.log_path).expanduser())
 
-    db = Database(database_url=args.database_url)
+    db = _connect_with_retry(args.database_url)
     crawler = NaverRealEstateCrawler(db)
     result = crawler.crawl_all()
 
