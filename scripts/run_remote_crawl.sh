@@ -22,6 +22,23 @@ ts() { date '+%Y-%m-%d %H:%M:%S%z'; }
 
 echo "[$(ts)] launchd wrapper starting (pid=$$)"
 
+# Wait for network connectivity after wake-from-sleep.
+# launchd may fire at exactly 09:00 while the NIC is still initialising.
+_wait_for_network() {
+  local max=12 i=1
+  while [[ $i -le $max ]]; do
+    if ping -c 1 -W 2 1.1.1.1 >/dev/null 2>&1; then
+      echo "[$(ts)] network ready (attempt ${i}/${max})"
+      return 0
+    fi
+    echo "[$(ts)] waiting for network (attempt ${i}/${max})..."
+    sleep 5
+    (( i++ ))
+  done
+  echo "[$(ts)] WARNING: network not confirmed after ${max} attempts, proceeding anyway"
+}
+_wait_for_network
+
 candidates=()
 if [[ -n "${CRAWL_PYTHON_BIN:-}" ]]; then
   candidates+=("${CRAWL_PYTHON_BIN}")
