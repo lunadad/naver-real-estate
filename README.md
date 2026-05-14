@@ -29,6 +29,33 @@ Backup URL:
 Keep production fixes on `main`. Start larger redesigns, architecture changes,
 and experimental 2.0 work from `version-2.0`.
 
+## Local Worktree Layout
+
+Local development uses separate folders so production maintenance and 2.0 work
+do not fight over the same checkout:
+
+```text
+/Users/haluna/workspace/naver-real-estate     -> main
+/Users/haluna/workspace/naver-real-estate-v2  -> version-2.0
+```
+
+Useful commands:
+
+```bash
+git worktree list
+
+cd /Users/haluna/workspace/naver-real-estate
+git status -sb
+
+cd /Users/haluna/workspace/naver-real-estate-v2
+git status -sb
+```
+
+The v2 folder has its own ignored `.env.local` that defaults to local SQLite and
+demo data. This avoids accidental writes to production Neon while experimenting.
+Copy a real Neon URL into that file only when v2 intentionally needs to read the
+shared production database.
+
 ## Deploy to Vercel + Neon
 
 Vercel serves the dashboard and read-only API routes. It should not run the
