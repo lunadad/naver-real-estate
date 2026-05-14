@@ -24,10 +24,10 @@ Backup URL:
 ## GitHub Branches
 
 - `main`: stable production branch for the current 1.x app.
-- `v2.0`: separate development branch for the 2.0 version.
+- `version-2.0`: separate development branch for the 2.0 version.
 
 Keep production fixes on `main`. Start larger redesigns, architecture changes,
-and experimental 2.0 work from `v2.0`.
+and experimental 2.0 work from `version-2.0`.
 
 ## Deploy to Vercel + Neon
 
