@@ -2,6 +2,7 @@
 # .claude/ 전체 무시하되 launch.json은 커밋
 .claude/*
 !.claude/launch.json
+.vercel/
 __pycache__/
 *.pyc
 *.pyo

@@ -1,0 +1,14 @@
+.DS_Store
+.env
+.env.local
+.env.production
+.env.*.local
+.venv/
+.venv-migrate/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+logs/
+tmp_geocode_cache.json

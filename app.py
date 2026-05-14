@@ -1,3 +1,4 @@
+import atexit
 import logging
 import os
 import json
@@ -15,7 +16,6 @@ except ImportError:  # pragma: no cover - optional until dependency is installed
     WebPushException = Exception
     webpush = None
 
-from crawler import NaverRealEstateCrawler
 from database import Database
 
 logging.basicConfig(
@@ -110,6 +110,9 @@ def env_flag(name: str, default: bool) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+IS_VERCEL = env_flag("VERCEL", False)
+
+
 def serialize_api_value(value):
     if isinstance(value, datetime):
         if value.tzinfo is None:
@@ -127,7 +130,8 @@ def serialize_api_value(value):
 DEFAULT_DB_PATH = str(BASE_DIR / "real_estate.db")
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 DB_PATH = os.getenv("DB_PATH", DEFAULT_DB_PATH)
-ENABLE_SCHEDULER = env_flag("ENABLE_SCHEDULER", True)
+ENABLE_SCHEDULER = env_flag("ENABLE_SCHEDULER", not IS_VERCEL)
+ENABLE_CRAWL_ENDPOINT = env_flag("ENABLE_CRAWL_ENDPOINT", not IS_VERCEL)
 SEED_DEMO_DATA = env_flag("SEED_DEMO_DATA", False)
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "").strip()
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "").strip()
@@ -141,7 +145,24 @@ app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
 CORS(app)
 
 db = Database(db_path=DB_PATH, database_url=DATABASE_URL)
-crawler = NaverRealEstateCrawler(db)
+atexit.register(db.close)
+_crawler = None
+
+
+def get_crawler():
+    global _crawler
+    if _crawler is None:
+        from crawler import NaverRealEstateCrawler
+
+        _crawler = NaverRealEstateCrawler(db)
+    return _crawler
+
+
+def load_regions():
+    regions_path = BASE_DIR / "data" / "regions.json"
+    if regions_path.exists():
+        return json.loads(regions_path.read_text(encoding="utf-8"))
+    return get_crawler().REGIONS
 
 # ── Scheduler ───────────────────────────────────────────────────────────────
 scheduler = BackgroundScheduler(timezone=KST)
@@ -150,7 +171,7 @@ SCHEDULED_HOUR = 9  # default: 9 AM KST
 
 def scheduled_crawl():
     logger.info("⏰ 자동 크롤링 시작...")
-    result = crawler.crawl_all()
+    result = get_crawler().crawl_all()
     if result.get("status") == "success":
         dispatch_push_alerts()
     else:
@@ -181,7 +202,7 @@ def ensure_initial_data():
         return
 
     logger.warning("초기 데이터 없음 → 데모 데이터 로드 (운영환경에서는 비권장)")
-    demo = crawler.generate_demo_data()
+    demo = get_crawler().generate_demo_data()
     import uuid as _uuid
 
     sid = str(_uuid.uuid4())[:8]
@@ -584,7 +605,7 @@ def get_crawl_daily_series():
 @app.route("/api/regions")
 def get_regions():
     regions = []
-    for name, info in crawler.REGIONS.items():
+    for name, info in load_regions().items():
         entry = {
             "name": name,
             "lat": info["lat"],
@@ -600,8 +621,11 @@ def get_regions():
 
 @app.route("/api/crawl", methods=["POST"])
 def trigger_crawl():
+    if not ENABLE_CRAWL_ENDPOINT:
+        return jsonify({"status": "error", "message": "crawl endpoint disabled"}), 403
+
     try:
-        result = crawler.crawl_all()
+        result = get_crawler().crawl_all()
         run_status = result.get("status", "success")
         push_result = (
             dispatch_push_alerts()
