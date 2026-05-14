@@ -3,11 +3,22 @@ import os
 import plistlib
 import sys
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_LABEL = "com.lunadad.naver-real-estate-crawl"
 WRAPPER_PATH = ROOT_DIR / "scripts" / "run_remote_crawl.sh"
+
+
+def ensure_postgres_sslmode(database_url: str) -> str:
+    if not database_url.startswith(("postgresql://", "postgres://")):
+        return database_url
+
+    parts = urlsplit(database_url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query.setdefault("sslmode", "require")
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
 
 def default_python_path() -> str:
@@ -28,12 +39,12 @@ def default_python_path() -> str:
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        description="Create a macOS launchd plist for local daily crawling to Render Postgres."
+        description="Create a macOS launchd plist for local daily crawling to Neon or another remote Postgres database."
     )
     parser.add_argument(
         "--database-url",
         default=os.getenv("DATABASE_URL", "").strip(),
-        help="Render Postgres DATABASE_URL",
+        help="Neon or remote Postgres DATABASE_URL",
     )
     parser.add_argument(
         "--python",
@@ -98,6 +109,7 @@ def make_plist(args):
     run_at_load = args.run_at_load
     if run_at_load is None:
         run_at_load = args.mode == "daemon"
+    database_url = ensure_postgres_sslmode(args.database_url)
 
     if args.mode == "daemon":
         logs_dir = Path("/var/log") / "naver-real-estate"
@@ -112,11 +124,11 @@ def make_plist(args):
             "/bin/bash",
             str(WRAPPER_PATH),
             "--database-url",
-            args.database_url,
+            database_url,
         ],
         "WorkingDirectory": str(ROOT_DIR),
         "EnvironmentVariables": {
-            "DATABASE_URL": args.database_url,
+            "DATABASE_URL": database_url,
             "ALLOW_DEMO_FALLBACK": "false",
             "SEED_DEMO_DATA": "false",
             "MIN_LIVE_CRAWL_RATIO": "0.5",

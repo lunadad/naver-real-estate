@@ -4,6 +4,7 @@ import sqlite3
 import re
 from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional, Sequence, Tuple
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 try:
     import psycopg
@@ -14,6 +15,16 @@ try:
     from psycopg_pool import ConnectionPool
 except ImportError:  # pragma: no cover - optional for sqlite-only use
     ConnectionPool = None
+
+
+def ensure_postgres_sslmode(database_url: str) -> str:
+    if not database_url.startswith(("postgresql://", "postgres://")):
+        return database_url
+
+    parts = urlsplit(database_url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query.setdefault("sslmode", "require")
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
 
 class CompatRow(dict):
@@ -126,7 +137,7 @@ class Database:
         skip_price_backfill: bool = False,
     ):
         self.db_path = db_path
-        self.database_url = (database_url or "").strip()
+        self.database_url = ensure_postgres_sslmode((database_url or "").strip())
         self.driver = "postgres" if self.database_url else "sqlite"
         self.skip_price_backfill = skip_price_backfill
         self.connect_timeout = int((os.getenv("PGCONNECT_TIMEOUT") or "10").strip())
@@ -165,6 +176,11 @@ class Database:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return ConnectionWrapper("sqlite", conn)
+
+    def close(self):
+        if self.pool is not None:
+            self.pool.close()
+            self.pool = None
 
     def init_db(self):
         with self.get_connection() as conn:

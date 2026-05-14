@@ -5,6 +5,7 @@ import sys
 import time
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 LOGS_DIR = ROOT_DIR / "logs"
@@ -12,12 +13,20 @@ DEFAULT_LOG_PATH = LOGS_DIR / "run_remote_crawl.log"
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-print(f"[run_remote_crawl] python={sys.executable} pid={os.getpid()}", flush=True)
-
 from crawler import NaverRealEstateCrawler
 from database import Database
 
 logger = logging.getLogger("run_remote_crawl")
+
+
+def ensure_postgres_sslmode(database_url: str) -> str:
+    if not database_url.startswith(("postgresql://", "postgres://")):
+        return database_url
+
+    parts = urlsplit(database_url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query.setdefault("sslmode", "require")
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
 
 def configure_logging(log_path: str):
@@ -51,7 +60,7 @@ def build_parser():
     parser.add_argument(
         "--database-url",
         default=os.getenv("DATABASE_URL", "").strip(),
-        help="Render Postgres DATABASE_URL",
+        help="Neon or remote Postgres DATABASE_URL",
     )
     parser.add_argument(
         "--min-live-crawl-ratio",
@@ -88,21 +97,27 @@ def main():
     args = parser.parse_args()
     configure_logging(args.log_path)
 
-    if not args.database_url:
+    database_url = ensure_postgres_sslmode(args.database_url)
+
+    if not database_url:
         raise SystemExit("DATABASE_URL is required")
 
-    os.environ["DATABASE_URL"] = args.database_url
+    os.environ["DATABASE_URL"] = database_url
     os.environ.setdefault("ALLOW_DEMO_FALLBACK", "false")
     os.environ.setdefault("SEED_DEMO_DATA", "false")
     os.environ["MIN_LIVE_CRAWL_RATIO"] = str(args.min_live_crawl_ratio)
     os.environ["LOCAL_CRAWL_LOG_PATH"] = str(args.log_path)
 
+    print(f"[run_remote_crawl] python={sys.executable} pid={os.getpid()}", flush=True)
     logger.info("Local remote crawl starting (pid=%s)", os.getpid())
     logger.info("Local crawl log file: %s", Path(args.log_path).expanduser())
 
-    db = _connect_with_retry(args.database_url)
-    crawler = NaverRealEstateCrawler(db)
-    result = crawler.crawl_all()
+    db = _connect_with_retry(database_url)
+    try:
+        crawler = NaverRealEstateCrawler(db)
+        result = crawler.crawl_all()
+    finally:
+        db.close()
 
     status = result.get("status", "success")
     logger.info(

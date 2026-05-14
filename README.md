@@ -2,16 +2,37 @@
 
 Flask + Playwright app for browsing urgent listings from Naver Real Estate.
 
-## Deploy to Render
+## Deploy to Render + Neon
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/lunadad/naver-real-estate)
 
 ## Notes
 
-- Render deployment is configured with `render.yaml`.
+- Render deployment is configured with `render.yaml` as a free web service.
+- Create the Postgres database separately in Neon, then provide its connection string as Render's `DATABASE_URL` secret.
 - The app uses `DATABASE_URL` first and falls back to local SQLite via `DB_PATH`.
-- The default Render setup in this repo provisions a managed Postgres database.
-- Production crawling should run outside Render and write directly to the managed Postgres database.
+- Production crawling should run outside Render and write directly to the same Neon database.
+- Do not commit the real Neon URL. Use `.env.local` locally and Render secret env vars in hosting.
+
+## Free Hosting Setup
+
+This repo is set up for a low-cost/free hobby deployment shape:
+
+1. Create a Neon Postgres project and copy the pooled or direct connection string.
+2. Make sure the URL includes `sslmode=require`; the app and crawler also add it automatically if it is missing.
+3. Click the Render deploy button above.
+4. When Render prompts for `DATABASE_URL`, paste the Neon connection string.
+5. Keep these production env vars as configured in `render.yaml`:
+
+```bash
+ENABLE_SCHEDULER=false
+SEED_DEMO_DATA=false
+ALLOW_DEMO_FALLBACK=false
+DB_POOL_MIN_SIZE=0
+DB_POOL_MAX_SIZE=3
+```
+
+Render serves the dashboard. The Mac mini runs the crawler and writes fresh rows to Neon.
 
 ## Production Safety (Important)
 
@@ -82,16 +103,23 @@ REMOTE_NAME=origin BRANCH_NAME=main scripts/publish.sh
 
 ## Recommended Production Crawl Setup
 
-Render should serve the web app only. Run the crawler from your local Mac mini and write directly to Render Postgres.
+Render should serve the web app only. Run the crawler from your local Mac mini and write directly to Neon Postgres.
 
 1. Keep Render `ENABLE_SCHEDULER=false`
-2. On the Mac mini, activate the project virtualenv and run:
+2. On the Mac mini, set the same Neon URL:
+
+```bash
+cp .env.example .env.local
+# edit .env.local and paste the real Neon DATABASE_URL
+```
+
+3. Activate the project virtualenv and run:
 
 ```bash
 python3 scripts/run_remote_crawl.py --database-url "$DATABASE_URL"
 ```
 
-3. To install a daily macOS job for 09:00:
+4. To install a daily macOS job for 09:00:
 
 ```bash
 sudo python3 scripts/install_launchd_crawl.py --database-url "$DATABASE_URL" --install --mode daemon
@@ -153,7 +181,7 @@ The generated logs go to:
 
 ## Postgres Migration
 
-- Generate or provision a Postgres `DATABASE_URL`.
+- Generate or provision a Neon/Postgres `DATABASE_URL`.
 - Local development can stay on SQLite. Production should set `DATABASE_URL`.
 - To copy existing SQLite data into Postgres:
 
