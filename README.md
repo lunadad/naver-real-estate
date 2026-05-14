@@ -98,6 +98,7 @@ This repo is set up for a low-cost/free hobby deployment shape:
 
 ```bash
 ENABLE_SCHEDULER=false
+ENABLE_CRAWL_ENDPOINT=false
 SEED_DEMO_DATA=false
 ALLOW_DEMO_FALLBACK=false
 DB_POOL_MIN_SIZE=0

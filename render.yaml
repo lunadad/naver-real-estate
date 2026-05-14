@@ -11,6 +11,8 @@ services:
         sync: false
       - key: ENABLE_SCHEDULER
         value: "false"
+      - key: ENABLE_CRAWL_ENDPOINT
+        value: "false"
       - key: SEED_DEMO_DATA
         value: "false"
       - key: ALLOW_DEMO_FALLBACK
