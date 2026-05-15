@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 import sqlite3
 import re
 from datetime import date, datetime, timedelta
@@ -15,6 +16,8 @@ try:
     from psycopg_pool import ConnectionPool
 except ImportError:  # pragma: no cover - optional for sqlite-only use
     ConnectionPool = None
+
+logger = logging.getLogger(__name__)
 
 
 def ensure_postgres_sslmode(database_url: str) -> str:
@@ -80,16 +83,30 @@ class ConnectionWrapper:
         return self
 
     def __exit__(self, exc_type, exc, tb):
+        had_error = exc_type is not None
         try:
             if exc_type:
-                self.conn.rollback()
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    logger.warning("Failed to roll back database transaction", exc_info=True)
             else:
-                self.conn.commit()
+                try:
+                    self.conn.commit()
+                except Exception:
+                    had_error = True
+                    raise
         finally:
-            if self.release:
-                self.release(exc_type, exc, tb)
-            else:
-                self.conn.close()
+            try:
+                if self.release:
+                    self.release(exc_type, exc, tb)
+                else:
+                    self.conn.close()
+            except Exception:
+                if had_error:
+                    logger.warning("Failed to release database connection", exc_info=True)
+                else:
+                    raise
 
     def _convert_sql(self, sql: str) -> str:
         if self.driver == "postgres":
@@ -142,16 +159,24 @@ class Database:
         self.skip_price_backfill = skip_price_backfill
         self.connect_timeout = int((os.getenv("PGCONNECT_TIMEOUT") or "10").strip())
         self.pool = None
-        if self.driver == "postgres" and ConnectionPool is not None:
-            self.pool = ConnectionPool(
-                self.database_url,
-                kwargs={"connect_timeout": self.connect_timeout},
-                min_size=int((os.getenv("DB_POOL_MIN_SIZE") or "1").strip()),
-                max_size=int((os.getenv("DB_POOL_MAX_SIZE") or "5").strip()),
-                timeout=float((os.getenv("DB_POOL_TIMEOUT") or "10").strip()),
-                open=True,
-            )
+        self._open_pool()
         self.init_db()
+
+    def _open_pool(self):
+        if self.driver != "postgres" or ConnectionPool is None:
+            return
+
+        pool_kwargs = {
+            "kwargs": {"connect_timeout": self.connect_timeout},
+            "min_size": int((os.getenv("DB_POOL_MIN_SIZE") or "1").strip()),
+            "max_size": int((os.getenv("DB_POOL_MAX_SIZE") or "5").strip()),
+            "timeout": float((os.getenv("DB_POOL_TIMEOUT") or "10").strip()),
+            "open": True,
+        }
+        if hasattr(ConnectionPool, "check_connection"):
+            pool_kwargs["check"] = ConnectionPool.check_connection
+
+        self.pool = ConnectionPool(self.database_url, **pool_kwargs)
 
     def get_connection(self):
         if self.driver == "postgres":
@@ -181,6 +206,31 @@ class Database:
         if self.pool is not None:
             self.pool.close()
             self.pool = None
+
+    def reconnect(self):
+        self.close()
+        self._open_pool()
+
+    def is_transient_connection_error(self, exc: Exception) -> bool:
+        if self.driver != "postgres":
+            return False
+
+        if psycopg is not None and isinstance(
+            exc, (psycopg.OperationalError, psycopg.InterfaceError)
+        ):
+            return True
+
+        transient_names = {
+            "AdminShutdown",
+            "ConnectionDoesNotExist",
+            "ConnectionFailure",
+            "ConnectionException",
+        }
+        if exc.__class__.__name__ in transient_names:
+            return True
+
+        message = str(exc).lower()
+        return "connection is lost" in message or "terminating connection" in message
 
     def init_db(self):
         with self.get_connection() as conn:

@@ -685,32 +685,67 @@ class NaverRealEstateCrawler:
                 all_listings = self.generate_demo_data()
                 source = "demo"
                 urgent_count = len(all_listings)
-                self.db.insert_listings(all_listings, session_id)
-                self.db.log_crawl(session_id, len(all_listings), urgent_count, "degraded", source)
+
+                def persist_degraded_crawl():
+                    self.db.insert_listings(all_listings, session_id)
+                    self.db.log_crawl(session_id, len(all_listings), urgent_count, "degraded", source)
+                    return {"total": len(all_listings), "urgent": urgent_count, "source": source, "status": "degraded"}
+
+                result = self._with_db_reconnect("degraded crawl persistence", persist_degraded_crawl)
                 logger.warning(f"급매 크롤링 폴백 완료: {len(all_listings)}개 [출처: {source}, status=degraded]")
-                return {"total": len(all_listings), "urgent": urgent_count, "source": source, "status": "degraded"}
+                return result
 
             logger.error("라이브 크롤링 데이터 없음: 데모 폴백 비활성화 상태. 기존 데이터 유지")
-            self.db.log_crawl(session_id, 0, 0, "failed", source)
-            return {"total": 0, "urgent": 0, "source": source, "status": "failed"}
 
-        previous_live = self.db.get_last_successful_live_crawl()
-        previous_total = int((previous_live or {}).get("total_count") or 0)
-        min_allowed = int(previous_total * self.MIN_LIVE_CRAWL_RATIO) if previous_total else 0
+            def persist_failed_crawl():
+                self.db.log_crawl(session_id, 0, 0, "failed", source)
+                return {"total": 0, "urgent": 0, "source": source, "status": "failed"}
 
-        if previous_total and len(all_listings) < min_allowed:
-            logger.error(
-                "라이브 크롤링 결과가 비정상적으로 적음: current=%s, previous=%s, min_allowed=%s",
-                len(all_listings),
-                previous_total,
-                min_allowed,
-            )
-            self.db.log_crawl(session_id, len(all_listings), len(all_listings), "failed", source)
-            return {"total": len(all_listings), "urgent": len(all_listings), "source": source, "status": "failed"}
+            return self._with_db_reconnect("failed crawl logging", persist_failed_crawl)
 
-        urgent_count = len(all_listings)
-        self.db.insert_listings(all_listings, session_id)
-        self.db.log_crawl(session_id, len(all_listings), urgent_count, "success", "naver")
+        def persist_live_crawl():
+            previous_live = self.db.get_last_successful_live_crawl()
+            previous_total = int((previous_live or {}).get("total_count") or 0)
+            min_allowed = int(previous_total * self.MIN_LIVE_CRAWL_RATIO) if previous_total else 0
 
-        logger.info(f"급매 크롤링 완료: {len(all_listings)}개 급매 [출처: {source}]")
-        return {"total": len(all_listings), "urgent": urgent_count, "source": source, "status": "success"}
+            if previous_total and len(all_listings) < min_allowed:
+                logger.error(
+                    "라이브 크롤링 결과가 비정상적으로 적음: current=%s, previous=%s, min_allowed=%s",
+                    len(all_listings),
+                    previous_total,
+                    min_allowed,
+                )
+                self.db.log_crawl(session_id, len(all_listings), len(all_listings), "failed", source)
+                return {"total": len(all_listings), "urgent": len(all_listings), "source": source, "status": "failed"}
+
+            urgent_count = len(all_listings)
+            self.db.insert_listings(all_listings, session_id)
+            self.db.log_crawl(session_id, len(all_listings), urgent_count, "success", "naver")
+            return {"total": len(all_listings), "urgent": urgent_count, "source": source, "status": "success"}
+
+        result = self._with_db_reconnect("live crawl persistence", persist_live_crawl)
+
+        if result.get("status") == "success":
+            logger.info(f"급매 크롤링 완료: {len(all_listings)}개 급매 [출처: {source}]")
+        return result
+
+    def _with_db_reconnect(self, label: str, operation):
+        for attempt in range(1, 3):
+            try:
+                return operation()
+            except Exception as exc:
+                is_transient = (
+                    hasattr(self.db, "is_transient_connection_error")
+                    and self.db.is_transient_connection_error(exc)
+                )
+                if not is_transient or attempt >= 2:
+                    raise
+
+                logger.warning(
+                    "%s failed after a transient database connection error; reconnecting and retrying: %s",
+                    label,
+                    exc,
+                )
+                if hasattr(self.db, "reconnect"):
+                    self.db.reconnect()
+                time.sleep(2)
