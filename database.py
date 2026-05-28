@@ -291,7 +291,9 @@ class Database:
                 "CREATE INDEX IF NOT EXISTS idx_price_drop_rate ON listings(price_drop_rate)"
             )
             conn.execute("UPDATE listings SET property_type = '상가' WHERE property_type = '상가/업무'")
-            if not self.skip_price_backfill:
+            if self.skip_price_backfill:
+                logger.info("Startup listing backfill skipped")
+            else:
                 self._backfill_price_sort_values(conn)
                 self._backfill_commercial_metadata(conn)
             latest_visible_session = self._get_latest_visible_session_id(conn)

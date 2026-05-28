@@ -69,6 +69,7 @@ ENABLE_SCHEDULER=false
 ENABLE_CRAWL_ENDPOINT=false
 SEED_DEMO_DATA=false
 ALLOW_DEMO_FALLBACK=false
+SKIP_STARTUP_BACKFILL=true
 LOCAL_CRAWL_SCHEDULE_HOUR=9
 LOCAL_CRAWL_SCHEDULE_MINUTE=0
 DB_POOL_MIN_SIZE=0
@@ -143,6 +144,7 @@ DATABASE_URL=<your-neon-postgres-url>
 ENABLE_SCHEDULER=false
 SEED_DEMO_DATA=false
 ALLOW_DEMO_FALLBACK=false
+SKIP_STARTUP_BACKFILL=true
 ```
 
 Do not commit the Neon connection string to git. For local testing, copy `.env.example` to `.env.local` and put the real `DATABASE_URL` there; `.env.local` is ignored by git.

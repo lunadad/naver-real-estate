@@ -18,6 +18,8 @@ services:
         value: "false"
       - key: ALLOW_DEMO_FALLBACK
         value: "false"
+      - key: SKIP_STARTUP_BACKFILL
+        value: "true"
       - key: DB_POOL_MIN_SIZE
         value: "0"
       - key: DB_POOL_MAX_SIZE

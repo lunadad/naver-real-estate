@@ -142,6 +142,7 @@ DB_PATH = os.getenv("DB_PATH", DEFAULT_DB_PATH)
 ENABLE_SCHEDULER = env_flag("ENABLE_SCHEDULER", not IS_VERCEL)
 ENABLE_CRAWL_ENDPOINT = env_flag("ENABLE_CRAWL_ENDPOINT", not IS_VERCEL)
 SEED_DEMO_DATA = env_flag("SEED_DEMO_DATA", False)
+SKIP_STARTUP_BACKFILL = env_flag("SKIP_STARTUP_BACKFILL", bool(DATABASE_URL))
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "").strip()
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "").strip()
 VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:alerts@example.com").strip()
@@ -153,7 +154,11 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
 CORS(app)
 
-db = Database(db_path=DB_PATH, database_url=DATABASE_URL)
+db = Database(
+    db_path=DB_PATH,
+    database_url=DATABASE_URL,
+    skip_price_backfill=SKIP_STARTUP_BACKFILL,
+)
 atexit.register(db.close)
 _crawler = None
 
