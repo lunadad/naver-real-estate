@@ -175,7 +175,7 @@ class Database:
 
         pool_kwargs = {
             "kwargs": {"connect_timeout": self.connect_timeout},
-            "min_size": int((os.getenv("DB_POOL_MIN_SIZE") or "1").strip()),
+            "min_size": int((os.getenv("DB_POOL_MIN_SIZE") or "0").strip()),
             "max_size": int((os.getenv("DB_POOL_MAX_SIZE") or "5").strip()),
             "timeout": float((os.getenv("DB_POOL_TIMEOUT") or "10").strip()),
             "open": True,
@@ -280,24 +280,25 @@ class Database:
             if "min_price_drop_rate" not in alert_cols:
                 conn.execute("ALTER TABLE alert_rules ADD COLUMN min_price_drop_rate DOUBLE PRECISION")
 
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_price_sort ON listings(price_sort_value)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_raw_property_code ON listings(raw_property_code)"
-            )
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_area_m2 ON listings(area_m2)")
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_price_drop_rate ON listings(price_drop_rate)"
-            )
-            conn.execute("UPDATE listings SET property_type = '상가' WHERE property_type = '상가/업무'")
             if self.skip_price_backfill:
+                logger.info("Startup listing index maintenance skipped")
                 logger.info("Startup listing backfill skipped")
             else:
+                conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_price_sort ON listings(price_sort_value)"
+                )
+                conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_raw_property_code ON listings(raw_property_code)"
+                )
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_area_m2 ON listings(area_m2)")
+                conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_price_drop_rate ON listings(price_drop_rate)"
+                )
+                conn.execute("UPDATE listings SET property_type = '상가' WHERE property_type = '상가/업무'")
                 self._backfill_price_sort_values(conn)
                 self._backfill_commercial_metadata(conn)
             latest_visible_session = self._get_latest_visible_session_id(conn)
-            if latest_visible_session:
+            if latest_visible_session and not self.skip_price_backfill:
                 existing_stats = conn.execute(
                     "SELECT COUNT(*) AS cnt FROM crawl_region_stats WHERE session_id = ?",
                     (latest_visible_session,),
@@ -413,7 +414,7 @@ class Database:
         )
 
     def _init_postgres(self, conn: ConnectionWrapper):
-        statements = [
+        table_statements = [
             """
             CREATE TABLE IF NOT EXISTS listings (
                 id BIGSERIAL PRIMARY KEY,
@@ -512,6 +513,8 @@ class Database:
                 last_success_at TIMESTAMP
             )
             """,
+        ]
+        index_statements = [
             "CREATE INDEX IF NOT EXISTS idx_region ON listings(region)",
             "CREATE INDEX IF NOT EXISTS idx_district ON listings(district)",
             "CREATE INDEX IF NOT EXISTS idx_property_type ON listings(property_type)",
@@ -523,6 +526,12 @@ class Database:
             "CREATE INDEX IF NOT EXISTS idx_alert_deliveries_alert_id ON alert_deliveries(alert_id)",
             "CREATE INDEX IF NOT EXISTS idx_push_subscriptions_client_id ON push_subscriptions(client_id)",
         ]
+        statements = table_statements
+        if self.skip_price_backfill:
+            logger.info("Startup index maintenance skipped")
+        else:
+            statements = table_statements + index_statements
+
         for statement in statements:
             conn.execute(statement)
 
