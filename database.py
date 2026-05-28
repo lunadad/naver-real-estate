@@ -19,6 +19,13 @@ except ImportError:  # pragma: no cover - optional for sqlite-only use
 
 logger = logging.getLogger(__name__)
 
+COMMERCIAL_PROPERTY_TYPES = ("상가", "업무", "토지")
+PROPERTY_CODE_BY_TYPE = {
+    "상가": "OBYG",
+    "업무": "SGJT",
+    "토지": "TJ",
+}
+
 
 def ensure_postgres_sslmode(database_url: str) -> str:
     if not database_url.startswith(("postgresql://", "postgres://")):
@@ -246,12 +253,47 @@ class Database:
                 conn.execute("ALTER TABLE listings ADD COLUMN price_sort_value BIGINT")
             if "rent_sort_value" not in cols:
                 conn.execute("ALTER TABLE listings ADD COLUMN rent_sort_value BIGINT")
+            if "raw_property_code" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN raw_property_code TEXT")
+            if "area_m2" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN area_m2 DOUBLE PRECISION")
+            if "land_use_zone" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN land_use_zone TEXT")
+            if "land_category" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN land_category TEXT")
+            if "road_access" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN road_access TEXT")
+            if "premium_info" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN premium_info TEXT")
+            if "estimated_yield_rate" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN estimated_yield_rate DOUBLE PRECISION")
+            if "price_drop_rate" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN price_drop_rate DOUBLE PRECISION")
+
+            alert_cols = self._get_table_columns(conn, "alert_rules")
+            if "min_area_m2" not in alert_cols:
+                conn.execute("ALTER TABLE alert_rules ADD COLUMN min_area_m2 DOUBLE PRECISION")
+            if "max_area_m2" not in alert_cols:
+                conn.execute("ALTER TABLE alert_rules ADD COLUMN max_area_m2 DOUBLE PRECISION")
+            if "trade_scope" not in alert_cols:
+                conn.execute("ALTER TABLE alert_rules ADD COLUMN trade_scope TEXT")
+            if "min_price_drop_rate" not in alert_cols:
+                conn.execute("ALTER TABLE alert_rules ADD COLUMN min_price_drop_rate DOUBLE PRECISION")
 
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_price_sort ON listings(price_sort_value)"
             )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_raw_property_code ON listings(raw_property_code)"
+            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_area_m2 ON listings(area_m2)")
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_price_drop_rate ON listings(price_drop_rate)"
+            )
+            conn.execute("UPDATE listings SET property_type = '상가' WHERE property_type = '상가/업무'")
             if not self.skip_price_backfill:
                 self._backfill_price_sort_values(conn)
+                self._backfill_commercial_metadata(conn)
             latest_visible_session = self._get_latest_visible_session_id(conn)
             if latest_visible_session:
                 existing_stats = conn.execute(
@@ -285,7 +327,15 @@ class Database:
                 longitude REAL,
                 naver_url TEXT,
                 price_sort_value INTEGER,
-                rent_sort_value INTEGER
+                rent_sort_value INTEGER,
+                raw_property_code TEXT,
+                area_m2 REAL,
+                land_use_zone TEXT,
+                land_category TEXT,
+                road_access TEXT,
+                premium_info TEXT,
+                estimated_yield_rate REAL,
+                price_drop_rate REAL
             );
 
             CREATE TABLE IF NOT EXISTS _migrations (
@@ -321,6 +371,10 @@ class Database:
                 district TEXT,
                 property_type TEXT,
                 trade_type TEXT,
+                min_area_m2 REAL,
+                max_area_m2 REAL,
+                trade_scope TEXT,
+                min_price_drop_rate REAL,
                 enabled INTEGER DEFAULT 1,
                 created_at TEXT
             );
@@ -380,7 +434,15 @@ class Database:
                 longitude DOUBLE PRECISION,
                 naver_url TEXT,
                 price_sort_value BIGINT,
-                rent_sort_value BIGINT
+                rent_sort_value BIGINT,
+                raw_property_code TEXT,
+                area_m2 DOUBLE PRECISION,
+                land_use_zone TEXT,
+                land_category TEXT,
+                road_access TEXT,
+                premium_info TEXT,
+                estimated_yield_rate DOUBLE PRECISION,
+                price_drop_rate DOUBLE PRECISION
             )
             """,
             """
@@ -420,6 +482,10 @@ class Database:
                 district TEXT,
                 property_type TEXT,
                 trade_type TEXT,
+                min_area_m2 DOUBLE PRECISION,
+                max_area_m2 DOUBLE PRECISION,
+                trade_scope TEXT,
+                min_price_drop_rate DOUBLE PRECISION,
                 enabled INTEGER DEFAULT 1,
                 created_at TIMESTAMP
             )
@@ -531,6 +597,154 @@ class Database:
             return price_value, 0
         return price_value, None
 
+    def _parse_area_to_m2(self, raw: Optional[str]) -> Optional[float]:
+        text = str(raw or "").strip()
+        if not text:
+            return None
+
+        normalized = text.replace(",", "")
+        match = re.search(r"(\d+(?:\.\d+)?)", normalized)
+        if not match:
+            return None
+
+        value = float(match.group(1))
+        if "평" in normalized and "㎡" not in normalized and "m2" not in normalized.lower():
+            value *= 3.305785
+        return round(value, 2)
+
+    def _coerce_float(self, value) -> Optional[float]:
+        if value in (None, ""):
+            return None
+        try:
+            return float(str(value).replace("%", "").replace(",", "").strip())
+        except (TypeError, ValueError):
+            return None
+
+    def _extract_tags(self, tags) -> List[str]:
+        if isinstance(tags, list):
+            return [str(tag) for tag in tags if str(tag).strip()]
+        if isinstance(tags, str):
+            try:
+                parsed = json.loads(tags)
+                if isinstance(parsed, list):
+                    return [str(tag) for tag in parsed if str(tag).strip()]
+            except Exception:
+                return [tags]
+        return []
+
+    def _infer_premium_info(self, tags: Sequence[str], description: Optional[str]) -> Optional[str]:
+        text = " ".join([*(tags or []), str(description or "")])
+        if not text:
+            return None
+        if any(token in text for token in ("무권리", "권리금 없음", "권리금없음")):
+            return "무권리"
+        if "권리금" in text:
+            return "권리금 확인"
+        return None
+
+    def _infer_road_access(self, tags: Sequence[str], description: Optional[str]) -> Optional[str]:
+        text = " ".join([*(tags or []), str(description or "")])
+        if not text:
+            return None
+        if any(token in text for token in ("코너", "양면", "삼면")):
+            return "코너/다중접면"
+        if any(token in text for token in ("대로변", "대로", "왕복", "광로")):
+            return "대로변"
+        if any(token in text for token in ("도로접", "접도", "도로 접", "진입로")):
+            return "도로접면"
+        if "맹지" in text:
+            return "맹지 유의"
+        return None
+
+    def _infer_land_use_zone(self, tags: Sequence[str], description: Optional[str]) -> Optional[str]:
+        text = " ".join([*(tags or []), str(description or "")])
+        patterns = [
+            "계획관리",
+            "생산관리",
+            "보전관리",
+            "자연녹지",
+            "생산녹지",
+            "보전녹지",
+            "일반상업",
+            "중심상업",
+            "근린상업",
+            "준주거",
+            "제1종일반주거",
+            "제2종일반주거",
+            "제3종일반주거",
+            "일반주거",
+            "전용주거",
+            "공업지역",
+            "농림지역",
+        ]
+        for pattern in patterns:
+            if pattern in text:
+                return pattern
+        return None
+
+    def _infer_land_category(self, tags: Sequence[str], description: Optional[str]) -> Optional[str]:
+        text = " ".join([*(tags or []), str(description or "")])
+        for pattern in ("대지", "전", "답", "잡종지", "임야", "공장용지", "도로"):
+            if pattern in text:
+                return pattern
+        return None
+
+    def _estimate_yield_rate(
+        self,
+        price: Optional[str],
+        trade_type: Optional[str],
+        price_value: Optional[int],
+        rent_value: Optional[int],
+    ) -> Optional[float]:
+        deposit_value, monthly_value = self._parse_price_sort_values(price, trade_type)
+        if monthly_value is None or monthly_value <= 0:
+            return None
+
+        denominator = price_value or deposit_value
+        if not denominator or denominator <= 0:
+            return None
+
+        return round((monthly_value * 12 / denominator) * 100, 2)
+
+    def _build_listing_metadata(self, listing: Dict) -> Dict:
+        tags = self._extract_tags(listing.get("tags"))
+        property_type = str(listing.get("property_type") or "").strip()
+        price_value, rent_value = self._parse_price_sort_values(
+            listing.get("price"), listing.get("trade_type")
+        )
+        metadata = {
+            "raw_property_code": (
+                str(listing.get("raw_property_code") or "").strip()
+                or PROPERTY_CODE_BY_TYPE.get(property_type)
+            ),
+            "area_m2": self._coerce_float(listing.get("area_m2"))
+            or self._parse_area_to_m2(listing.get("area")),
+            "land_use_zone": self._normalize_alert_value(listing.get("land_use_zone")),
+            "land_category": self._normalize_alert_value(listing.get("land_category")),
+            "road_access": self._normalize_alert_value(listing.get("road_access")),
+            "premium_info": self._normalize_alert_value(listing.get("premium_info")),
+            "estimated_yield_rate": self._coerce_float(listing.get("estimated_yield_rate")),
+            "price_drop_rate": self._coerce_float(listing.get("price_drop_rate")),
+        }
+
+        if not metadata["premium_info"]:
+            metadata["premium_info"] = self._infer_premium_info(tags, listing.get("description"))
+        if not metadata["road_access"]:
+            metadata["road_access"] = self._infer_road_access(tags, listing.get("description"))
+        if property_type == "토지":
+            if not metadata["land_use_zone"]:
+                metadata["land_use_zone"] = self._infer_land_use_zone(tags, listing.get("description"))
+            if not metadata["land_category"]:
+                metadata["land_category"] = self._infer_land_category(tags, listing.get("description"))
+        if metadata["estimated_yield_rate"] is None:
+            metadata["estimated_yield_rate"] = self._estimate_yield_rate(
+                listing.get("price"),
+                listing.get("trade_type"),
+                price_value,
+                rent_value,
+            )
+        return metadata
+
     def _backfill_price_sort_values(self, conn: ConnectionWrapper):
         rows = conn.execute(
             """
@@ -551,6 +765,49 @@ class Database:
                 WHERE id = ?
                 """,
                 (price_value, rent_value, row["id"]),
+            )
+
+    def _backfill_commercial_metadata(self, conn: ConnectionWrapper):
+        rows = conn.execute(
+            """
+            SELECT id, property_type, price, trade_type, area, description, tags,
+                   raw_property_code, area_m2, land_use_zone, land_category,
+                   road_access, premium_info, estimated_yield_rate, price_drop_rate
+            FROM listings
+            WHERE raw_property_code IS NULL
+               OR area_m2 IS NULL
+               OR premium_info IS NULL
+               OR road_access IS NULL
+               OR (property_type = '토지' AND (land_use_zone IS NULL OR land_category IS NULL))
+            """
+        ).fetchall()
+
+        for row in rows:
+            metadata = self._build_listing_metadata(dict(row))
+            conn.execute(
+                """
+                UPDATE listings
+                SET raw_property_code = ?,
+                    area_m2 = ?,
+                    land_use_zone = COALESCE(?, land_use_zone),
+                    land_category = COALESCE(?, land_category),
+                    road_access = COALESCE(?, road_access),
+                    premium_info = COALESCE(?, premium_info),
+                    estimated_yield_rate = COALESCE(?, estimated_yield_rate),
+                    price_drop_rate = COALESCE(?, price_drop_rate)
+                WHERE id = ?
+                """,
+                (
+                    metadata["raw_property_code"],
+                    metadata["area_m2"],
+                    metadata["land_use_zone"],
+                    metadata["land_category"],
+                    metadata["road_access"],
+                    metadata["premium_info"],
+                    metadata["estimated_yield_rate"],
+                    metadata["price_drop_rate"],
+                    row["id"],
+                ),
             )
 
     def _get_latest_session_id(
@@ -590,6 +847,18 @@ class Database:
             exclude_demo=True,
         ) or self._get_latest_session_id(conn)
 
+    def _sanitize_naver_url(self, url: Optional[str], source: Optional[str] = None) -> str:
+        value = self._normalize_alert_value(url)
+        if not value:
+            return ""
+        if source == "demo":
+            return ""
+        if "new.land.naver.com/search?query=" in value:
+            return ""
+        if "new.land.naver.com" in value and "articleNo=" not in value:
+            return ""
+        return value
+
     def _normalize_alert_value(self, value: Optional[str]) -> str:
         return str(value or "").strip()
 
@@ -599,6 +868,10 @@ class Database:
         district: str,
         property_type: str,
         trade_type: str,
+        min_area_m2: Optional[float] = None,
+        max_area_m2: Optional[float] = None,
+        trade_scope: str = "",
+        min_price_drop_rate: Optional[float] = None,
     ) -> str:
         parts = []
         if keyword:
@@ -609,6 +882,19 @@ class Database:
             parts.append(property_type)
         if trade_type:
             parts.append(trade_type)
+        if trade_scope == "sale":
+            parts.append("매매 전용")
+        if trade_scope == "rent":
+            parts.append("임대 전용")
+        if min_area_m2 is not None or max_area_m2 is not None:
+            if min_area_m2 is not None and max_area_m2 is not None:
+                parts.append(f"{min_area_m2:g}-{max_area_m2:g}㎡")
+            elif min_area_m2 is not None:
+                parts.append(f"{min_area_m2:g}㎡ 이상")
+            else:
+                parts.append(f"{max_area_m2:g}㎡ 이하")
+        if min_price_drop_rate is not None:
+            parts.append(f"가격인하율 {min_price_drop_rate:g}%+")
         return " · ".join(parts) if parts else "전체 급매 알림"
 
     def _build_region_stats_rows(self, session_id: str, listings: List[Dict], created_at: str):
@@ -754,6 +1040,10 @@ class Database:
         district: str = "",
         property_type: str = "",
         trade_type: str = "",
+        min_area_m2: Optional[float] = None,
+        max_area_m2: Optional[float] = None,
+        trade_scope: str = "",
+        min_price_drop_rate: Optional[float] = None,
         name: str = "",
     ):
         client_id = self._normalize_alert_value(client_id)
@@ -761,8 +1051,21 @@ class Database:
         district = self._normalize_alert_value(district)
         property_type = self._normalize_alert_value(property_type)
         trade_type = self._normalize_alert_value(trade_type)
+        trade_scope = self._normalize_alert_value(trade_scope)
+        if trade_scope not in {"", "sale", "rent"}:
+            trade_scope = ""
+        min_area_m2 = self._coerce_float(min_area_m2)
+        max_area_m2 = self._coerce_float(max_area_m2)
+        min_price_drop_rate = self._coerce_float(min_price_drop_rate)
         name = self._normalize_alert_value(name) or self._build_alert_name(
-            keyword, district, property_type, trade_type
+            keyword,
+            district,
+            property_type,
+            trade_type,
+            min_area_m2,
+            max_area_m2,
+            trade_scope,
+            min_price_drop_rate,
         )
 
         with self.get_connection() as conn:
@@ -770,8 +1073,10 @@ class Database:
                 cursor = conn.execute(
                     """
                     INSERT INTO alert_rules
-                    (client_id, name, keyword, district, property_type, trade_type, enabled, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+                    (client_id, name, keyword, district, property_type, trade_type,
+                     min_area_m2, max_area_m2, trade_scope, min_price_drop_rate,
+                     enabled, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
                     RETURNING id
                     """,
                     (
@@ -781,6 +1086,10 @@ class Database:
                         district,
                         property_type,
                         trade_type,
+                        min_area_m2,
+                        max_area_m2,
+                        trade_scope,
+                        min_price_drop_rate,
                         datetime.now().isoformat(),
                     ),
                 )
@@ -789,8 +1098,10 @@ class Database:
                 cursor = conn.execute(
                     """
                     INSERT INTO alert_rules
-                    (client_id, name, keyword, district, property_type, trade_type, enabled, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+                    (client_id, name, keyword, district, property_type, trade_type,
+                     min_area_m2, max_area_m2, trade_scope, min_price_drop_rate,
+                     enabled, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
                     """,
                     (
                         client_id,
@@ -799,6 +1110,10 @@ class Database:
                         district,
                         property_type,
                         trade_type,
+                        min_area_m2,
+                        max_area_m2,
+                        trade_scope,
+                        min_price_drop_rate,
                         datetime.now().isoformat(),
                     ),
                 )
@@ -867,6 +1182,7 @@ class Database:
             conditions = [
                 "crawl_session = ?",
                 "crawled_at >= ?",
+                "property_type IN ('상가', '업무', '토지')",
             ]
             params = [latest_session, rule["created_at"]]
 
@@ -884,10 +1200,33 @@ class Database:
             if rule["trade_type"]:
                 conditions.append("trade_type = ?")
                 params.append(rule["trade_type"])
+            if rule.get("trade_scope") == "sale":
+                conditions.append("trade_type = '매매'")
+            elif rule.get("trade_scope") == "rent":
+                conditions.append("trade_type IN ('전세', '월세')")
+            min_area_m2 = self._coerce_float(rule.get("min_area_m2"))
+            max_area_m2 = self._coerce_float(rule.get("max_area_m2"))
+            min_price_drop_rate = self._coerce_float(rule.get("min_price_drop_rate"))
+            if min_area_m2 is not None:
+                conditions.append("area_m2 IS NOT NULL AND area_m2 >= ?")
+                params.append(min_area_m2)
+            if max_area_m2 is not None:
+                conditions.append("area_m2 IS NOT NULL AND area_m2 <= ?")
+                params.append(max_area_m2)
+            if min_price_drop_rate is not None:
+                conditions.append("price_drop_rate IS NOT NULL AND price_drop_rate >= ?")
+                params.append(min_price_drop_rate)
 
             rows = conn.execute(
                 f"""
-                SELECT *
+                SELECT listings.*,
+                       (
+                         SELECT source
+                         FROM crawl_history h
+                         WHERE h.session_id = listings.crawl_session
+                         ORDER BY h.crawled_at DESC
+                         LIMIT 1
+                       ) AS crawl_source
                 FROM listings
                 WHERE {" AND ".join(conditions)}
                   AND NOT EXISTS (
@@ -905,6 +1244,10 @@ class Database:
                 article_no = row["article_no"]
                 if article_no not in matches_by_article:
                     entry = dict(row)
+                    source = entry.pop("crawl_source", None)
+                    entry["naver_url"] = self._sanitize_naver_url(
+                        entry.get("naver_url"), source
+                    )
                     entry["alert_names"] = [rule["name"]]
                     entry["_delivery_refs"] = [(rule["id"], article_no)]
                     matches_by_article[article_no] = entry
@@ -939,6 +1282,8 @@ class Database:
     def _sanitize_alert_match(self, match: Dict):
         item = dict(match)
         item.pop("_delivery_refs", None)
+        source = item.pop("crawl_source", None)
+        item["naver_url"] = self._sanitize_naver_url(item.get("naver_url"), source)
         return item
 
     def get_pending_alert_matches(self, client_id: str, limit: int = 10):
@@ -1086,8 +1431,10 @@ class Database:
             (article_no, region, district, property_type, trade_type, price,
              area, floor, building_name, description, is_urgent, tags,
              confirmed_date, crawled_at, crawl_session, latitude, longitude, naver_url,
-             price_sort_value, rent_sort_value)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             price_sort_value, rent_sort_value, raw_property_code, area_m2,
+             land_use_zone, land_category, road_access, premium_info,
+             estimated_yield_rate, price_drop_rate)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(article_no) DO UPDATE SET
                 region = excluded.region,
                 district = excluded.district,
@@ -1107,7 +1454,15 @@ class Database:
                 longitude = excluded.longitude,
                 naver_url = excluded.naver_url,
                 price_sort_value = excluded.price_sort_value,
-                rent_sort_value = excluded.rent_sort_value
+                rent_sort_value = excluded.rent_sort_value,
+                raw_property_code = excluded.raw_property_code,
+                area_m2 = excluded.area_m2,
+                land_use_zone = excluded.land_use_zone,
+                land_category = excluded.land_category,
+                road_access = excluded.road_access,
+                premium_info = excluded.premium_info,
+                estimated_yield_rate = excluded.estimated_yield_rate,
+                price_drop_rate = excluded.price_drop_rate
         """
 
         with self.get_connection() as conn:
@@ -1132,6 +1487,7 @@ class Database:
                 price_value, rent_value = self._parse_price_sort_values(
                     listing.get("price"), listing.get("trade_type")
                 )
+                metadata = self._build_listing_metadata(listing)
                 rows.append(
                     (
                         listing.get("article_no"),
@@ -1154,6 +1510,14 @@ class Database:
                         listing.get("naver_url"),
                         price_value,
                         rent_value,
+                        metadata["raw_property_code"],
+                        metadata["area_m2"],
+                        metadata["land_use_zone"],
+                        metadata["land_category"],
+                        metadata["road_access"],
+                        metadata["premium_info"],
+                        metadata["estimated_yield_rate"],
+                        metadata["price_drop_rate"],
                     )
                 )
 
@@ -1204,7 +1568,7 @@ class Database:
         sort_by="urgent",
         price_down_only=False,
     ):
-        conditions = []
+        conditions = ["property_type IN ('상가', '업무', '토지')"]
         params = []
 
         if region:
@@ -1214,11 +1578,8 @@ class Database:
             conditions.append("district LIKE ?")
             params.append(f"%{district}%")
         if property_type:
-            if property_type == "__OTHER__":
-                conditions.append("property_type NOT IN ('아파트','오피스텔','빌라/연립')")
-            else:
-                conditions.append("property_type = ?")
-                params.append(property_type)
+            conditions.append("property_type = ?")
+            params.append(property_type)
         if trade_type:
             conditions.append("trade_type = ?")
             params.append(trade_type)
@@ -1228,9 +1589,9 @@ class Database:
             conditions.append("tags LIKE '%가격인하%'")
         if search:
             conditions.append(
-                "(region LIKE ? OR district LIKE ? OR building_name LIKE ? OR description LIKE ?)"
+                "(region LIKE ? OR district LIKE ? OR building_name LIKE ? OR description LIKE ? OR tags LIKE ? OR land_use_zone LIKE ? OR land_category LIKE ? OR road_access LIKE ? OR premium_info LIKE ?)"
             )
-            params.extend([f"%{search}%"] * 4)
+            params.extend([f"%{search}%"] * 9)
 
         order_map = {
             "urgent": "is_urgent DESC, crawled_at DESC",
@@ -1267,7 +1628,20 @@ class Database:
 
             offset = (page - 1) * per_page
             rows = conn.execute(
-                f"SELECT * FROM listings {scoped_where} ORDER BY {order} LIMIT ? OFFSET ?",
+                f"""
+                SELECT listings.*,
+                       (
+                         SELECT source
+                         FROM crawl_history h
+                         WHERE h.session_id = listings.crawl_session
+                         ORDER BY h.crawled_at DESC
+                         LIMIT 1
+                       ) AS crawl_source
+                FROM listings
+                {scoped_where}
+                ORDER BY {order}
+                LIMIT ? OFFSET ?
+                """,
                 scoped_params + [per_page, offset],
             ).fetchall()
 
@@ -1278,6 +1652,13 @@ class Database:
             ).fetchall():
                 type_counts[row["property_type"]] = row["cnt"]
 
+        listings_payload = []
+        for row in rows:
+            item = dict(row)
+            source = item.pop("crawl_source", None)
+            item["naver_url"] = self._sanitize_naver_url(item.get("naver_url"), source)
+            listings_payload.append(item)
+
         return {
             "total": total,
             "urgent": total,
@@ -1286,14 +1667,17 @@ class Database:
             "page": page,
             "per_page": per_page,
             "total_pages": max(1, (total + per_page - 1) // per_page),
-            "listings": [dict(row) for row in rows],
+            "listings": listings_payload,
         }
 
     def get_region_stats(self):
         with self.get_connection() as conn:
             latest_session = self._get_latest_visible_session_id(conn)
             params = [latest_session] if latest_session else []
-            where = "WHERE crawl_session = ?" if latest_session else ""
+            conditions = ["property_type IN ('상가', '업무', '토지')"]
+            if latest_session:
+                conditions.insert(0, "crawl_session = ?")
+            where = "WHERE " + " AND ".join(conditions)
             rows = conn.execute(
                 f"""
                 SELECT region, district,

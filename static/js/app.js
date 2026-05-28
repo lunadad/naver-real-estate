@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   부동산 급매 알리미 — Frontend App
+   상업용 급매 알리미 — Frontend App
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const APP_NAME = '부동산 급매 알리미';
+const APP_NAME = '상업용 급매 알리미';
 const ALERT_POLL_MS = 60000;
 
 // ── State ──────────────────────────────────────────────────────────────────
@@ -97,11 +97,10 @@ function buildCurrentFilterLabel() {
   const parts = [];
   if (state.filters.search) parts.push(`검색 ${state.filters.search}`);
   if (state.filters.district) parts.push(`지역 ${state.filters.district}`);
-  if (state.filters.property_type && state.filters.property_type !== '__OTHER__') parts.push(`유형 ${state.filters.property_type}`);
-  if (state.filters.property_type === '__OTHER__') parts.push('유형 기타');
+  if (state.filters.property_type) parts.push(`유형 ${state.filters.property_type}`);
   if (state.filters.trade_type) parts.push(`거래 ${state.filters.trade_type}`);
   if (state.filters.price_down_only) parts.push('가격인하만');
-  return parts.length ? parts.join(' · ') : '전체 급매';
+  return parts.length ? parts.join(' · ') : '전체 상업용 급매';
 }
 
 function updateHeroAlertCount() {
@@ -449,6 +448,101 @@ function parseTags(tagsRaw) {
   try { return JSON.parse(tagsRaw) || []; } catch { return []; }
 }
 
+function formatMetricValue(value, suffix = '') {
+  if (value === null || value === undefined || value === '') return '확인 필요';
+  const numeric = Number(value);
+  if (Number.isFinite(numeric)) {
+    const rounded = Math.round(numeric * 10) / 10;
+    return `${fmtNum(rounded)}${suffix}`;
+  }
+  return String(value);
+}
+
+function formatAreaM2(listing) {
+  const area = Number(listing.area_m2);
+  if (Number.isFinite(area) && area > 0) return `${fmtNum(Math.round(area * 10) / 10)}㎡`;
+  return listing.area || '확인 필요';
+}
+
+function inferPremiumLabel(listing, tags) {
+  if (listing.premium_info) return listing.premium_info;
+  const text = `${tags.join(' ')} ${listing.description || ''}`;
+  if (text.includes('무권리') || text.includes('권리금 없음') || text.includes('권리금없음')) return '무권리';
+  if (text.includes('권리금')) return '권리금 확인';
+  return '권리금 미확인';
+}
+
+function inferRoadLabel(listing, tags) {
+  if (listing.road_access) return listing.road_access;
+  const text = `${tags.join(' ')} ${listing.description || ''}`;
+  if (text.includes('코너')) return '코너';
+  if (text.includes('대로')) return '대로변';
+  if (text.includes('도로접') || text.includes('접도')) return '도로접면';
+  return '접면 미확인';
+}
+
+function priceDropLabel(listing, hasPriceDown) {
+  if (listing.price_drop_rate === null || listing.price_drop_rate === undefined || listing.price_drop_rate === '') {
+    return hasPriceDown ? '가격인하' : '해당 없음';
+  }
+  const rate = Number(listing.price_drop_rate);
+  if (Number.isFinite(rate)) return `${Math.round(rate * 10) / 10}%`;
+  return hasPriceDown ? '가격인하' : '해당 없음';
+}
+
+function getListingCardProfile(listing, tags, hasPriceDown) {
+  if (listing.property_type === '토지') {
+    return {
+      className: 'property-land',
+      caption: '면적·용도지역·지목 우선',
+      meta: [
+        `면적 ${formatAreaM2(listing)}`,
+        listing.land_use_zone ? `용도 ${listing.land_use_zone}` : '용도지역 확인 필요',
+        listing.land_category ? `지목 ${listing.land_category}` : '지목 확인 필요',
+      ],
+      metrics: [
+        { label: '면적', value: formatAreaM2(listing) },
+        { label: '용도지역', value: listing.land_use_zone || '확인 필요' },
+        { label: '지목', value: listing.land_category || '확인 필요' },
+        { label: '도로접면', value: inferRoadLabel(listing, tags) },
+      ],
+    };
+  }
+
+  if (listing.property_type === '업무') {
+    return {
+      className: 'property-office',
+      caption: '업무·수익형 지표',
+      meta: [
+        `면적 ${formatAreaM2(listing)}`,
+        listing.floor ? `층 ${listing.floor}` : '',
+        listing.trade_type || '',
+      ].filter(Boolean),
+      metrics: [
+        { label: '추정 수익률', value: formatMetricValue(listing.estimated_yield_rate, '%') },
+        { label: '면적', value: formatAreaM2(listing) },
+        { label: '가격인하율', value: priceDropLabel(listing, hasPriceDown) },
+      ],
+    };
+  }
+
+  return {
+    className: 'property-shop',
+    caption: '상가·권리금 지표',
+    meta: [
+      `면적 ${formatAreaM2(listing)}`,
+      listing.floor ? `층 ${listing.floor}` : '',
+      listing.trade_type || '',
+    ].filter(Boolean),
+    metrics: [
+      { label: '추정 수익률', value: formatMetricValue(listing.estimated_yield_rate, '%') },
+      { label: '권리금', value: inferPremiumLabel(listing, tags) },
+      { label: '도로접면', value: inferRoadLabel(listing, tags) },
+      { label: '가격인하율', value: priceDropLabel(listing, hasPriceDown) },
+    ],
+  };
+}
+
 function renderListings(data) {
   const grid = document.getElementById('listings-grid');
   const { listings, total, total_pages, page } = data;
@@ -469,38 +563,46 @@ function renderListings(data) {
     const tags = parseTags(l.tags);
     const hasPriceDown = tags.includes('가격인하');
     const compactRegion = `${l.region ? l.region.replace('특별시','').replace('광역시','').replace('특별자치시','') : ''} ${l.district}`.trim();
-    const metaBits = [
-      l.area ? `면적 ${l.area}` : '',
-      l.floor ? `층 ${l.floor}` : '',
-      l.trade_type || '',
-    ].filter(Boolean);
+    const profile = getListingCardProfile(l, tags, hasPriceDown);
     const visibleTags = tags.filter(tag => tag !== '급매').slice(0, 4);
+    const naverUrl = escHtml(l.naver_url || '');
     return `
-    <div class="listing-card urgent-card-item"
+    <div class="listing-card urgent-card-item ${profile.className}"
          onclick="openNaver('${l.article_no}')"
          data-id="${l.id}"
          data-article-no="${l.article_no}"
-         data-naver-url="${l.naver_url || ''}"
+         data-naver-url="${naverUrl}"
          title="네이버 부동산에서 보기">
       <div class="card-topline">
         <div class="card-badges">
           <span class="badge badge-urgent">${hasPriceDown ? '가격인하' : '급매'}</span>
           <span class="badge ${tradeBadgeClass(l.trade_type)}">${l.trade_type}</span>
           <span class="badge badge-type">${l.property_type}</span>
+          ${l.raw_property_code ? `<span class="badge badge-code">${escHtml(l.raw_property_code)}</span>` : ''}
         </div>
         <div class="card-date-chip">확인 ${formatDate(l.confirmed_date) || '—'}</div>
       </div>
       <div class="card-price-row">
         <div class="card-price-block">
           <div class="card-price">${l.price || '—'}</div>
-          <div class="card-price-caption">${escHtml(l.trade_type)} ${hasPriceDown ? '· 가격인하 감지' : '· 급매 포착'}</div>
+          <div class="card-price-caption">${escHtml(profile.caption)} ${hasPriceDown ? '· 가격인하 감지' : '· 급매 포착'}</div>
         </div>
-        <span class="naver-link-icon" title="네이버 부동산">네이버 보기</span>
+        ${naverUrl
+          ? `<a class="naver-link-icon" href="${naverUrl}" target="_self" rel="noopener noreferrer" onclick="event.stopPropagation()" title="네이버 부동산">네이버 보기</a>`
+          : '<span class="naver-link-icon disabled" title="네이버 링크 없음">링크 없음</span>'}
       </div>
-      <div class="card-name" title="${l.building_name}">${l.building_name}</div>
+      <div class="card-name" title="${escHtml(l.building_name)}">${escHtml(l.building_name || '이름 없는 매물')}</div>
       <div class="card-location-line">${escHtml(compactRegion)}</div>
       <div class="card-meta">
-        ${metaBits.map(bit => `<span>${escHtml(bit)}</span>`).join('')}
+        ${profile.meta.map(bit => `<span>${escHtml(bit)}</span>`).join('')}
+      </div>
+      <div class="card-metrics">
+        ${profile.metrics.map(metric => `
+          <div class="card-metric">
+            <span class="metric-label">${escHtml(metric.label)}</span>
+            <strong class="metric-value">${escHtml(metric.value)}</strong>
+          </div>
+        `).join('')}
       </div>
       ${l.description ? `<div class="card-desc">${escHtml(l.description)}</div>` : ''}
       <div class="card-tags">
@@ -514,11 +616,9 @@ function renderListings(data) {
 function updateStats(data) {
   document.getElementById('stat-total').textContent = fmtNum(data.total);
   const tc = data.type_counts || {};
-  document.getElementById('stat-apt').textContent = fmtNum(tc['아파트'] || 0);
-  document.getElementById('stat-opst').textContent = fmtNum(tc['오피스텔'] || 0);
-  document.getElementById('stat-villa').textContent = fmtNum(tc['빌라/연립'] || 0);
-  const other = (tc['단독/다가구'] || 0) + (tc['상가/업무'] || 0) + (tc['토지'] || 0);
-  document.getElementById('stat-other').textContent = fmtNum(other);
+  document.getElementById('stat-shop').textContent = fmtNum(tc['상가'] || 0);
+  document.getElementById('stat-office').textContent = fmtNum(tc['업무'] || 0);
+  document.getElementById('stat-land').textContent = fmtNum(tc['토지'] || 0);
 
   // 가격인하 수 (서버에서 안 내려오면 0)
   const pdEl = document.getElementById('stat-price-down');
@@ -646,7 +746,7 @@ function openNaver(articleNo) {
   const card = document.querySelector(`[data-article-no="${articleNo}"]`);
   const url = card?.dataset?.naverUrl;
   if (url) {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(url, '_self');
   }
 }
 
@@ -700,16 +800,54 @@ function updateNotificationStatus() {
   if (cls) el.classList.add(cls);
 }
 
+function readOptionalNumber(id) {
+  const value = document.getElementById(id)?.value.trim();
+  if (!value) return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function formatAreaRange(minArea, maxArea) {
+  if (minArea !== null && maxArea !== null) return `면적 ${minArea}–${maxArea}㎡`;
+  if (minArea !== null) return `면적 ${minArea}㎡ 이상`;
+  if (maxArea !== null) return `면적 ${maxArea}㎡ 이하`;
+  return '';
+}
+
+function tradeScopeLabel(scope) {
+  if (scope === 'sale') return '매매 전용';
+  if (scope === 'rent') return '임대 전용';
+  return '';
+}
+
+function hasAlertCondition(draft) {
+  return Boolean(
+    draft.keyword ||
+    draft.district ||
+    draft.property_type ||
+    draft.trade_type ||
+    draft.trade_scope ||
+    draft.min_area_m2 !== null ||
+    draft.max_area_m2 !== null ||
+    draft.min_price_drop_rate !== null
+  );
+}
+
 function buildAlertDraft() {
   const keywordInput = document.getElementById('alert-keyword');
   const keyword = keywordInput?.value.trim() || state.filters.search;
-  const propertyType = state.filters.property_type === '__OTHER__' ? '' : state.filters.property_type;
+  const propertyType = state.filters.property_type;
+  const tradeScope = document.getElementById('alert-trade-scope')?.value || '';
   return {
     client_id: state.clientId,
     keyword,
     district: state.filters.district,
     property_type: propertyType,
     trade_type: state.filters.trade_type,
+    trade_scope: tradeScope,
+    min_area_m2: readOptionalNumber('alert-min-area'),
+    max_area_m2: readOptionalNumber('alert-max-area'),
+    min_price_drop_rate: readOptionalNumber('alert-min-price-drop'),
   };
 }
 
@@ -723,6 +861,10 @@ function refreshAlertDraftSummary() {
   if (draft.district) parts.push(`지역: ${draft.district}`);
   if (draft.property_type) parts.push(`유형: ${draft.property_type}`);
   if (draft.trade_type) parts.push(`거래: ${draft.trade_type}`);
+  if (draft.trade_scope) parts.push(tradeScopeLabel(draft.trade_scope));
+  const areaRange = formatAreaRange(draft.min_area_m2, draft.max_area_m2);
+  if (areaRange) parts.push(areaRange);
+  if (draft.min_price_drop_rate !== null) parts.push(`가격인하율 ${draft.min_price_drop_rate}% 이상`);
   const summary = parts.length
     ? `저장될 조건: ${parts.join(' · ')}`
     : '검색어나 지역/유형/거래 필터를 먼저 선택하세요.';
@@ -749,6 +891,14 @@ function renderAlertRules() {
       rule.district ? `지역 ${rule.district}` : '',
       rule.property_type ? `유형 ${rule.property_type}` : '',
       rule.trade_type ? `거래 ${rule.trade_type}` : '',
+      rule.trade_scope ? tradeScopeLabel(rule.trade_scope) : '',
+      formatAreaRange(
+        rule.min_area_m2 === null || rule.min_area_m2 === undefined ? null : Number(rule.min_area_m2),
+        rule.max_area_m2 === null || rule.max_area_m2 === undefined ? null : Number(rule.max_area_m2),
+      ),
+      rule.min_price_drop_rate !== null && rule.min_price_drop_rate !== undefined
+        ? `가격인하율 ${rule.min_price_drop_rate}% 이상`
+        : '',
     ].filter(Boolean).join(' · ');
 
     return `
@@ -880,7 +1030,7 @@ async function ensureNotificationsReady(interactive = false) {
 
 async function saveAlertRule() {
   const draft = buildAlertDraft();
-  if (!draft.keyword && !draft.district && !draft.property_type && !draft.trade_type) {
+  if (!hasAlertCondition(draft)) {
     showToast('검색어나 필터를 먼저 선택하세요.', 'error');
     return;
   }
@@ -899,6 +1049,12 @@ async function saveAlertRule() {
 
   const keywordInput = document.getElementById('alert-keyword');
   if (keywordInput) keywordInput.value = '';
+  ['alert-min-area', 'alert-max-area', 'alert-min-price-drop'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.value = '';
+  });
+  const tradeScope = document.getElementById('alert-trade-scope');
+  if (tradeScope) tradeScope.value = '';
   await loadAlertRules();
   refreshAlertDraftSummary();
   showToast(`알림 등록: ${result.rule.name}`, 'success');
@@ -1255,8 +1411,6 @@ function wireEvents() {
 
         if (filter === 'price-down') {
           state.filters.price_down_only = true;
-        } else if (filter === '__OTHER__') {
-          state.filters.property_type = '__OTHER__';
         } else {
           state.filters.property_type = filter;
         }
@@ -1319,6 +1473,10 @@ function wireEvents() {
     }
   });
   document.getElementById('alert-keyword').addEventListener('input', refreshAlertDraftSummary);
+  ['alert-min-area', 'alert-max-area', 'alert-min-price-drop'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', refreshAlertDraftSummary);
+  });
+  document.getElementById('alert-trade-scope')?.addEventListener('change', refreshAlertDraftSummary);
   document.getElementById('alert-rules-list').addEventListener('click', async (event) => {
     const button = event.target.closest('.alert-rule-remove');
     if (!button) return;

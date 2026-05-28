@@ -11,7 +11,8 @@ __pycache__/
 .venv/
 venv/
 tmp_geocode_cache.json
-# 민감 정보가 담긴 env 파일은 무시, 로컬 개발용 .env는 커밋
+# 민감 정보가 담긴 env 파일은 커밋하지 않습니다. 예시는 .env.example을 사용하세요.
+.env
 .env.local
 .env.production
 .env.*.local

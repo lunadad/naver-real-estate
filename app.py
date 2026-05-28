@@ -110,6 +110,15 @@ def env_flag(name: str, default: bool) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def optional_float(value):
+    if value in (None, ""):
+        return None
+    try:
+        return float(str(value).replace("%", "").replace(",", "").strip())
+    except (TypeError, ValueError):
+        return None
+
+
 IS_VERCEL = env_flag("VERCEL", False)
 
 
@@ -344,7 +353,7 @@ def build_daily_crawl_series(days=7):
 def build_push_payload(matches):
     first = matches[0]
     extra_count = max(0, len(matches) - 1)
-    app_name = "부동산 급매 알리미"
+    app_name = "상업용 급매 알리미"
     label = ", ".join(first.get("alert_names") or []) or "새 급매"
     location = " ".join(
         part
@@ -500,12 +509,25 @@ def create_alert_rule():
     if not client_id:
         return jsonify({"status": "error", "message": "client_id required"}), 400
 
+    min_area_m2 = optional_float(data.get("min_area_m2"))
+    max_area_m2 = optional_float(data.get("max_area_m2"))
+    min_price_drop_rate = optional_float(data.get("min_price_drop_rate"))
+    trade_scope = (data.get("trade_scope") or "").strip()
+    if trade_scope not in {"", "sale", "rent"}:
+        return jsonify({"status": "error", "message": "invalid trade_scope"}), 400
+    if min_area_m2 is not None and max_area_m2 is not None and min_area_m2 > max_area_m2:
+        return jsonify({"status": "error", "message": "min_area_m2 must be <= max_area_m2"}), 400
+
     if not any(
         [
             (data.get("keyword") or "").strip(),
             (data.get("district") or "").strip(),
             (data.get("property_type") or "").strip(),
             (data.get("trade_type") or "").strip(),
+            trade_scope,
+            min_area_m2 is not None,
+            max_area_m2 is not None,
+            min_price_drop_rate is not None,
         ]
     ):
         return jsonify({"status": "error", "message": "at least one filter required"}), 400
@@ -516,6 +538,10 @@ def create_alert_rule():
         district=data.get("district", ""),
         property_type=data.get("property_type", ""),
         trade_type=data.get("trade_type", ""),
+        min_area_m2=min_area_m2,
+        max_area_m2=max_area_m2,
+        trade_scope=trade_scope,
+        min_price_drop_rate=min_price_drop_rate,
         name=data.get("name", ""),
     )
     return jsonify(serialize_api_value({"status": "success", "rule": rule}))

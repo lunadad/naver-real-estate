@@ -11,10 +11,10 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data ? event.data.json() : {};
   } catch (error) {
-    payload = { title: "부동산 급매 알리미", body: event.data?.text() || "새 급매 알림이 도착했습니다." };
+    payload = { title: "상업용 급매 알리미", body: event.data?.text() || "새 급매 알림이 도착했습니다." };
   }
 
-  const title = payload.title || "부동산 급매 알리미";
+  const title = payload.title || "상업용 급매 알리미";
   const options = {
     body: payload.body || "새 급매 알림이 도착했습니다.",
     tag: payload.tag || "real-estate-alert",

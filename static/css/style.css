@@ -327,7 +327,7 @@ a { color: var(--accent); text-decoration: none; }
 .alert-panel {
   overflow: hidden;
   transition: max-height 0.3s ease, opacity 0.25s ease;
-  max-height: 600px;
+  max-height: 760px;
   opacity: 1;
 }
 .alert-panel.collapsed {
@@ -383,6 +383,28 @@ a { color: var(--accent); text-decoration: none; }
 .alert-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.alert-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.alert-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alert-field span {
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.alert-field select.alert-input {
+  height: 34px;
 }
 
 .alert-current-filters {
@@ -705,7 +727,9 @@ a { color: var(--accent); text-decoration: none; }
   font-size: 11px;
   opacity: 0;
   transition: opacity var(--transition);
+  text-decoration: none;
 }
+.naver-link-icon.disabled { pointer-events: none; opacity: 0.5; }
 .listing-card:hover .naver-link-icon { opacity: 1; }
 
 .card-name {
@@ -1671,6 +1695,7 @@ body {
   border-radius: 999px;
   background: color-mix(in srgb, var(--bg3) 90%, transparent);
   color: var(--text2);
+  text-decoration: none;
 }
 
 .card-price-row {
@@ -1727,6 +1752,63 @@ body {
   padding: 4px 8px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--bg3) 82%, transparent);
+}
+
+.badge-code {
+  background: color-mix(in srgb, var(--bg3) 82%, transparent);
+  color: var(--text3);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  font-family: var(--font-mono);
+}
+
+.listing-card.property-shop {
+  box-shadow: inset 3px 0 0 var(--urgent);
+}
+
+.listing-card.property-office {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.listing-card.property-land {
+  box-shadow: inset 3px 0 0 var(--up);
+}
+
+.card-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+
+.card-metric {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg3) 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.metric-label {
+  display: block;
+  color: var(--text3);
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  display: block;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.property-land .card-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.property-land .metric-value {
+  color: var(--up);
 }
 
 .card-desc {
@@ -2288,5 +2370,10 @@ body.sidebar-overlay-open {
 
   .card-name {
     font-size: 17px;
+  }
+
+  .card-metrics,
+  .property-land .card-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

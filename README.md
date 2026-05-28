@@ -1,6 +1,6 @@
 # Naver Real Estate
 
-Flask + Playwright app for browsing urgent listings from Naver Real Estate.
+Flask + Playwright app for browsing urgent commercial listings from Naver Real Estate: shops, offices, and land.
 
 ## Current Production Architecture
 
@@ -110,30 +110,67 @@ mini launchd job.
 - Render deployment is configured with `render.yaml` as a free backup web service.
 - Create the Postgres database separately in Neon, then provide its connection string as Render's `DATABASE_URL` secret.
 - The app uses `DATABASE_URL` first and falls back to local SQLite via `DB_PATH`.
-- Production crawling should run outside Render and write directly to the same Neon database.
-- Do not commit the real Neon URL. Use `.env.local` locally and Render secret env vars in hosting.
+- The default Render setup in this repo uses a Free Render web service and expects an external Postgres `DATABASE_URL` (Neon Free is the recommended no-cost option).
+- Production crawling should run outside Vercel/Render and write directly to the same Neon database.
+- Do not commit the real Neon URL. Use `.env.local` locally and Render/Vercel secret env vars in hosting.
 
-## Free Hosting Setup
+## Free Hosting Setup (Render Free + Neon Free + Mac mini Crawler)
 
-This repo is set up for a low-cost/free hobby deployment shape:
+This repository is configured for a no-cost personal deployment pattern:
 
-1. Create a Neon Postgres project and copy the pooled or direct connection string.
-2. Make sure the URL includes `sslmode=require`; the app and crawler also add it automatically if it is missing.
-3. Click the Render deploy button above.
-4. When Render prompts for `DATABASE_URL`, paste the Neon connection string.
-5. Keep these production env vars as configured in `render.yaml`:
+- **Render Web Free** runs the Flask web app from `Dockerfile`.
+- **Neon Free Postgres** stores persistent app and crawl data through `DATABASE_URL`.
+- **Mac mini launchd** runs the crawler outside Render and writes to the same Neon database.
+
+Important Render Free limitations to account for:
+
+- Free web services spin down after idle periods, so the first request can be slow.
+- Free web services have an ephemeral filesystem, so do not rely on local SQLite for production data.
+- Keep `ENABLE_SCHEDULER=false` on Render so the web service does not run the crawler.
+
+### 1. Create Neon Free Postgres
+
+1. Create a Neon project on the Free plan.
+2. Copy the pooled or direct Postgres connection string.
+3. If Neon provides a URL with `postgres://`, it is acceptable for this app.
+
+### 2. Configure Render Web Free
+
+The `render.yaml` Blueprint now declares only the web service and prompts for `DATABASE_URL` instead of provisioning Render Postgres. For an existing Render service, set these environment variables manually in the Render dashboard because Render does not update existing `sync: false` values from Blueprint syncs:
 
 ```bash
+DATABASE_URL=<your-neon-postgres-url>
 ENABLE_SCHEDULER=false
-ENABLE_CRAWL_ENDPOINT=false
 SEED_DEMO_DATA=false
 ALLOW_DEMO_FALLBACK=false
-DB_POOL_MIN_SIZE=0
-DB_POOL_MAX_SIZE=3
 ```
 
-Vercel serves the primary dashboard. Render is kept as a backup dashboard. The
-Mac mini runs the crawler and writes fresh rows to Neon.
+Do not commit the Neon connection string to git. For local testing, copy `.env.example` to `.env.local` and put the real `DATABASE_URL` there; `.env.local` is ignored by git.
+
+Then change the Render web service instance type to **Free** if it is not already Free.
+
+### 3. Move existing Render Postgres data to Neon
+
+From a machine with `pg_dump` and `psql` installed:
+
+```bash
+export OLD_DATABASE_URL='<render-postgres-url>'
+export NEW_DATABASE_URL='<neon-postgres-url>'
+pg_dump --no-owner --no-acl "$OLD_DATABASE_URL" > render-postgres.dump.sql
+psql "$NEW_DATABASE_URL" < render-postgres.dump.sql
+```
+
+After verifying the app and Mac mini crawler both work with Neon, delete the old Render Postgres database to stop paying for it.
+
+### 4. Point the Mac mini crawler at Neon
+
+Use the same Neon `DATABASE_URL` when running or installing the launchd crawler:
+
+```bash
+python3 scripts/run_remote_crawl.py --database-url "$DATABASE_URL"
+```
+
+For the scheduled crawler, reinstall the launchd job with the Neon URL using the commands in the Recommended Production Crawl Setup section below.
 
 ## Production Safety (Important)
 
@@ -214,7 +251,9 @@ REMOTE_NAME=origin BRANCH_NAME=main scripts/publish.sh
 
 ## Recommended Production Crawl Setup
 
-Vercel and Render should serve the web app only. Run the crawler from your local Mac mini and write directly to Neon Postgres.
+Vercel and Render should serve the web app only. Run the crawler from your local Mac mini and write directly to Neon or another external Postgres database.
+
+The Mac mini checkout path used by these commands is `~/workspace/naver-real-estate` (`/Users/haluna/workspace/naver-real-estate`). Reinstall the launchd job from this workspace path after moving the checkout so the generated plist uses the new `WorkingDirectory` and wrapper path.
 
 1. Keep Render `ENABLE_SCHEDULER=false`
 2. On the Mac mini, set the same Neon URL:
@@ -255,8 +294,8 @@ launchd job is almost certainly failing before Python starts. Check, in order:
 
 **For LaunchAgent mode (user-bound):**
 ```bash
-tail -n 50 ~/naver-real-estate/logs/run_remote_crawl.wrapper.log
-tail -n 50 ~/naver-real-estate/logs/launchd-crawl.err.log
+tail -n 50 ~/workspace/naver-real-estate/logs/run_remote_crawl.wrapper.log
+tail -n 50 ~/workspace/naver-real-estate/logs/launchd-crawl.err.log
 ```
 
 **For LaunchDaemon mode (system-wide):**

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>부동산 급매 알리미</title>
+  <title>상업용 급매 알리미</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <link rel="stylesheet" href="/static/css/style.css" />
@@ -24,13 +24,13 @@
         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
-      <span class="logo-text">부동산 급매 알리미</span>
+      <span class="logo-text">상업용 급매 알리미</span>
     </div>
     <div class="search-wrap">
       <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <input id="search-input" type="text" placeholder="지역/아파트 검색  (예: 강남구, 트리지움, 해운대)" autocomplete="off" />
+      <input id="search-input" type="text" placeholder="지역/상가·업무·토지 검색 (예: 강남구, 테헤란로, 역삼동)" autocomplete="off" />
       <button id="search-clear" class="search-clear hidden">✕</button>
     </div>
   </div>
@@ -46,11 +46,9 @@
     <!-- Property type pills -->
     <div class="pill-group" id="type-filter" data-param="property_type">
       <button class="pill active" data-value="">전체</button>
-      <button class="pill" data-value="아파트">아파트</button>
-      <button class="pill" data-value="오피스텔">오피스텔</button>
-      <button class="pill" data-value="빌라/연립">빌라</button>
-      <button class="pill" data-value="단독/다가구">단독</button>
-      <button class="pill" data-value="상가/업무">상가</button>
+      <button class="pill" data-value="상가">상가</button>
+      <button class="pill" data-value="업무">업무</button>
+      <button class="pill" data-value="토지">토지</button>
     </div>
   </div>
 
@@ -104,7 +102,29 @@
         <div class="alert-panel-inner">
           <p class="alert-helper">상단 검색창과 현재 필터 조건을 저장하고, 새 급매가 들어오면 브라우저 알림을 보냅니다.</p>
           <div id="notification-status" class="alert-status">브라우저 알림 상태 확인 중...</div>
-          <input id="alert-keyword" class="alert-input" type="text" placeholder="아파트명 또는 지역명 직접 입력" />
+          <input id="alert-keyword" class="alert-input" type="text" placeholder="상가명·업무단지·지역명 직접 입력" />
+          <div class="alert-filter-grid">
+            <label class="alert-field">
+              <span>최소 면적</span>
+              <input id="alert-min-area" class="alert-input" type="number" min="0" step="1" placeholder="㎡" />
+            </label>
+            <label class="alert-field">
+              <span>최대 면적</span>
+              <input id="alert-max-area" class="alert-input" type="number" min="0" step="1" placeholder="㎡" />
+            </label>
+            <label class="alert-field">
+              <span>거래 범위</span>
+              <select id="alert-trade-scope" class="alert-input">
+                <option value="">현재 거래 필터</option>
+                <option value="sale">매매 전용</option>
+                <option value="rent">임대 전용</option>
+              </select>
+            </label>
+            <label class="alert-field">
+              <span>가격인하율</span>
+              <input id="alert-min-price-drop" class="alert-input" type="number" min="0" step="0.1" placeholder="% 이상" />
+            </label>
+          </div>
           <div id="alert-current-filters" class="alert-current-filters"></div>
           <div class="alert-actions">
             <button id="btn-alert-enable" class="alert-btn secondary">알림 권한 요청</button>
@@ -163,17 +183,17 @@
     <section id="hero-panel">
       <div class="hero-copy">
         <span class="hero-kicker">FASTSELL WATCH</span>
-        <h1 class="hero-title">내 조건에 맞는 급매를 실시간으로 감시하는 대시보드</h1>
-        <p class="hero-desc">검색, 지역, 거래 유형을 잡아두면 새 급매와 가격인하 매물을 빠르게 골라 보고 바로 알림까지 연결할 수 있습니다.</p>
+        <h1 class="hero-title">상가·업무·토지 급매를 실시간으로 감시하는 대시보드</h1>
+        <p class="hero-desc">면적, 용도지역, 권리금, 가격인하 조건을 잡아두면 상업용 급매를 빠르게 골라 보고 바로 알림까지 연결할 수 있습니다.</p>
       </div>
       <div class="hero-shell">
         <div class="hero-dashboard">
           <div class="hero-meta">
-            <div id="hero-filter-summary" class="hero-filter-summary">현재 조건: 전체 급매</div>
+            <div id="hero-filter-summary" class="hero-filter-summary">현재 조건: 전체 상업용 급매</div>
             <div id="hero-crawl-summary" class="hero-crawl-summary">최신 크롤링 정보를 불러오는 중...</div>
           </div>
           <div id="hero-insight-banner" class="hero-insight-banner">
-            <span class="hero-insight-label">오늘의 급매 온도</span>
+            <span class="hero-insight-label">오늘의 상업용 급매 온도</span>
             <div class="hero-insight-copy">
               <p id="hero-insight-text" class="hero-insight-text">전국 급매 흐름과 알림 현황을 계산 중입니다.</p>
               <p id="hero-insight-subtext" class="hero-insight-subtext">서울 주요 지역과 가격인하 변화는 트렌드 집계 후 함께 보여드립니다.</p>
@@ -227,23 +247,19 @@
     <div id="stats-bar">
       <div class="stat-card urgent-card stat-clickable" data-filter="all">
         <span class="stat-val" id="stat-total">—</span>
-        <span class="stat-lbl">전체 급매</span>
+        <span class="stat-lbl">전체 상업용</span>
       </div>
-      <div class="stat-card stat-clickable" data-filter="아파트">
-        <span class="stat-val" id="stat-apt">—</span>
-        <span class="stat-lbl">아파트</span>
+      <div class="stat-card stat-clickable" data-filter="상가">
+        <span class="stat-val" id="stat-shop">—</span>
+        <span class="stat-lbl">상가</span>
       </div>
-      <div class="stat-card stat-clickable" data-filter="오피스텔">
-        <span class="stat-val" id="stat-opst">—</span>
-        <span class="stat-lbl">오피스텔</span>
+      <div class="stat-card stat-clickable" data-filter="업무">
+        <span class="stat-val" id="stat-office">—</span>
+        <span class="stat-lbl">업무</span>
       </div>
-      <div class="stat-card stat-clickable" data-filter="빌라/연립">
-        <span class="stat-val" id="stat-villa">—</span>
-        <span class="stat-lbl">빌라/연립</span>
-      </div>
-      <div class="stat-card stat-clickable" data-filter="__OTHER__">
-        <span class="stat-val" id="stat-other">—</span>
-        <span class="stat-lbl">기타</span>
+      <div class="stat-card stat-clickable" data-filter="토지">
+        <span class="stat-val" id="stat-land">—</span>
+        <span class="stat-lbl">토지</span>
       </div>
       <div class="stat-card stat-clickable" data-filter="price-down">
         <span class="stat-val" id="stat-price-down">—</span>

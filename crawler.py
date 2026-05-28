@@ -5,9 +5,9 @@ import random
 import uuid
 import logging
 import os
+import re
 import threading
 from pathlib import Path
-from urllib.parse import quote
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 
@@ -53,13 +53,12 @@ class NaverRealEstateCrawler:
     REGIONS_FILE = Path(__file__).resolve().parent / "data" / "regions.json"
     API_BASE = "https://new.land.naver.com/api"
     FASTSELL_TAG = ":::::::::FASTSELL"
+    FASTSELL_URL_TAG = "FASTSELL"
 
     PROPERTY_TYPE_MAP = {
-        "APT": "아파트",
-        "OPST": "오피스텔",
-        "VL": "빌라/연립",
-        "ABYG": "단독/다가구",
-        "OBYG": "상가/업무",
+        "OBYG": "상가",
+        "SGJT": "업무",
+        "TJ": "토지",
     }
 
     TRADE_TYPE_MAP = {
@@ -333,6 +332,128 @@ class NaverRealEstateCrawler:
             return True
         return bool(article.get("isPriceModification"))
 
+    def _first_article_value(self, article: Dict, keys: List[str]):
+        for key in keys:
+            value = article.get(key)
+            if value not in (None, ""):
+                return value
+        return None
+
+    def _build_naver_listing_url(
+        self,
+        article_no,
+        property_code,
+        trade_code,
+        lat,
+        lng,
+    ) -> Optional[str]:
+        if not article_no:
+            return None
+
+        params = [
+            f"ms={lat},{lng},16" if lat not in (None, "") and lng not in (None, "") else "",
+            f"a={property_code}" if property_code else "",
+            f"b={trade_code}" if trade_code else "",
+            "e=RETAIL",
+            f"y={self.FASTSELL_URL_TAG}",
+            "ad=true",
+            f"articleNo={article_no}",
+        ]
+        query = "&".join(param for param in params if param)
+        return f"https://new.land.naver.com/search?{query}"
+
+    def _parse_float_value(self, value) -> Optional[float]:
+        if value in (None, ""):
+            return None
+        try:
+            return float(str(value).replace("%", "").replace(",", "").strip())
+        except (TypeError, ValueError):
+            return None
+
+    def _parse_area_m2(self, *values) -> Optional[float]:
+        for value in values:
+            if value in (None, ""):
+                continue
+            text = str(value).replace(",", "").strip()
+            match = re.search(r"(\d+(?:\.\d+)?)", text)
+            if not match:
+                continue
+            area = float(match.group(1))
+            if "평" in text and "㎡" not in text and "m2" not in text.lower():
+                area *= 3.305785
+            return round(area, 2)
+        return None
+
+    def _parse_money_to_manwon(self, raw: Optional[str]) -> Optional[int]:
+        text = re.sub(r"\s+", "", str(raw or ""))
+        text = text.replace(",", "")
+        if not text or not re.search(r"\d", text):
+            return None
+        if "억" in text:
+            eok_part, rest = text.split("억", 1)
+            eok_digits = re.sub(r"[^\d]", "", eok_part)
+            total = (int(eok_digits) if eok_digits else 0) * 10000
+            rest_digits = re.sub(r"[^\d]", "", rest)
+            return total + (int(rest_digits) if rest_digits else 0)
+        digits = re.sub(r"[^\d]", "", text)
+        return int(digits) if digits else None
+
+    def _estimate_yield_rate(self, formatted_price: str) -> Optional[float]:
+        if "/" not in str(formatted_price or ""):
+            return None
+        deposit_raw, monthly_raw = formatted_price.split("/", 1)
+        deposit = self._parse_money_to_manwon(deposit_raw)
+        monthly = self._parse_money_to_manwon(monthly_raw)
+        if not deposit or not monthly:
+            return None
+        return round((monthly * 12 / deposit) * 100, 2)
+
+    def _extract_premium_info(self, article: Dict, tags: List[str], desc: str) -> Optional[str]:
+        value = self._first_article_value(
+            article,
+            ["premiumPrc", "premiumPrice", "rightPrc", "rightPrice", "premiumInfo"],
+        )
+        if value not in (None, ""):
+            return str(value)
+        text = " ".join([*(tags or []), desc or ""])
+        if any(token in text for token in ("무권리", "권리금 없음", "권리금없음")):
+            return "무권리"
+        if "권리금" in text:
+            return "권리금 확인"
+        return None
+
+    def _extract_road_access(self, article: Dict, tags: List[str], desc: str) -> Optional[str]:
+        value = self._first_article_value(
+            article,
+            ["roadAccess", "roadAccessName", "roadCondition", "contactRoad"],
+        )
+        if value not in (None, ""):
+            return str(value)
+        text = " ".join([*(tags or []), desc or ""])
+        if any(token in text for token in ("코너", "양면", "삼면")):
+            return "코너/다중접면"
+        if any(token in text for token in ("대로변", "대로", "왕복", "광로")):
+            return "대로변"
+        if any(token in text for token in ("도로접", "접도", "도로 접", "진입로")):
+            return "도로접면"
+        if "맹지" in text:
+            return "맹지 유의"
+        return None
+
+    def _extract_price_drop_rate(self, article: Dict) -> Optional[float]:
+        return self._parse_float_value(
+            self._first_article_value(
+                article,
+                [
+                    "priceChangeRate",
+                    "priceChangePercent",
+                    "priceChangeRateValue",
+                    "priceDownRate",
+                    "dealPriceChangeRate",
+                ],
+            )
+        )
+
     def _fetch_combo_all_pages(self, page, token, cortarNo, ptype, ttype, max_pages=100):
         """한 조합(지역+유형+거래)의 전 페이지를 순회, FASTSELL 태그 매물만 반환."""
         all_articles = []
@@ -358,6 +479,21 @@ class NaverRealEstateCrawler:
                 tags = art.get("tagList") or []
                 desc = art.get("articleFeatureDesc") or ""
                 price_down = self._is_price_down_article(art)
+                formatted_price = self._format_article_price(art)
+                land_use_zone = self._first_article_value(
+                    art,
+                    [
+                        "landUseZoneName",
+                        "landUseRegionName",
+                        "useRegionName",
+                        "useZoneName",
+                        "usageArea",
+                    ],
+                )
+                land_category = self._first_article_value(
+                    art,
+                    ["landCategoryName", "landCategory", "jimokName", "landTypeName"],
+                )
 
                 if price_down and "가격인하" not in tags:
                     tags = list(tags) + ["가격인하"]
@@ -367,13 +503,26 @@ class NaverRealEstateCrawler:
                     "articleName": art.get("articleName") or "",
                     "tagList": tags,
                     "desc": desc,
-                    "price": self._format_article_price(art),
+                    "price": formatted_price,
                     "area": art.get("areaName") or "",
                     "floor": art.get("floorInfo") or "",
                     "date": art.get("articleConfirmYmd") or "",
                     "lat": art.get("latitude"),
                     "lng": art.get("longitude"),
                     "priceDown": price_down,
+                    "areaM2": self._parse_area_m2(
+                        art.get("areaName"),
+                        art.get("area1"),
+                        art.get("area2"),
+                        art.get("exclusiveArea"),
+                        art.get("landArea"),
+                    ),
+                    "landUseZone": str(land_use_zone) if land_use_zone not in (None, "") else None,
+                    "landCategory": str(land_category) if land_category not in (None, "") else None,
+                    "roadAccess": self._extract_road_access(art, tags, desc),
+                    "premiumInfo": self._extract_premium_info(art, tags, desc),
+                    "estimatedYieldRate": self._estimate_yield_rate(formatted_price),
+                    "priceDropRate": self._extract_price_drop_rate(art),
                 })
 
             if not data.get("isMoreData"):
@@ -394,7 +543,7 @@ class NaverRealEstateCrawler:
 
         listings = []
         seen_articles = set()
-        prop_codes = ["APT", "OPST", "VL"]
+        prop_codes = ["OBYG", "SGJT", "TJ"]
         trade_codes = ["A1", "B1", "B2"]
 
         try:
@@ -492,11 +641,12 @@ class NaverRealEstateCrawler:
 
                                         art_lat = art.get("lat") or d_info["lat"]
                                         art_lng = art.get("lng") or d_info["lng"]
-                                        naver_url = (
-                                            f"https://new.land.naver.com/complexes"
-                                            f"?ms={art_lat},{art_lng},16"
-                                            f"&a={ptype_code}&b={ttype_code}"
-                                            f"&articleNo={ano}"
+                                        naver_url = self._build_naver_listing_url(
+                                            ano,
+                                            ptype_code,
+                                            ttype_code,
+                                            art_lat,
+                                            art_lng,
                                         )
 
                                         listings.append({
@@ -504,6 +654,7 @@ class NaverRealEstateCrawler:
                                             "region": region_name,
                                             "district": district_name,
                                             "property_type": self.PROPERTY_TYPE_MAP.get(ptype_code, ptype_code),
+                                            "raw_property_code": ptype_code,
                                             "trade_type": self.TRADE_TYPE_MAP.get(ttype_code, ttype_code),
                                             "price": art.get("price", ""),
                                             "area": art.get("area", ""),
@@ -516,6 +667,13 @@ class NaverRealEstateCrawler:
                                             "latitude": art_lat,
                                             "longitude": art_lng,
                                             "naver_url": naver_url,
+                                            "area_m2": art.get("areaM2"),
+                                            "land_use_zone": art.get("landUseZone"),
+                                            "land_category": art.get("landCategory"),
+                                            "road_access": art.get("roadAccess"),
+                                            "premium_info": art.get("premiumInfo"),
+                                            "estimated_yield_rate": art.get("estimatedYieldRate"),
+                                            "price_drop_rate": art.get("priceDropRate"),
                                         })
                                         district_count += 1
 
@@ -538,32 +696,25 @@ class NaverRealEstateCrawler:
         """급매 전용 데모 데이터 생성."""
         rng = random.Random(42)
 
-        property_types = ["아파트", "오피스텔", "빌라/연립", "단독/다가구", "상가/업무"]
+        property_types = ["상가", "업무", "토지"]
+        raw_codes_by_type = {"상가": "OBYG", "업무": "SGJT", "토지": "TJ"}
         trade_types = ["매매", "전세", "월세"]
 
         price_cfg = {
-            "아파트": {"매매": (3, 30), "전세": (2, 15), "월세": (50, 300)},
-            "오피스텔": {"매매": (1.5, 8), "전세": (1, 5), "월세": (40, 150)},
-            "빌라/연립": {"매매": (1, 5), "전세": (0.5, 3), "월세": (30, 100)},
-            "단독/다가구": {"매매": (2, 20), "전세": (1, 8), "월세": (50, 200)},
-            "상가/업무": {"매매": (3, 50), "전세": (2, 20), "월세": (100, 1000)},
+            "상가": {"매매": (3, 60), "전세": (2, 30), "월세": (100, 1500)},
+            "업무": {"매매": (4, 80), "전세": (3, 50), "월세": (120, 1800)},
+            "토지": {"매매": (5, 200), "전세": (0.5, 2), "월세": (30, 300)},
         }
 
         areas_by_type = {
-            "아파트":     ["59㎡", "74㎡", "84㎡", "99㎡", "114㎡", "134㎡"],
-            "오피스텔":   ["20㎡", "33㎡", "44㎡", "59㎡", "74㎡"],
-            "빌라/연립":  ["33㎡", "44㎡", "59㎡", "74㎡", "84㎡"],
-            "단독/다가구":["66㎡", "99㎡", "132㎡", "165㎡"],
-            "상가/업무":  ["33㎡", "49㎡", "66㎡", "99㎡", "132㎡"],
+            "상가": ["33㎡", "49㎡", "66㎡", "99㎡", "132㎡"],
+            "업무": ["49㎡", "66㎡", "99㎡", "132㎡", "165㎡"],
+            "토지": ["330㎡", "495㎡", "660㎡", "990㎡", "1320㎡"],
         }
 
-        apt_brands   = ["래미안", "힐스테이트", "자이", "e편한세상", "더샵",
-                        "롯데캐슬", "아이파크", "푸르지오", "SK뷰", "리버파크"]
-        opst_brands  = ["위브더제니스", "두산위브", "SK허브", "롯데캐슬", "한화포레나",
-                        "힐스테이트", "더샵", "KT에스테이트"]
-        villa_types  = ["빌라", "연립", "다세대"]
-        detached_sfx = ["주택", "단독주택", "다가구"]
-        shop_sfx     = ["상가", "오피스빌딩", "근린상가", "주상복합상가"]
+        shop_sfx = ["상가", "근린상가", "로드샵", "주상복합상가"]
+        office_sfx = ["오피스", "업무타워", "지식산업센터", "오피스동"]
+        land_sfx = ["토지", "대지", "잡종지", "계획관리"]
 
         urgent_descs = [
             "급매!! 시세보다 저렴하게 내놓습니다. 빠른 협의 가능.",
@@ -577,30 +728,23 @@ class NaverRealEstateCrawler:
         ]
 
         all_tags_pool = ["역세권", "신축", "대단지", "주차가능", "남향", "학세권", "숲세권"]
+        commercial_tags = ["무권리", "코너", "대로변", "권리금 확인"]
+        land_zones = ["계획관리", "자연녹지", "준주거", "일반상업", "제2종일반주거"]
+        land_categories = ["대지", "잡종지", "전", "답", "임야"]
         urgent_tag_types = ["급매", "가격인하"]
 
         def make_building_name(rng, ptype, short):
-            if ptype == "아파트":
-                brand = rng.choice(apt_brands)
-                n = rng.randint(1, 12)
-                return f"{brand} {short} {n}단지"
-            elif ptype == "오피스텔":
-                brand = rng.choice(opst_brands)
-                n = rng.randint(1, 3)
-                suffix = f" {n}차" if n > 1 else ""
-                return f"{brand} {short}{suffix}"
-            elif ptype == "빌라/연립":
-                t = rng.choice(villa_types)
-                n = rng.randint(1, 50)
-                return f"{short} {n}호{t}" if t != "빌라" else f"{short}파크{t}"
-            elif ptype == "단독/다가구":
-                sfx = rng.choice(detached_sfx)
-                n = rng.randint(1, 999)
-                return f"{short} {n}번지 {sfx}"
-            else:
+            if ptype == "상가":
                 sfx = rng.choice(shop_sfx)
-                n = rng.randint(1, 5)
+                n = rng.randint(1, 8)
                 return f"{short} {n}번가 {sfx}"
+            if ptype == "업무":
+                sfx = rng.choice(office_sfx)
+                n = rng.randint(1, 6)
+                return f"{short} {n}지구 {sfx}"
+            sfx = rng.choice(land_sfx)
+            n = rng.randint(1, 999)
+            return f"{short} {n}번지 {sfx}"
 
         listings = []
         article_id = 1_000_000
@@ -623,8 +767,7 @@ class NaverRealEstateCrawler:
                         chun = int((val - bil) * 10) * 1000
                         price = f"{bil}억" + (f" {chun:,}만" if chun else "")
 
-                    max_floor = {"아파트": 35, "오피스텔": 40, "빌라/연립": 5,
-                                 "단독/다가구": 3, "상가/업무": 15}.get(ptype, 10)
+                    max_floor = {"상가": 20, "업무": 30, "토지": 1}.get(ptype, 10)
                     floor_n = rng.randint(1, max_floor)
                     total_f = rng.randint(floor_n, max_floor)
 
@@ -632,11 +775,16 @@ class NaverRealEstateCrawler:
                     tags = [urgent_tag]
                     for t in rng.sample(all_tags_pool, k=rng.randint(0, 3)):
                         tags.append(t)
+                    if ptype in {"상가", "업무"} and rng.random() < 0.5:
+                        tags.append(rng.choice(commercial_tags))
+                    if ptype == "토지":
+                        tags.extend([rng.choice(land_zones), rng.choice(land_categories)])
 
                     desc = rng.choice(urgent_descs)
                     short = district_name.replace("구", "").replace("시", "")
                     name = make_building_name(rng, ptype, short)
                     area_pool = areas_by_type.get(ptype, ["59㎡", "84㎡"])
+                    area = rng.choice(area_pool)
 
                     lat = d_info["lat"] + rng.uniform(-0.025, 0.025)
                     lng = d_info["lng"] + rng.uniform(-0.025, 0.025)
@@ -645,18 +793,16 @@ class NaverRealEstateCrawler:
                     days_ago = rng.randint(0, 45)
                     conf_date = (datetime.now() - timedelta(days=days_ago)).strftime("%Y%m%d")
 
-                    search_query = f"{name} {district_name}"
-                    naver_url = f"https://new.land.naver.com/search?query={quote(search_query)}"
-
                     listings.append(
                         {
                             "article_no": str(article_id),
                             "region": region_name,
                             "district": district_name,
                             "property_type": ptype,
+                            "raw_property_code": raw_codes_by_type.get(ptype),
                             "trade_type": ttype,
                             "price": price,
-                            "area": rng.choice(area_pool),
+                            "area": area,
                             "floor": f"{floor_n}/{total_f}",
                             "building_name": name,
                             "description": desc,
@@ -665,7 +811,14 @@ class NaverRealEstateCrawler:
                             "confirmed_date": conf_date,
                             "latitude": lat,
                             "longitude": lng,
-                            "naver_url": naver_url,
+                            "naver_url": None,
+                            "area_m2": self._parse_area_m2(area),
+                            "land_use_zone": rng.choice(land_zones) if ptype == "토지" else None,
+                            "land_category": rng.choice(land_categories) if ptype == "토지" else None,
+                            "road_access": rng.choice(["대로변", "도로접면", "코너/다중접면"]) if ptype != "업무" or rng.random() < 0.4 else None,
+                            "premium_info": rng.choice(["무권리", "권리금 확인", None]) if ptype == "상가" else None,
+                            "estimated_yield_rate": round(rng.uniform(4.5, 11.5), 2) if ttype == "월세" else None,
+                            "price_drop_rate": round(rng.uniform(1.0, 12.0), 1) if urgent_tag == "가격인하" else None,
                         }
                     )
 
