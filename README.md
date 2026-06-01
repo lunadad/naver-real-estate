@@ -54,7 +54,7 @@ git status -sb
 The v2 folder has its own ignored `.env.local` that defaults to local SQLite and
 demo data. This avoids accidental writes to production Neon while experimenting.
 Copy a real Neon URL into that file only when v2 intentionally needs to read the
-shared production database.
+production Neon database through the isolated `commercial_v2` schema.
 
 ## Deploy to Vercel + Neon
 
@@ -65,12 +65,13 @@ Required production environment variables:
 
 ```bash
 DATABASE_URL=<Neon DATABASE_URL with sslmode=require>
+DB_SCHEMA=commercial_v2
 ENABLE_SCHEDULER=false
 ENABLE_CRAWL_ENDPOINT=false
 SEED_DEMO_DATA=false
 ALLOW_DEMO_FALLBACK=false
 SKIP_STARTUP_BACKFILL=true
-LOCAL_CRAWL_SCHEDULE_HOUR=9
+LOCAL_CRAWL_SCHEDULE_HOUR=10
 LOCAL_CRAWL_SCHEDULE_MINUTE=0
 DB_POOL_MIN_SIZE=0
 DB_POOL_MAX_SIZE=3
@@ -141,6 +142,7 @@ The `render.yaml` Blueprint now declares only the web service and prompts for `D
 
 ```bash
 DATABASE_URL=<your-neon-postgres-url>
+DB_SCHEMA=commercial_v2
 ENABLE_SCHEDULER=false
 SEED_DEMO_DATA=false
 ALLOW_DEMO_FALLBACK=false

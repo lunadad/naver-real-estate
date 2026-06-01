@@ -129,6 +129,7 @@ def make_plist(args):
         "WorkingDirectory": str(ROOT_DIR),
         "EnvironmentVariables": {
             "DATABASE_URL": database_url,
+            "DB_SCHEMA": os.getenv("DB_SCHEMA", "commercial_v2"),
             "ALLOW_DEMO_FALLBACK": "false",
             "SEED_DEMO_DATA": "false",
             "MIN_LIVE_CRAWL_RATIO": "0.5",

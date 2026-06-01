@@ -75,11 +75,19 @@ def build_parser():
     return parser
 
 
-def _connect_with_retry(database_url: str, max_attempts: int = 5, delay: int = 30) -> "Database":
+def _connect_with_retry(
+    database_url: str,
+    max_attempts: int = 5,
+    delay: int = 30,
+    skip_price_backfill: bool = False,
+) -> "Database":
     last_exc: Exception = RuntimeError("no attempts made")
     for attempt in range(1, max_attempts + 1):
         try:
-            return Database(database_url=database_url)
+            return Database(
+                database_url=database_url,
+                skip_price_backfill=skip_price_backfill,
+            )
         except Exception as exc:
             last_exc = exc
             if attempt >= max_attempts:
@@ -112,7 +120,7 @@ def main():
     logger.info("Local remote crawl starting (pid=%s)", os.getpid())
     logger.info("Local crawl log file: %s", Path(args.log_path).expanduser())
 
-    db = _connect_with_retry(database_url)
+    db = _connect_with_retry(database_url, skip_price_backfill=True)
     try:
         crawler = NaverRealEstateCrawler(db)
         result = crawler.crawl_all()

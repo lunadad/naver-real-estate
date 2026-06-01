@@ -10,6 +10,8 @@ services:
       # Set this manually in Render to your Neon Free Postgres connection string.
       - key: DATABASE_URL
         sync: false
+      - key: DB_SCHEMA
+        value: "commercial_v2"
       - key: ENABLE_SCHEDULER
         value: "false"
       - key: ENABLE_CRAWL_ENDPOINT

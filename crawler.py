@@ -859,6 +859,22 @@ class NaverRealEstateCrawler:
         def persist_live_crawl():
             previous_live = self.db.get_last_successful_live_crawl()
             previous_total = int((previous_live or {}).get("total_count") or 0)
+            previous_session_id = (previous_live or {}).get("session_id")
+            if (
+                previous_total
+                and previous_session_id
+                and hasattr(self.db, "count_commercial_listings_for_session")
+            ):
+                previous_commercial_total = self.db.count_commercial_listings_for_session(previous_session_id)
+                if previous_commercial_total:
+                    previous_total = previous_commercial_total
+                else:
+                    logger.warning(
+                        "직전 성공 크롤링 세션에 상업용 매물이 없어 라이브 수량 안전장치 기준에서 제외: previous_session=%s previous_total=%s",
+                        previous_session_id,
+                        previous_total,
+                    )
+                    previous_total = 0
             min_allowed = int(previous_total * self.MIN_LIVE_CRAWL_RATIO) if previous_total else 0
 
             if previous_total and len(all_listings) < min_allowed:

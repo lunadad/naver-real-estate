@@ -25,6 +25,20 @@ PROPERTY_CODE_BY_TYPE = {
     "업무": "SGJT",
     "토지": "TJ",
 }
+DEFAULT_POSTGRES_SCHEMA = "commercial_v2"
+
+
+def normalize_postgres_identifier(value: str) -> str:
+    identifier = (value or "").strip()
+    if not identifier:
+        return ""
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", identifier):
+        raise ValueError(f"Invalid Postgres identifier: {identifier}")
+    return identifier
+
+
+def quote_identifier(identifier: str) -> str:
+    return '"' + identifier.replace('"', '""') + '"'
 
 
 def ensure_postgres_sslmode(database_url: str) -> str:
@@ -165,6 +179,9 @@ class Database:
         self.driver = "postgres" if self.database_url else "sqlite"
         self.skip_price_backfill = skip_price_backfill
         self.connect_timeout = int((os.getenv("PGCONNECT_TIMEOUT") or "10").strip())
+        self.postgres_schema = normalize_postgres_identifier(
+            os.getenv("DB_SCHEMA", DEFAULT_POSTGRES_SCHEMA)
+        )
         self.pool = None
         self._open_pool()
         self.init_db()
@@ -194,6 +211,7 @@ class Database:
             if self.pool is not None:
                 pool_conn = self.pool.connection()
                 conn = pool_conn.__enter__()
+                self._configure_postgres_connection(conn)
                 return ConnectionWrapper(
                     "postgres",
                     conn,
@@ -203,11 +221,20 @@ class Database:
                 )
 
             conn = psycopg.connect(self.database_url, connect_timeout=self.connect_timeout)
+            self._configure_postgres_connection(conn)
             return ConnectionWrapper("postgres", conn)
 
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return ConnectionWrapper("sqlite", conn)
+
+    def _configure_postgres_connection(self, conn):
+        if self.driver != "postgres" or not self.postgres_schema:
+            return
+
+        schema = quote_identifier(self.postgres_schema)
+        conn.execute(f"CREATE SCHEMA IF NOT EXISTS {schema}")
+        conn.execute(f"SET search_path TO {schema}, public")
 
     def close(self):
         if self.pool is not None:
@@ -279,6 +306,8 @@ class Database:
                 conn.execute("ALTER TABLE alert_rules ADD COLUMN trade_scope TEXT")
             if "min_price_drop_rate" not in alert_cols:
                 conn.execute("ALTER TABLE alert_rules ADD COLUMN min_price_drop_rate DOUBLE PRECISION")
+
+            self._import_public_commercial_data(conn)
 
             if self.skip_price_backfill:
                 logger.info("Startup listing index maintenance skipped")
@@ -541,7 +570,7 @@ class Database:
                 """
                 SELECT column_name
                 FROM information_schema.columns
-                WHERE table_schema = 'public' AND table_name = ?
+                WHERE table_schema = current_schema() AND table_name = ?
                 """,
                 (table_name,),
             ).fetchall()
@@ -549,6 +578,158 @@ class Database:
 
         rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
         return {row["name"] for row in rows}
+
+    def _public_table_exists(self, conn: ConnectionWrapper, table_name: str) -> bool:
+        if self.driver != "postgres" or self.postgres_schema == "public":
+            return False
+
+        row = conn.execute(
+            """
+            SELECT 1 AS exists
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_name = ?
+            LIMIT 1
+            """,
+            (table_name,),
+        ).fetchone()
+        return bool(row)
+
+    def _import_public_commercial_data(self, conn: ConnectionWrapper):
+        if self.driver != "postgres" or self.postgres_schema == "public":
+            return
+        if not self._public_table_exists(conn, "listings"):
+            return
+
+        commercial_type_params = tuple(COMMERCIAL_PROPERTY_TYPES)
+        placeholders = ", ".join(["?"] * len(commercial_type_params))
+
+        conn.execute(
+            f"""
+            INSERT INTO listings
+            (article_no, region, district, property_type, trade_type, price,
+             area, floor, building_name, description, is_urgent, tags,
+             confirmed_date, crawled_at, crawl_session, latitude, longitude, naver_url,
+             price_sort_value, rent_sort_value, raw_property_code, area_m2,
+             land_use_zone, land_category, road_access, premium_info,
+             estimated_yield_rate, price_drop_rate)
+            SELECT article_no, region, district, property_type, trade_type, price,
+                   area, floor, building_name, description, is_urgent, tags,
+                   confirmed_date, crawled_at, crawl_session, latitude, longitude, naver_url,
+                   price_sort_value, rent_sort_value, raw_property_code, area_m2,
+                   land_use_zone, land_category, road_access, premium_info,
+                   estimated_yield_rate, price_drop_rate
+            FROM public.listings
+            WHERE property_type IN ({placeholders})
+            ON CONFLICT(article_no) DO UPDATE SET
+                region = excluded.region,
+                district = excluded.district,
+                property_type = excluded.property_type,
+                trade_type = excluded.trade_type,
+                price = excluded.price,
+                area = excluded.area,
+                floor = excluded.floor,
+                building_name = excluded.building_name,
+                description = excluded.description,
+                is_urgent = excluded.is_urgent,
+                tags = excluded.tags,
+                confirmed_date = excluded.confirmed_date,
+                crawled_at = excluded.crawled_at,
+                crawl_session = excluded.crawl_session,
+                latitude = excluded.latitude,
+                longitude = excluded.longitude,
+                naver_url = excluded.naver_url,
+                price_sort_value = excluded.price_sort_value,
+                rent_sort_value = excluded.rent_sort_value,
+                raw_property_code = excluded.raw_property_code,
+                area_m2 = excluded.area_m2,
+                land_use_zone = excluded.land_use_zone,
+                land_category = excluded.land_category,
+                road_access = excluded.road_access,
+                premium_info = excluded.premium_info,
+                estimated_yield_rate = excluded.estimated_yield_rate,
+                price_drop_rate = excluded.price_drop_rate
+            """,
+            commercial_type_params,
+        )
+
+        if self._public_table_exists(conn, "crawl_history"):
+            conn.execute(
+                f"""
+                INSERT INTO crawl_history
+                (session_id, crawled_at, total_count, urgent_count, status, source)
+                SELECT h.session_id, h.crawled_at, h.total_count, h.urgent_count, h.status, h.source
+                FROM public.crawl_history h
+                WHERE h.session_id IN (
+                    SELECT DISTINCT crawl_session
+                    FROM public.listings
+                    WHERE crawl_session IS NOT NULL
+                      AND property_type IN ({placeholders})
+                )
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM crawl_history existing
+                    WHERE existing.session_id = h.session_id
+                  )
+                """,
+                commercial_type_params,
+            )
+
+        if self._public_table_exists(conn, "crawl_region_stats"):
+            conn.execute(
+                f"""
+                INSERT INTO crawl_region_stats
+                (session_id, region, district, total_count, price_down_count, created_at)
+                SELECT s.session_id, s.region, s.district, s.total_count, s.price_down_count, s.created_at
+                FROM public.crawl_region_stats s
+                WHERE s.session_id IN (
+                    SELECT DISTINCT crawl_session
+                    FROM public.listings
+                    WHERE crawl_session IS NOT NULL
+                      AND property_type IN ({placeholders})
+                )
+                ON CONFLICT(session_id, region, district) DO UPDATE SET
+                    total_count = excluded.total_count,
+                    price_down_count = excluded.price_down_count,
+                    created_at = excluded.created_at
+                """,
+                commercial_type_params,
+            )
+
+            conn.execute(
+                f"""
+                DELETE FROM public.crawl_region_stats
+                WHERE session_id IN (
+                    SELECT DISTINCT crawl_session
+                    FROM public.listings
+                    WHERE crawl_session IS NOT NULL
+                      AND property_type IN ({placeholders})
+                )
+                """,
+                commercial_type_params,
+            )
+
+        if self._public_table_exists(conn, "crawl_history"):
+            conn.execute(
+                f"""
+                DELETE FROM public.crawl_history
+                WHERE session_id IN (
+                    SELECT DISTINCT crawl_session
+                    FROM public.listings
+                    WHERE crawl_session IS NOT NULL
+                      AND property_type IN ({placeholders})
+                )
+                """,
+                commercial_type_params,
+            )
+
+        conn.execute(
+            f"""
+            DELETE FROM public.listings
+            WHERE property_type IN ({placeholders})
+            """,
+            commercial_type_params,
+        )
 
     def _parse_low_unit_manwon(self, text: str) -> Optional[int]:
         normalized = re.sub(r"\s+", "", text or "")
@@ -1818,6 +1999,22 @@ class Database:
                 """
             ).fetchone()
         return dict(row) if row else None
+
+    def count_commercial_listings_for_session(self, session_id: str) -> int:
+        if not session_id:
+            return 0
+
+        with self.get_connection() as conn:
+            row = conn.execute(
+                """
+                SELECT COUNT(*) AS count
+                FROM listings
+                WHERE crawl_session = ?
+                  AND property_type IN ('상가', '업무', '토지')
+                """,
+                (session_id,),
+            ).fetchone()
+        return int((row or {}).get("count") or 0)
 
     def get_recent_successful_crawls(self, limit: int = 90):
         limit = max(1, int(limit or 90))

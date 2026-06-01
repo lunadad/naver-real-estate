@@ -46,6 +46,10 @@ def load_env_file(path: Path):
 
 
 def load_local_runtime_env():
+    def set_env_if_blank(key, value):
+        if isinstance(value, str) and value and not os.getenv(key, "").strip():
+            os.environ[key] = value
+
     for name in (".env.local", ".env"):
         load_env_file(BASE_DIR / name)
 
@@ -68,15 +72,14 @@ def load_local_runtime_env():
 
         env_vars = payload.get("EnvironmentVariables") or {}
         for key, value in env_vars.items():
-            if isinstance(value, str):
-                os.environ.setdefault(key, value)
+            set_env_if_blank(key, value)
 
         schedule = payload.get("StartCalendarInterval") or {}
         if isinstance(schedule, dict):
             if "Hour" in schedule:
-                os.environ.setdefault("LOCAL_CRAWL_SCHEDULE_HOUR", str(schedule["Hour"]))
+                os.environ["LOCAL_CRAWL_SCHEDULE_HOUR"] = str(schedule["Hour"])
             if "Minute" in schedule:
-                os.environ.setdefault("LOCAL_CRAWL_SCHEDULE_MINUTE", str(schedule["Minute"]))
+                os.environ["LOCAL_CRAWL_SCHEDULE_MINUTE"] = str(schedule["Minute"])
 
         if os.getenv("DATABASE_URL", "").strip():
             os.environ.setdefault("ENABLE_SCHEDULER", "false")
@@ -85,7 +88,7 @@ def load_local_runtime_env():
         args = payload.get("ProgramArguments") or []
         for index, arg in enumerate(args[:-1]):
             if arg == "--database-url" and isinstance(args[index + 1], str):
-                os.environ.setdefault("DATABASE_URL", args[index + 1])
+                set_env_if_blank("DATABASE_URL", args[index + 1])
                 os.environ.setdefault("ENABLE_SCHEDULER", "false")
                 return
 
