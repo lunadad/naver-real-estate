@@ -22,6 +22,10 @@ services:
         value: "false"
       - key: SKIP_STARTUP_BACKFILL
         value: "true"
+      - key: LOCAL_CRAWL_SCHEDULE_HOUR
+        value: "10"
+      - key: LOCAL_CRAWL_SCHEDULE_MINUTE
+        value: "0"
       - key: DB_POOL_MIN_SIZE
         value: "0"
       - key: DB_POOL_MAX_SIZE
