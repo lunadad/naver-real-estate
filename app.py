@@ -149,7 +149,7 @@ SKIP_STARTUP_BACKFILL = env_flag("SKIP_STARTUP_BACKFILL", bool(DATABASE_URL))
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "").strip()
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "").strip()
 VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:alerts@example.com").strip()
-EXTERNAL_CRAWL_HOUR = int((os.getenv("LOCAL_CRAWL_SCHEDULE_HOUR") or "9").strip())
+EXTERNAL_CRAWL_HOUR = int((os.getenv("LOCAL_CRAWL_SCHEDULE_HOUR") or "10").strip())
 EXTERNAL_CRAWL_MINUTE = int((os.getenv("LOCAL_CRAWL_SCHEDULE_MINUTE") or "0").strip())
 EXTERNAL_CRAWL_GRACE_MINUTES = int((os.getenv("LOCAL_CRAWL_GRACE_MINUTES") or "120").strip())
 
