@@ -65,5 +65,58 @@ if [[ -z "${PYTHON}" ]]; then
 fi
 
 echo "[$(ts)] using Python: ${PYTHON}"
+
+_wait_for_database_dns() {
+  local database_url_for_dns="${DATABASE_URL:-}"
+
+  if [[ -z "${database_url_for_dns}" ]]; then
+    local arg_index=1
+    while [[ $arg_index -le $# ]]; do
+      if [[ "${!arg_index}" == "--database-url" ]]; then
+        local value_index=$((arg_index + 1))
+        if [[ $value_index -le $# ]]; then
+          database_url_for_dns="${!value_index}"
+        fi
+        break
+      fi
+      (( arg_index++ ))
+    done
+  fi
+
+  if [[ -z "${database_url_for_dns}" ]]; then
+    return 0
+  fi
+
+  local host_port host max i
+  host_port="${database_url_for_dns#*@}"
+  host="${host_port%%/*}"
+  host="${host%%:*}"
+
+  if [[ -z "${host}" || "${host}" == "${database_url_for_dns}" ]]; then
+    return 0
+  fi
+
+  max=12
+  i=1
+  while [[ $i -le $max ]]; do
+    if "${PYTHON}" - "${host}" <<'PY' >/dev/null 2>&1
+import socket
+import sys
+
+socket.getaddrinfo(sys.argv[1], 5432)
+PY
+    then
+      echo "[$(ts)] database DNS ready: ${host} (attempt ${i}/${max})"
+      return 0
+    fi
+    echo "[$(ts)] waiting for database DNS: ${host} (attempt ${i}/${max})..."
+    sleep 10
+    (( i++ ))
+  done
+
+  echo "[$(ts)] WARNING: database DNS not confirmed after ${max} attempts, proceeding anyway"
+}
+_wait_for_database_dns
+
 cd "${ROOT_DIR}"
 exec "${PYTHON}" scripts/run_remote_crawl.py "$@"

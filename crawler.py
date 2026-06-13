@@ -730,7 +730,10 @@ class NaverRealEstateCrawler:
         return result
 
     def _with_db_reconnect(self, label: str, operation):
-        for attempt in range(1, 3):
+        max_attempts = max(1, int(os.getenv("DB_RECONNECT_ATTEMPTS", "10")))
+        retry_delay = max(1, int(os.getenv("DB_RECONNECT_DELAY_SECONDS", "30")))
+
+        for attempt in range(1, max_attempts + 1):
             try:
                 return operation()
             except Exception as exc:
@@ -738,14 +741,17 @@ class NaverRealEstateCrawler:
                     hasattr(self.db, "is_transient_connection_error")
                     and self.db.is_transient_connection_error(exc)
                 )
-                if not is_transient or attempt >= 2:
+                if not is_transient or attempt >= max_attempts:
                     raise
 
                 logger.warning(
-                    "%s failed after a transient database connection error; reconnecting and retrying: %s",
+                    "%s failed after a transient database connection error; reconnecting and retrying in %ss (attempt %s/%s): %s",
                     label,
+                    retry_delay,
+                    attempt,
+                    max_attempts,
                     exc,
                 )
                 if hasattr(self.db, "reconnect"):
                     self.db.reconnect()
-                time.sleep(2)
+                time.sleep(retry_delay)
