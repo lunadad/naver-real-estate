@@ -329,6 +329,24 @@ function urgencyColor(total) {
   return '#f85149';
 }
 
+// 좌표 데이터는 정적이므로 최초 1회만 요청하고 재사용한다.
+let regionCoordMapPromise = null;
+function getRegionCoordMap() {
+  if (!regionCoordMapPromise) {
+    regionCoordMapPromise = api('/api/regions').then(regions => {
+      const coordMap = {};
+      regions.forEach(r => {
+        r.districts.forEach(d => { coordMap[d.name] = { lat: d.lat, lng: d.lng }; });
+      });
+      return coordMap;
+    }).catch(e => {
+      regionCoordMapPromise = null;
+      throw e;
+    });
+  }
+  return regionCoordMapPromise;
+}
+
 function renderMapMarkers(regionStats) {
   if (!state.map) return;
 
@@ -345,12 +363,7 @@ function renderMapMarkers(regionStats) {
     }
   });
 
-  api('/api/regions').then(regions => {
-    const coordMap = {};
-    regions.forEach(r => {
-      r.districts.forEach(d => { coordMap[d.name] = { lat: d.lat, lng: d.lng }; });
-    });
-
+  getRegionCoordMap().then(coordMap => {
     const maxTotal = Math.max(...Object.values(byDistrict).map(d => d.total), 1);
 
     Object.entries(byDistrict).forEach(([district, data]) => {
@@ -372,8 +385,8 @@ function renderMapMarkers(regionStats) {
       const displayName = data.display_name || `${data.region} ${data.district}`;
       circle.bindPopup(`
         <div style="line-height:1.6">
-          <strong>${displayName}</strong><br/>
-          급매: <b style="color:${color}">${data.total}개</b>
+          <strong>${escHtml(displayName)}</strong><br/>
+          급매: <b style="color:${color}">${fmtNum(data.total)}개</b>
         </div>
       `);
 
@@ -477,27 +490,26 @@ function renderListings(data) {
     const visibleTags = tags.filter(tag => tag !== '급매').slice(0, 4);
     return `
     <div class="listing-card urgent-card-item"
-         onclick="openNaver('${l.article_no}')"
-         data-id="${l.id}"
-         data-article-no="${l.article_no}"
-         data-naver-url="${l.naver_url || ''}"
+         data-id="${escHtml(l.id)}"
+         data-article-no="${escHtml(l.article_no)}"
+         data-naver-url="${escHtml(l.naver_url || '')}"
          title="네이버 부동산에서 보기">
       <div class="card-topline">
         <div class="card-badges">
           <span class="badge badge-urgent">${hasPriceDown ? '가격인하' : '급매'}</span>
-          <span class="badge ${tradeBadgeClass(l.trade_type)}">${l.trade_type}</span>
-          <span class="badge badge-type">${l.property_type}</span>
+          <span class="badge ${tradeBadgeClass(l.trade_type)}">${escHtml(l.trade_type)}</span>
+          <span class="badge badge-type">${escHtml(l.property_type)}</span>
         </div>
         <div class="card-date-chip">확인 ${formatDate(l.confirmed_date) || '—'}</div>
       </div>
       <div class="card-price-row">
         <div class="card-price-block">
-          <div class="card-price">${l.price || '—'}</div>
+          <div class="card-price">${escHtml(l.price || '—')}</div>
           <div class="card-price-caption">${escHtml(l.trade_type)} ${hasPriceDown ? '· 가격인하 감지' : '· 급매 포착'}</div>
         </div>
         <span class="naver-link-icon" title="네이버 부동산">네이버 보기</span>
       </div>
-      <div class="card-name" title="${l.building_name}">${l.building_name}</div>
+      <div class="card-name" title="${escHtml(l.building_name)}">${escHtml(l.building_name)}</div>
       <div class="card-location-line">${escHtml(compactRegion)}</div>
       <div class="card-meta">
         ${metaBits.map(bit => `<span>${escHtml(bit)}</span>`).join('')}
@@ -611,10 +623,10 @@ function renderTrendList(id, items, type) {
     }
     const name = item.display_name || `${item.region} ${item.district}`;
     return `
-    <li class="trend-item" data-district="${item.district}" onclick="selectDistrict('${item.district}')">
+    <li class="trend-item" data-district="${escHtml(item.district)}">
       <div class="trend-rank">${String(index + 1).padStart(2, '0')}</div>
       <div class="trend-copy">
-        <div class="trend-name">${name}</div>
+        <div class="trend-name">${escHtml(name)}</div>
         <div class="trend-sub">${sub}</div>
       </div>
       <div class="trend-side">
@@ -629,25 +641,16 @@ function renderRegionStats(stats) {
   const ul = document.getElementById('list-region-stats');
   const maxTotal = Math.max(...stats.map(s => s.total), 1);
   ul.innerHTML = stats.slice(0, 20).map((s, index) => `
-    <li class="region-item" data-district="${s.district}" onclick="selectDistrict('${s.district}')">
+    <li class="region-item" data-district="${escHtml(s.district)}">
       <div class="region-rank">${String(index + 1).padStart(2, '0')}</div>
       <div class="region-bar-wrap">
-        <div class="region-name">${s.display_name || `${s.region} ${s.district}`}</div>
+        <div class="region-name">${escHtml(s.display_name || `${s.region} ${s.district}`)}</div>
         <div class="region-bar">
           <div class="region-bar-fill" style="width:${(s.total / maxTotal) * 100}%"></div>
         </div>
       </div>
       <span class="region-count">${s.total}</span>
     </li>`).join('');
-}
-
-// ── Naver Link ───────────────────────────────────────────────────────────────
-function openNaver(articleNo) {
-  const card = document.querySelector(`[data-article-no="${articleNo}"]`);
-  const url = card?.dataset?.naverUrl;
-  if (url) {
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
 }
 
 function getNotificationStatusMessage() {
@@ -1278,6 +1281,22 @@ function wireEvents() {
       state.page = 1;
       refreshAlertDraftSummary();
       loadListings();
+    });
+  });
+
+  // Listing cards → Naver link (delegated: cards are re-rendered on every load)
+  document.getElementById('listings-grid').addEventListener('click', e => {
+    const card = e.target.closest('.listing-card');
+    if (!card) return;
+    const url = card.dataset.naverUrl;
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  });
+
+  // Trend / region lists → district filter (delegated)
+  ['list-increasing', 'list-decreasing', 'list-price-down', 'list-region-stats'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', e => {
+      const item = e.target.closest('[data-district]');
+      if (item) selectDistrict(item.dataset.district);
     });
   });
 

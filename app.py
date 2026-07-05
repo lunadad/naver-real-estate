@@ -1,14 +1,21 @@
 import atexit
+import hashlib
 import logging
 import os
 import json
 import plistlib
 from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 from pathlib import Path
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, jsonify, render_template, request, send_from_directory
 from flask_cors import CORS
+
+try:
+    from flask_compress import Compress
+except ImportError:  # pragma: no cover - optional until dependency is installed
+    Compress = None
 
 try:
     from pywebpush import WebPushException, webpush
@@ -142,7 +149,31 @@ EXTERNAL_CRAWL_GRACE_MINUTES = int((os.getenv("LOCAL_CRAWL_GRACE_MINUTES") or "1
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
+# Static assets are fingerprinted via asset_url(), so long-lived caching is safe.
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = timedelta(days=30)
 CORS(app)
+if Compress:
+    Compress(app)
+
+
+@lru_cache(maxsize=32)
+def _asset_fingerprint(rel_path: str) -> str:
+    asset_path = BASE_DIR / "static" / rel_path
+    try:
+        return hashlib.md5(asset_path.read_bytes()).hexdigest()[:10]
+    except OSError:
+        return "0"
+
+
+@app.template_global()
+def asset_url(rel_path: str) -> str:
+    return f"/static/{rel_path}?v={_asset_fingerprint(rel_path)}"
+
+
+def cacheable_json(payload, max_age: int):
+    response = jsonify(payload)
+    response.headers["Cache-Control"] = f"public, max-age={max_age}"
+    return response
 
 db = Database(db_path=DB_PATH, database_url=DATABASE_URL)
 atexit.register(db.close)
@@ -586,24 +617,25 @@ def unsubscribe_push():
     return jsonify({"status": "success", "deleted": deleted})
 
 
+# Crawl data changes once a day, so short browser caching is safe for these.
 @app.route("/api/region-stats")
 def get_region_stats():
-    return jsonify(serialize_api_value(db.get_region_stats()))
+    return cacheable_json(serialize_api_value(db.get_region_stats()), max_age=300)
 
 
 @app.route("/api/trends")
 def get_trends():
-    return jsonify(serialize_api_value(db.get_trends()))
+    return cacheable_json(serialize_api_value(db.get_trends()), max_age=300)
 
 
 @app.route("/api/crawl-daily-series")
 def get_crawl_daily_series():
     days = request.args.get("days", default=7, type=int)
-    return jsonify(serialize_api_value(build_daily_crawl_series(days)))
+    return cacheable_json(serialize_api_value(build_daily_crawl_series(days)), max_age=300)
 
 
-@app.route("/api/regions")
-def get_regions():
+@lru_cache(maxsize=1)
+def build_regions_payload():
     regions = []
     for name, info in load_regions().items():
         entry = {
@@ -616,7 +648,12 @@ def get_regions():
             ],
         }
         regions.append(entry)
-    return jsonify(regions)
+    return regions
+
+
+@app.route("/api/regions")
+def get_regions():
+    return cacheable_json(build_regions_payload(), max_age=86400)
 
 
 @app.route("/api/crawl", methods=["POST"])
