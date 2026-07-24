@@ -21,7 +21,12 @@ const state = {
   perPage: 20,
   totalPages: 1,
   regionStats: [],
-  mapMarkers: {},   // district → Leaflet circle
+  mapMarkers: {},   // district → 마커 래퍼 (카카오 CustomOverlay)
+  mapRegionMarkers: {},   // region(도·광역시) → 마커 래퍼
+  mapListingMarkers: [],  // 매물 티어의 kakao.maps.Marker 목록
+  mapClusterer: null,
+  mapListingsToken: 0,    // 매물 응답 순서 역전 방지 토큰
+  mapTier: 'region',      // 'region' | 'district' | 'listing'
   map: null,
   sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false',
   clientId: '',
@@ -292,7 +297,7 @@ function applyMapVisibility() {
   if (legend) legend.classList.toggle('hidden', !state.mapExpanded);
   localStorage.setItem('mapExpanded', state.mapExpanded);
   if (state.map && state.mapExpanded) {
-    setTimeout(() => state.map.invalidateSize(), 260);
+    setTimeout(() => state.map.relayout(), 260);
   }
 }
 
@@ -311,14 +316,330 @@ function setMobileSidebar(open) {
   document.body.classList.toggle('sidebar-overlay-open', open);
 }
 
-// ── Map ─────────────────────────────────────────────────────────────────────
+// ── Map (Kakao Maps JS SDK) ─────────────────────────────────────────────────
 function initMap() {
-  state.map = L.map('map', { zoomControl: true, attributionControl: true }).setView([36.5, 127.8], 7);
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
-    maxZoom: 18,
-  }).addTo(state.map);
+  if (typeof kakao === 'undefined' || !kakao.maps) {
+    mapEl.innerHTML = `
+      <div class="map-unavailable">
+        <strong>카카오맵을 불러올 수 없습니다</strong>
+        <p>developers.kakao.com에서 발급한 <b>JavaScript 키</b>를 <code>.env.local</code>의
+        <code>KAKAO_MAP_APP_KEY</code>에 넣고, 앱 플랫폼에 현재 도메인을 등록한 뒤 서버를 재시작하세요.</p>
+      </div>`;
+    return;
+  }
+
+  // autoload=false로 로드하므로 지도 모듈 준비 후 생성한다
+  kakao.maps.load(() => {
+    state.map = new kakao.maps.Map(mapEl, {
+      center: new kakao.maps.LatLng(36.5, 127.8),
+      level: 13, // 전국 뷰
+    });
+    // 줌·이동이 끝날 때마다 티어 갱신 (매물 티어에서는 화면 영역 재조회)
+    kakao.maps.event.addListener(state.map, 'idle', () => applyMapTier());
+    // SDK 준비 전에 지역 통계가 먼저 도착한 경우 여기서 마커를 그린다
+    if (state.regionStats.length) renderMapMarkers(state.regionStats);
+  });
+}
+
+// ── 줌 티어: region(도) → district(시·군·구) → listing(개별 매물) ─────────────
+const MAP_TIER_LISTING_MAX_LEVEL = 7;   // 이 레벨 이하로 확대하면 개별 매물 표시
+const MAP_TIER_DISTRICT_MAX_LEVEL = 10; // 이 레벨 이하는 시·군·구, 초과는 도 단위
+
+function getMapTier(level) {
+  if (level <= MAP_TIER_LISTING_MAX_LEVEL) return 'listing';
+  if (level <= MAP_TIER_DISTRICT_MAX_LEVEL) return 'district';
+  return 'region';
+}
+
+function applyMapTier(force = false) {
+  if (!state.map) return;
+  const tier = typeof state.map.getLevel === 'function'
+    ? getMapTier(state.map.getLevel())
+    : state.mapTier;
+
+  if (!force && tier === state.mapTier) {
+    // 티어는 그대로여도 매물 티어에서는 화면 이동 시 재조회가 필요하다
+    if (tier === 'listing') refreshMapListingsDebounced();
+    return;
+  }
+
+  state.mapTier = tier;
+  hideMarkerBubble();
+  Object.values(state.mapRegionMarkers).forEach(m => m.setVisible(tier === 'region'));
+  Object.values(state.mapMarkers).forEach(m => m.setVisible(tier === 'district'));
+  if (tier === 'listing') {
+    refreshMapListingsDebounced();
+  } else {
+    clearListingMarkers();
+  }
+}
+
+// 마커 클릭 시 표시되는 정보 말풍선 (한 번에 하나만)
+let mapInfoOverlay = null;
+function hideMarkerBubble() {
+  if (mapInfoOverlay) {
+    mapInfoOverlay.setMap(null);
+    mapInfoOverlay = null;
+  }
+}
+function showMarkerBubble(coords, displayName, total, color) {
+  hideMarkerBubble();
+  const el = document.createElement('div');
+  el.className = 'map-info-bubble';
+  el.innerHTML = `<strong>${escHtml(displayName)}</strong><br/>급매: <b style="color:${color}">${fmtNum(total)}개</b>`;
+  mapInfoOverlay = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(coords.lat, coords.lng),
+    content: el,
+    xAnchor: 0.5,
+    yAnchor: 1.35,
+    zIndex: 30,
+  });
+  mapInfoOverlay.setMap(state.map);
+}
+
+// 시·군·구 라벨 버블 — 지역명과 건수를 항상 표시해 가독성을 확보한다
+function createDistrictMarker(district, data, coords, maxTotal) {
+  const ratio = data.total / maxTotal;
+  const color = urgencyColor(data.total);
+  const displayName = data.display_name || `${data.region} ${data.district}`;
+
+  const el = document.createElement('div');
+  el.className = 'district-marker';
+  el.style.borderColor = color;
+  el.innerHTML = `<span class="district-marker-name">${escHtml(district)}</span><strong style="color:${color}">${fmtNum(data.total)}</strong>`;
+  // 급매가 많은 지역일수록 버블을 조금 더 키운다
+  el.style.fontSize = `${11 + Math.round(ratio * 3)}px`;
+  el.title = `${displayName} · 급매 ${fmtNum(data.total)}개`;
+  el.addEventListener('click', () => {
+    selectDistrict(district);
+    if (state.filters.district === district) {
+      showMarkerBubble(coords, displayName, data.total, color);
+    } else {
+      hideMarkerBubble();
+    }
+  });
+
+  const overlay = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(coords.lat, coords.lng),
+    content: el,
+    xAnchor: 0.5,
+    yAnchor: 0.5,
+  });
+  overlay.setMap(state.mapTier === 'district' ? state.map : null);
+
+  return {
+    remove: () => overlay.setMap(null),
+    setVisible: v => overlay.setMap(v ? state.map : null),
+    setEmphasis(selected, anySelected) {
+      el.classList.toggle('selected', selected);
+      el.classList.toggle('dimmed', anySelected && !selected);
+    },
+  };
+}
+
+// ── Region(도·광역시) 티어 마커 ──────────────────────────────────────────────
+function shortRegionName(region) {
+  return String(region || '')
+    .replace('특별자치시', '').replace('특별자치도', '')
+    .replace('특별시', '').replace('광역시', '');
+}
+
+function buildRegionMarkers(regionStats, coordMap) {
+  const byRegion = {};
+  regionStats.forEach(r => {
+    const coords = coordMap[r.district];
+    if (!coords) return;
+    if (!byRegion[r.region]) byRegion[r.region] = { total: 0, latSum: 0, lngSum: 0, count: 0 };
+    const agg = byRegion[r.region];
+    agg.total += r.total;
+    agg.latSum += coords.lat;
+    agg.lngSum += coords.lng;
+    agg.count += 1;
+  });
+
+  const maxTotal = Math.max(...Object.values(byRegion).map(r => r.total), 1);
+  Object.entries(byRegion).forEach(([region, agg]) => {
+    state.mapRegionMarkers[region] = createRegionMarker(region, agg, maxTotal);
+  });
+}
+
+function createRegionMarker(region, agg, maxTotal) {
+  const ratio = agg.total / maxTotal;
+  const color = ratio >= 0.6 ? '#f85149' : ratio >= 0.25 ? '#d29922' : '#3fb950';
+  const center = { lat: agg.latSum / agg.count, lng: agg.lngSum / agg.count };
+
+  const el = document.createElement('div');
+  el.className = 'region-marker';
+  el.style.borderColor = color;
+  el.innerHTML = `<strong>${escHtml(shortRegionName(region))}</strong><span style="color:${color}">${fmtNum(agg.total)}</span>`;
+  el.title = `${region} · 급매 ${fmtNum(agg.total)}개 — 클릭해 확대`;
+  el.addEventListener('click', () => {
+    state.map.setLevel(MAP_TIER_DISTRICT_MAX_LEVEL - 1);
+    state.map.panTo(new kakao.maps.LatLng(center.lat, center.lng));
+  });
+
+  const overlay = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(center.lat, center.lng),
+    content: el,
+    xAnchor: 0.5,
+    yAnchor: 0.5,
+  });
+  overlay.setMap(state.mapTier === 'region' ? state.map : null);
+
+  return {
+    remove: () => overlay.setMap(null),
+    setVisible: v => overlay.setMap(v ? state.map : null),
+  };
+}
+
+// ── Listing(개별 매물) 티어 ──────────────────────────────────────────────────
+function ensureClusterer() {
+  if (state.mapClusterer) return state.mapClusterer;
+  if (!kakao.maps.MarkerClusterer) return null; // clusterer 라이브러리 미로드
+  state.mapClusterer = new kakao.maps.MarkerClusterer({
+    map: state.map,
+    averageCenter: true,
+    minLevel: 1, // 같은 건물·단지에 몰린 매물을 항상 묶는다
+    disableClickZoom: true,
+    gridSize: 60,
+    styles: [{
+      width: '46px',
+      height: '46px',
+      borderRadius: '23px',
+      background: 'rgba(37, 99, 235, 0.92)',
+      border: '2px solid #fff',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.35)',
+      color: '#fff',
+      textAlign: 'center',
+      lineHeight: '43px',
+      fontSize: '14px',
+      fontWeight: '700',
+    }],
+  });
+  kakao.maps.event.addListener(state.mapClusterer, 'clusterclick', cluster => {
+    const level = state.map.getLevel();
+    if (level > 3) {
+      state.map.setLevel(level - 2, { anchor: cluster.getCenter() });
+    } else {
+      // 최대 확대에서도 묶여 있으면(같은 단지) 목록 말풍선으로 보여준다
+      showClusterBubble(cluster.getCenter(), cluster.getMarkers());
+    }
+  });
+  return state.mapClusterer;
+}
+
+function clearListingMarkers() {
+  if (state.mapClusterer) state.mapClusterer.clear();
+  state.mapListingMarkers.forEach(m => m.setMap(null));
+  state.mapListingMarkers = [];
+}
+
+async function refreshMapListings() {
+  if (!state.map || state.mapTier !== 'listing') return;
+
+  const bounds = state.map.getBounds();
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+  const q = new URLSearchParams({
+    min_lat: sw.getLat(),
+    max_lat: ne.getLat(),
+    min_lng: sw.getLng(),
+    max_lng: ne.getLng(),
+  });
+  ['trade_type', 'property_type', 'search', 'district'].forEach(key => {
+    if (state.filters[key]) q.set(key, state.filters[key]);
+  });
+  if (state.filters.price_down_only) q.set('price_down_only', 'true');
+
+  const token = ++state.mapListingsToken;
+  try {
+    const data = await api(`/api/map-listings?${q.toString()}`);
+    // 늦게 도착한 이전 응답이나 티어 이탈 후 응답은 무시
+    if (token !== state.mapListingsToken || state.mapTier !== 'listing') return;
+    renderListingMarkers(data.listings || []);
+  } catch (e) {
+    console.warn('Map listings load error:', e);
+  }
+}
+const refreshMapListingsDebounced = debounce(refreshMapListings, 250);
+
+function renderListingMarkers(listings) {
+  const clusterer = ensureClusterer();
+  clearListingMarkers();
+
+  const markers = listings.map(l => {
+    const marker = new kakao.maps.Marker({
+      position: new kakao.maps.LatLng(l.latitude, l.longitude),
+      title: `${l.building_name || '매물'} ${l.price || ''}`.trim(),
+    });
+    marker.__listing = l;
+    kakao.maps.event.addListener(marker, 'click', () => showListingBubble(l));
+    return marker;
+  });
+
+  state.mapListingMarkers = markers;
+  if (clusterer) clusterer.addMarkers(markers);
+  else markers.forEach(m => m.setMap(state.map));
+}
+
+function showListingBubble(l) {
+  hideMarkerBubble();
+  const tags = parseTags(l.tags);
+  const hasPriceDown = tags.includes('가격인하');
+
+  const el = document.createElement('div');
+  el.className = 'map-info-bubble listing-bubble';
+  el.innerHTML = `
+    <button class="bubble-close" title="닫기">✕</button>
+    <div class="listing-bubble-row">
+      <span class="badge badge-urgent">${hasPriceDown ? '가격인하' : '급매'}</span>
+      <span class="listing-bubble-type">[${escHtml(l.property_type || '')}/${escHtml(l.trade_type || '')}]</span>
+    </div>
+    <strong>${escHtml(l.building_name || '이름 없는 매물')}</strong>
+    <div class="listing-bubble-price">${escHtml(l.price || '가격 확인 필요')}</div>
+    ${l.naver_url ? `<a href="${escHtml(l.naver_url)}" target="_blank" rel="noopener noreferrer">네이버 부동산에서 보기 ↗</a>` : ''}
+  `;
+  el.querySelector('.bubble-close')?.addEventListener('click', hideMarkerBubble);
+
+  mapInfoOverlay = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(l.latitude, l.longitude),
+    content: el,
+    xAnchor: 0.5,
+    yAnchor: 1.2,
+    zIndex: 40,
+  });
+  mapInfoOverlay.setMap(state.map);
+}
+
+function showClusterBubble(center, markers) {
+  hideMarkerBubble();
+  const items = markers.map(m => m.__listing).filter(Boolean).slice(0, 6);
+
+  const el = document.createElement('div');
+  el.className = 'map-info-bubble cluster-bubble';
+  el.innerHTML = `
+    <button class="bubble-close" title="닫기">✕</button>
+    <strong>이 위치 매물 ${fmtNum(markers.length)}건</strong>
+    <ul>${items.map(l => `
+      <li>${l.naver_url
+        ? `<a href="${escHtml(l.naver_url)}" target="_blank" rel="noopener noreferrer">${escHtml(l.building_name || '매물')} · ${escHtml(l.price || '가격 미확인')}</a>`
+        : `${escHtml(l.building_name || '매물')} · ${escHtml(l.price || '가격 미확인')}`}</li>`).join('')}
+    </ul>
+    ${markers.length > items.length ? `<div class="bubble-more">외 ${fmtNum(markers.length - items.length)}건</div>` : ''}
+  `;
+  el.querySelector('.bubble-close')?.addEventListener('click', hideMarkerBubble);
+
+  mapInfoOverlay = new kakao.maps.CustomOverlay({
+    position: center,
+    content: el,
+    xAnchor: 0.5,
+    yAnchor: 1.1,
+    zIndex: 40,
+  });
+  mapInfoOverlay.setMap(state.map);
 }
 
 function urgencyColor(total) {
@@ -352,6 +673,8 @@ function renderMapMarkers(regionStats) {
 
   Object.values(state.mapMarkers).forEach(m => m.remove());
   state.mapMarkers = {};
+  Object.values(state.mapRegionMarkers).forEach(m => m.remove());
+  state.mapRegionMarkers = {};
 
   // Group by district (sum totals if same district in different regions)
   const byDistrict = {};
@@ -363,40 +686,18 @@ function renderMapMarkers(regionStats) {
     }
   });
 
+  hideMarkerBubble();
+
   getRegionCoordMap().then(coordMap => {
     const maxTotal = Math.max(...Object.values(byDistrict).map(d => d.total), 1);
 
     Object.entries(byDistrict).forEach(([district, data]) => {
       const coords = coordMap[district];
       if (!coords) return;
-
-      const radius = 6 + (data.total / maxTotal) * 22;
-      const color = urgencyColor(data.total);
-
-      const circle = L.circleMarker([coords.lat, coords.lng], {
-        radius,
-        color,
-        fillColor: color,
-        fillOpacity: 0.45,
-        weight: 2,
-        opacity: 0.9,
-      });
-
-      const displayName = data.display_name || `${data.region} ${data.district}`;
-      circle.bindPopup(`
-        <div style="line-height:1.6">
-          <strong>${escHtml(displayName)}</strong><br/>
-          급매: <b style="color:${color}">${fmtNum(data.total)}개</b>
-        </div>
-      `);
-
-      circle.on('click', () => {
-        selectDistrict(district);
-      });
-
-      circle.addTo(state.map);
-      state.mapMarkers[district] = circle;
+      state.mapMarkers[district] = createDistrictMarker(district, data, coords, maxTotal);
     });
+    buildRegionMarkers(regionStats, coordMap);
+    applyMapTier(true); // 마커 재생성 후 현재 티어에 맞는 세트만 표시
   }).catch(() => {});
 }
 
@@ -415,8 +716,9 @@ function selectDistrict(district) {
   }
 
   Object.entries(state.mapMarkers).forEach(([d, m]) => {
-    m.setStyle({ weight: d === state.filters.district ? 3 : 2, opacity: state.filters.district && d !== state.filters.district ? 0.4 : 0.9 });
+    m.setEmphasis(d === state.filters.district, Boolean(state.filters.district));
   });
+  if (!state.filters.district) hideMarkerBubble();
 
   document.querySelectorAll('.trend-item, .region-item').forEach(el => {
     el.classList.toggle('active', el.dataset.district === district);
@@ -444,6 +746,9 @@ async function loadListings() {
     grid.innerHTML = '<div class="empty-state">데이터를 불러올 수 없습니다.</div>';
     updateListingsSummary(0);
   }
+
+  // 필터가 바뀌면 매물 티어의 지도 마커도 같은 조건으로 갱신
+  if (state.mapTier === 'listing') refreshMapListingsDebounced();
 }
 
 function tradeBadgeClass(trade) {
@@ -1048,7 +1353,7 @@ function toggleSidebar() {
   btn.textContent = state.sidebarOpen ? '◀' : '▶';
   openBtn.classList.toggle('visible', !state.sidebarOpen);
   localStorage.setItem('sidebarOpen', state.sidebarOpen);
-  if (state.map) setTimeout(() => state.map.invalidateSize(), 250);
+  if (state.map) setTimeout(() => state.map.relayout(), 250);
 }
 
 // ── Mobile notification guide modal ──────────────────────────────────────────
