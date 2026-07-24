@@ -182,6 +182,11 @@ def cacheable_json(payload, max_age: int):
     response.headers["Cache-Control"] = f"public, max-age={max_age}"
     return response
 
+
+def parse_tag_args(raw: str):
+    """콤마로 구분된 tags 쿼리 파라미터를 태그 리스트로 변환한다."""
+    return [tag.strip() for tag in (raw or "").split(",") if tag.strip()]
+
 db = Database(db_path=DB_PATH, database_url=DATABASE_URL)
 atexit.register(db.close)
 _crawler = None
@@ -519,6 +524,7 @@ def get_listings():
         per_page=per_page,
         sort_by=request.args.get("sort_by", "price-desc"),
         price_down_only=request.args.get("price_down_only", "false").lower() == "true",
+        tags=parse_tag_args(request.args.get("tags", "")),
     )
     return jsonify(serialize_api_value(result))
 
@@ -550,6 +556,7 @@ def get_map_listings():
         trade_type=request.args.get("trade_type", ""),
         search=request.args.get("search", ""),
         price_down_only=request.args.get("price_down_only", "false").lower() == "true",
+        tags=parse_tag_args(request.args.get("tags", "")),
         limit=limit,
     )
     return jsonify(serialize_api_value({"listings": listings, "count": len(listings)}))
@@ -665,6 +672,11 @@ def get_region_stats():
 @app.route("/api/trends")
 def get_trends():
     return cacheable_json(serialize_api_value(db.get_trends()), max_age=300)
+
+
+@app.route("/api/tags")
+def get_tags():
+    return cacheable_json(serialize_api_value({"tags": db.get_tag_counts()}), max_age=300)
 
 
 @app.route("/api/crawl-daily-series")

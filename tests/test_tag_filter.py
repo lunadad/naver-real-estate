@@ -116,5 +116,69 @@ class TagFilterDBTest(unittest.TestCase):
         self.assertEqual(len(rows), 4)
 
 
+class TagFilterAPITest(unittest.TestCase):
+    """app.py를 임포트하기 전에 환경변수로 로컬 SQLite 모드를 강제한다."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmpdir = tempfile.TemporaryDirectory()
+        db_path = os.path.join(cls._tmpdir.name, "api-test.db")
+
+        os.environ["FORCE_LOCAL_SQLITE"] = "1"
+        os.environ["DATABASE_URL"] = ""
+        os.environ["DB_PATH"] = db_path
+        os.environ["ENABLE_SCHEDULER"] = "false"
+        os.environ["SEED_DEMO_DATA"] = "false"
+
+        import app as app_module  # noqa: E402
+
+        cls.app_module = app_module
+        cls.client = app_module.app.test_client()
+
+        listings = [
+            make_listing("B1", ["역세권", "신축"]),
+            make_listing("B2", ["대단지"]),
+        ]
+        app_module.db.insert_listings(listings, "api-session")
+        app_module.db.log_crawl("api-session", 2, 2, "success", "naver")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_module.db.close()
+        cls._tmpdir.cleanup()
+
+    def test_parse_tag_args_strips_and_drops_blanks(self):
+        self.assertEqual(
+            self.app_module.parse_tag_args(" 역세권 , ,신축,"),
+            ["역세권", "신축"],
+        )
+        self.assertEqual(self.app_module.parse_tag_args(""), [])
+
+    def test_tags_endpoint_returns_counts(self):
+        response = self.client.get("/api/tags")
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(
+            payload["tags"],
+            [
+                {"tag": "대단지", "count": 1},
+                {"tag": "신축", "count": 1},
+                {"tag": "역세권", "count": 1},
+            ],
+        )
+
+    def test_listings_endpoint_accepts_tags_param(self):
+        payload = self.client.get("/api/listings?tags=대단지").get_json()
+        self.assertEqual([row["article_no"] for row in payload["listings"]], ["B2"])
+
+    def test_listings_endpoint_ignores_blank_tags_param(self):
+        payload = self.client.get("/api/listings?tags=").get_json()
+        self.assertEqual(payload["total"], 2)
+
+    def test_map_listings_endpoint_accepts_tags_param(self):
+        payload = self.client.get("/api/map-listings?tags=역세권").get_json()
+        self.assertEqual([row["article_no"] for row in payload["listings"]], ["B1"])
+
+
 if __name__ == "__main__":
     unittest.main()
