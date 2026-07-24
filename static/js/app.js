@@ -114,6 +114,7 @@ function buildCurrentFilterLabel() {
   if (state.filters.property_type === '__OTHER__') parts.push('유형 기타');
   if (state.filters.trade_type) parts.push(`거래 ${state.filters.trade_type}`);
   if (state.filters.price_down_only) parts.push('가격인하만');
+  if (state.filters.tags.length) parts.push(`태그 ${state.filters.tags.join(',')}`);
   return parts.length ? parts.join(' · ') : '전체 급매';
 }
 
@@ -561,6 +562,7 @@ async function refreshMapListings() {
     if (state.filters[key]) q.set(key, state.filters[key]);
   });
   if (state.filters.price_down_only) q.set('price_down_only', 'true');
+  if (state.filters.tags.length) q.set('tags', state.filters.tags.join(','));
 
   const token = ++state.mapListingsToken;
   try {
