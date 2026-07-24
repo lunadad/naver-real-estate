@@ -3,6 +3,7 @@ import json
 import logging
 import sqlite3
 import re
+from collections import Counter
 from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional, Sequence, Tuple
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -1190,6 +1191,46 @@ class Database:
                     """,
                     region_payload,
                 )
+
+    @staticmethod
+    def _parse_tags(raw) -> List[str]:
+        """tags 컬럼(JSON 문자열 또는 리스트)을 태그 문자열 리스트로 파싱한다."""
+        if isinstance(raw, list):
+            values = raw
+        elif not raw:
+            return []
+        else:
+            try:
+                values = json.loads(raw)
+            except (TypeError, ValueError):
+                return []
+            if not isinstance(values, list):
+                return []
+        return [str(value).strip() for value in values if str(value).strip()]
+
+    def get_tag_counts(self):
+        """최신 세션 매물의 태그별 등장 횟수를 count 내림차순으로 반환한다.
+
+        SQLite JSON1 확장을 쓰지 않고(운영 DB는 Postgres) 애플리케이션 레벨에서 파싱한다.
+        """
+        with self.get_connection() as conn:
+            latest_session = self._get_latest_visible_session_id(conn)
+            if latest_session:
+                rows = conn.execute(
+                    "SELECT tags FROM listings WHERE crawl_session = ?",
+                    (latest_session,),
+                ).fetchall()
+            else:
+                rows = conn.execute("SELECT tags FROM listings").fetchall()
+
+        counter = Counter()
+        for row in rows:
+            counter.update(self._parse_tags(row["tags"]))
+
+        return [
+            {"tag": tag, "count": count}
+            for tag, count in sorted(counter.items(), key=lambda item: (-item[1], item[0]))
+        ]
 
     def get_listings(
         self,
