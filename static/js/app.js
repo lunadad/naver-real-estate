@@ -15,7 +15,9 @@ const state = {
     district: '',
     sort_by: 'price-desc',
     price_down_only: false,
+    tags: [],
   },
+  tagCounts: [],
   activeStatFilter: '',  // tracks which stat card is active
   page: 1,
   perPage: 20,
@@ -61,7 +63,13 @@ async function api(path, opts = {}) {
 function buildQuery(extra = {}) {
   const p = { ...state.filters, page: state.page, per_page: state.perPage, ...extra };
   const q = new URLSearchParams();
-  Object.entries(p).forEach(([k, v]) => { if (v !== '' && v !== false) q.set(k, v); });
+  Object.entries(p).forEach(([k, v]) => {
+    if (Array.isArray(v)) {
+      if (v.length) q.set(k, v.join(','));
+      return;
+    }
+    if (v !== '' && v !== false) q.set(k, v);
+  });
   return q.toString();
 }
 
@@ -849,6 +857,56 @@ function updateStats(data) {
   updateHeroFocusRegion();
   updateListingsSummary(data.total || 0);
   updateHeroInsight();
+}
+
+// ── Tag filter ───────────────────────────────────────────────────────────────
+async function loadTagFilter() {
+  try {
+    const data = await api('/api/tags');
+    state.tagCounts = data.tags || [];
+  } catch (e) {
+    console.warn('Tag list load error:', e);
+    state.tagCounts = [];
+  }
+  renderTagFilter();
+}
+
+function renderTagFilter() {
+  const list = document.getElementById('tag-filter-list');
+  const clearBtn = document.getElementById('tag-filter-clear');
+  if (!list) return;
+
+  if (!state.tagCounts.length) {
+    list.innerHTML = '<span class="tag-filter-empty">태그 데이터가 없습니다.</span>';
+    if (clearBtn) clearBtn.classList.add('hidden');
+    return;
+  }
+
+  list.innerHTML = state.tagCounts.map(({ tag, count }) => {
+    const active = state.filters.tags.includes(tag) ? ' active' : '';
+    return `<button class="tag-filter-pill${active}" data-tag="${escHtml(tag)}">`
+      + `${escHtml(tag)}<span class="tag-filter-count">${fmtNum(count)}</span></button>`;
+  }).join('');
+
+  if (clearBtn) clearBtn.classList.toggle('hidden', state.filters.tags.length === 0);
+}
+
+function toggleTagFilter(tag) {
+  const index = state.filters.tags.indexOf(tag);
+  if (index >= 0) state.filters.tags.splice(index, 1);
+  else state.filters.tags.push(tag);
+
+  state.page = 1;
+  renderTagFilter();
+  loadListings();
+}
+
+function clearTagFilters() {
+  if (!state.filters.tags.length) return;
+  state.filters.tags = [];
+  state.page = 1;
+  renderTagFilter();
+  loadListings();
 }
 
 // ── Sidebar ──────────────────────────────────────────────────────────────────
@@ -1667,6 +1725,26 @@ function wireEvents() {
     localStorage.setItem('alertSectionCollapsed', isNowCollapsed);
   });
 
+  // Tag filter: pill 토글 · 선택 해제 · 접기/펼치기
+  document.getElementById('tag-filter-list').addEventListener('click', (event) => {
+    const pill = event.target.closest('.tag-filter-pill');
+    if (!pill) return;
+    toggleTagFilter(pill.dataset.tag);
+  });
+  document.getElementById('tag-filter-clear').addEventListener('click', clearTagFilters);
+
+  const tagToggleBtn = document.getElementById('tag-filter-toggle');
+  const tagPanelBody = document.getElementById('tag-filter-panel');
+  if (localStorage.getItem('tagSectionCollapsed') === 'true') {
+    tagPanelBody.classList.add('collapsed');
+    tagToggleBtn.classList.add('collapsed');
+  }
+  tagToggleBtn.addEventListener('click', () => {
+    const isNowCollapsed = tagPanelBody.classList.toggle('collapsed');
+    tagToggleBtn.classList.toggle('collapsed', isNowCollapsed);
+    localStorage.setItem('tagSectionCollapsed', isNowCollapsed);
+  });
+
   // ESC 키
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') document.getElementById('modal-overlay')?.classList.add('hidden');
@@ -1707,6 +1785,7 @@ async function init() {
     loadCrawlStatus(),
     loadListings(),
     loadSidebar(),
+    loadTagFilter(),
   ];
 
   const alertsBootstrap = (async () => {

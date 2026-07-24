@@ -121,6 +121,31 @@
       </div>
     </div>
 
+    <div class="sidebar-section" id="tag-filter-section">
+      <div class="section-title tag-filter-title">
+        <span class="alert-title-left">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/>
+            <circle cx="7.5" cy="7.5" r="1.5"/>
+          </svg>
+          태그 필터
+        </span>
+        <button id="tag-filter-toggle" class="section-collapse-btn" title="접기/펼치기">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="18 15 12 9 6 15"/>
+          </svg>
+        </button>
+      </div>
+      <div class="alert-panel" id="tag-filter-panel">
+        <div class="tag-filter-inner">
+          <div id="tag-filter-list" class="tag-filter-list">
+            <span class="tag-filter-empty">태그를 불러오는 중...</span>
+          </div>
+          <button id="tag-filter-clear" class="tag-filter-clear hidden">선택 해제</button>
+        </div>
+      </div>
+    </div>
+
     <div class="sidebar-section">
       <div class="section-title trend-up">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
