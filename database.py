@@ -1244,6 +1244,7 @@ class Database:
         per_page=20,
         sort_by="urgent",
         price_down_only=False,
+        tags=None,
     ):
         conditions = []
         params = []
@@ -1267,6 +1268,9 @@ class Database:
             conditions.append("is_urgent = 1")
         if price_down_only:
             conditions.append("tags LIKE '%가격인하%'")
+        if tags:
+            conditions.append("(" + " OR ".join(["tags LIKE ?"] * len(tags)) + ")")
+            params.extend(f'%"{tag}"%' for tag in tags)
         if search:
             conditions.append(
                 "(region LIKE ? OR district LIKE ? OR building_name LIKE ? OR description LIKE ?)"
@@ -1342,6 +1346,7 @@ class Database:
         trade_type="",
         search="",
         price_down_only=False,
+        tags=None,
         limit=500,
     ):
         """지도 화면 영역(bounds) 안의 좌표 보유 매물을 가벼운 필드로 반환한다."""
@@ -1380,6 +1385,9 @@ class Database:
             params.append(trade_type)
         if price_down_only:
             conditions.append("tags LIKE '%가격인하%'")
+        if tags:
+            conditions.append("(" + " OR ".join(["tags LIKE ?"] * len(tags)) + ")")
+            params.extend(f'%"{tag}"%' for tag in tags)
         if search:
             conditions.append(
                 "(region LIKE ? OR district LIKE ? OR building_name LIKE ? OR description LIKE ?)"

@@ -73,6 +73,48 @@ class TagFilterDBTest(unittest.TestCase):
         tags = [entry["tag"] for entry in self.db.get_tag_counts()]
         self.assertNotIn("", tags)
 
+    def article_nos(self, result):
+        return sorted(row["article_no"] for row in result["listings"])
+
+    def test_single_tag_filters_listings(self):
+        result = self.db.get_listings(tags=["역세권"])
+        self.assertEqual(self.article_nos(result), ["A1", "A2"])
+        self.assertEqual(result["total"], 2)
+
+    def test_multiple_tags_use_or_matching(self):
+        result = self.db.get_listings(tags=["역세권", "대단지"])
+        self.assertEqual(self.article_nos(result), ["A1", "A2", "A3"])
+
+    def test_empty_tag_list_returns_everything(self):
+        result = self.db.get_listings(tags=[])
+        self.assertEqual(self.article_nos(result), ["A1", "A2", "A3", "A4"])
+
+    def test_unknown_tag_returns_no_rows(self):
+        result = self.db.get_listings(tags=["존재하지않는태그"])
+        self.assertEqual(result["listings"], [])
+        self.assertEqual(result["total"], 0)
+
+    def test_tag_matching_is_exact_not_substring(self):
+        """'역'은 '역세권'의 부분 문자열이지만 매칭되면 안 된다."""
+        result = self.db.get_listings(tags=["역"])
+        self.assertEqual(result["listings"], [])
+
+    def test_tags_combine_with_other_filters_as_and(self):
+        result = self.db.get_listings(tags=["역세권", "대단지"], property_type="오피스텔")
+        self.assertEqual(self.article_nos(result), ["A3"])
+
+    def test_tags_combine_with_price_down_only(self):
+        result = self.db.get_listings(tags=["역세권"], price_down_only=True)
+        self.assertEqual(self.article_nos(result), ["A2"])
+
+    def test_map_listings_filtered_by_tags(self):
+        rows = self.db.get_map_listings(tags=["대단지"])
+        self.assertEqual([row["article_no"] for row in rows], ["A3"])
+
+    def test_map_listings_without_tags_returns_all_geocoded(self):
+        rows = self.db.get_map_listings()
+        self.assertEqual(len(rows), 4)
+
 
 if __name__ == "__main__":
     unittest.main()
