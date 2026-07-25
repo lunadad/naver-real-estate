@@ -1,0 +1,165 @@
+{
+  "fmtNum": {
+    "int": "1,234,567",
+    "str": "12",
+    "null": "0",
+    "undef": "NaN",
+    "float": "1.5",
+    "neg": "-3"
+  },
+  "escHtml": {
+    "amp": "a&amp;b&lt;c&gt;d&quot;e'f",
+    "plain": "한글 텍스트",
+    "null": "null",
+    "undef": "undefined",
+    "num": "42"
+  },
+  "formatDate": {
+    "ok": "2026.03.15",
+    "short": "2026",
+    "empty": "",
+    "null": ""
+  },
+  "parseTags": {
+    "arrayIdentity": true,
+    "json": [
+      "가격인하",
+      "급매"
+    ],
+    "invalid": [],
+    "null": [],
+    "jsonNull": []
+  },
+  "formatMetricValue": {
+    "num": "3.1%",
+    "round": "3.2%",
+    "int": "1,234㎡",
+    "null": "확인 필요",
+    "empty": "확인 필요",
+    "undef": "확인 필요",
+    "text": "협의"
+  },
+  "formatAreaM2": {
+    "num": "84.6㎡",
+    "zero": "10평",
+    "none": "확인 필요",
+    "strArea": "33㎡"
+  },
+  "inferPremiumLabel": {
+    "direct": "무권리",
+    "noRights": "무권리",
+    "hasKeyword": "권리금 확인",
+    "none": "권리금 미확인",
+    "noneText": "무권리"
+  },
+  "inferRoadLabel": {
+    "direct": "코너각지",
+    "corner": "코너",
+    "main": "대로변",
+    "jeopdo": "도로접면",
+    "none": "접면 미확인"
+  },
+  "priceDropLabel": {
+    "nullTrue": "가격인하",
+    "nullFalse": "해당 없음",
+    "num": "12.3%",
+    "strNum": "5.5%",
+    "nan": "가격인하"
+  },
+  "tradeBadgeClass": {
+    "buy": "badge-trade-buy",
+    "jeon": "badge-trade-jeon",
+    "month": "badge-trade-month",
+    "etc": "badge-trade-month"
+  },
+  "urgencyColor": {
+    "null": "#58a6ff",
+    "nan": "#58a6ff",
+    "low": "#3fb950",
+    "mid": "#d29922",
+    "mid2": "#d29922",
+    "high": "#f85149"
+  },
+  "urlBase64ToUint8Array": [
+    1,
+    2,
+    3
+  ],
+  "formatAreaRange": {
+    "both": "면적 10–50㎡",
+    "min": "면적 10㎡ 이상",
+    "max": "면적 50㎡ 이하",
+    "none": ""
+  },
+  "tradeScopeLabel": {
+    "sale": "매매 전용",
+    "rent": "임대 전용",
+    "etc": ""
+  },
+  "hasAlertCondition": {
+    "empty": false,
+    "kw": true,
+    "area": true
+  },
+  "formatTrendInsightName": {
+    "display": "서울 강남구",
+    "fallback": "서울특별시 강남구"
+  },
+  "formatSeoulTrendSummary": "강남구(+3), 마포구(-2)",
+  "buildCurrentFilterLabel": {
+    "default": "전체 상업용 급매",
+    "full": "검색 테헤란로 · 지역 강남구 · 유형 상가 · 거래 매매 · 가격인하만"
+  },
+  "buildQuery": {
+    "default": "sort_by=price-desc&page=1&per_page=20",
+    "extra": "sort_by=price-desc&page=1&per_page=20&days=7",
+    "filtered": "trade_type=%EB%A7%A4%EB%A7%A4&search=%EC%97%AD%EC%82%BC&sort_by=price-desc&price_down_only=true&page=3&per_page=20"
+  },
+  "profileLand": "{\"className\":\"property-land\",\"caption\":\"면적·용도지역·지목 우선\",\"meta\":[\"면적 660.5㎡\",\"용도 계획관리\",\"지목 전\"],\"metrics\":[{\"label\":\"면적\",\"value\":\"660.5㎡\"},{\"label\":\"용도지역\",\"value\":\"계획관리\"},{\"label\":\"지목\",\"value\":\"전\"},{\"label\":\"도로접면\",\"value\":\"코너\"}]}",
+  "profileOffice": "{\"className\":\"property-office\",\"caption\":\"업무·수익형 지표\",\"meta\":[\"면적 84㎡\",\"층 5/10\",\"매매\"],\"metrics\":[{\"label\":\"추정 수익률\",\"value\":\"4.5%\"},{\"label\":\"면적\",\"value\":\"84㎡\"},{\"label\":\"가격인하율\",\"value\":\"3.2%\"}]}",
+  "profileShop": "{\"className\":\"property-shop\",\"caption\":\"상가·권리금 지표\",\"meta\":[\"면적 33㎡\",\"층 1/5\",\"월세\"],\"metrics\":[{\"label\":\"추정 수익률\",\"value\":\"확인 필요\"},{\"label\":\"권리금\",\"value\":\"무권리\"},{\"label\":\"도로접면\",\"value\":\"대로변\"},{\"label\":\"가격인하율\",\"value\":\"가격인하\"}]}",
+  "trendUp": "\n    <li class=\"trend-item\" data-district=\"강남구\" onclick=\"selectDistrict('강남구')\">\n      <div class=\"trend-rank\">01</div>\n      <div class=\"trend-copy\">\n        <div class=\"trend-name\">서울 강남구</div>\n        <div class=\"trend-sub\">전일 10개 → 오늘 15개</div>\n      </div>\n      <div class=\"trend-side\">\n        <span class=\"trend-badge up\">+5</span>\n        <span class=\"trend-current\">15건</span>\n      </div>\n    </li>\n    <li class=\"trend-item\" data-district=\"해운대구\" onclick=\"selectDistrict('해운대구')\">\n      <div class=\"trend-rank\">02</div>\n      <div class=\"trend-copy\">\n        <div class=\"trend-name\">부산광역시 해운대구</div>\n        <div class=\"trend-sub\">전일 1개 → 오늘 4개</div>\n      </div>\n      <div class=\"trend-side\">\n        <span class=\"trend-badge up\">+3</span>\n        <span class=\"trend-current\">4건</span>\n      </div>\n    </li>",
+  "trendDown": "\n    <li class=\"trend-item\" data-district=\"마포구\" onclick=\"selectDistrict('마포구')\">\n      <div class=\"trend-rank\">01</div>\n      <div class=\"trend-copy\">\n        <div class=\"trend-name\">서울특별시 마포구</div>\n        <div class=\"trend-sub\">전일 9개 → 오늘 5개</div>\n      </div>\n      <div class=\"trend-side\">\n        <span class=\"trend-badge down\">-4</span>\n        <span class=\"trend-current\">5건</span>\n      </div>\n    </li>",
+  "trendPriceDown": "\n    <li class=\"trend-item\" data-district=\"강남구\" onclick=\"selectDistrict('강남구')\">\n      <div class=\"trend-rank\">01</div>\n      <div class=\"trend-copy\">\n        <div class=\"trend-name\">서울 강남구</div>\n        <div class=\"trend-sub\">가격인하 2개 · 급매 15개</div>\n      </div>\n      <div class=\"trend-side\">\n        <span class=\"trend-badge urgent\">2개</span>\n        <span class=\"trend-current\">15건</span>\n      </div>\n    </li>\n    <li class=\"trend-item\" data-district=\"해운대구\" onclick=\"selectDistrict('해운대구')\">\n      <div class=\"trend-rank\">02</div>\n      <div class=\"trend-copy\">\n        <div class=\"trend-name\">부산광역시 해운대구</div>\n        <div class=\"trend-sub\">가격인하 0개 · 급매 4개</div>\n      </div>\n      <div class=\"trend-side\">\n        <span class=\"trend-badge urgent\">0개</span>\n        <span class=\"trend-current\">4건</span>\n      </div>\n    </li>",
+  "trendEmpty": "<li class=\"trend-empty\">데이터 없음</li>",
+  "regionStats": "\n    <li class=\"region-item\" data-district=\"강남구\" onclick=\"selectDistrict('강남구')\">\n      <div class=\"region-rank\">01</div>\n      <div class=\"region-bar-wrap\">\n        <div class=\"region-name\">서울 강남구</div>\n        <div class=\"region-bar\">\n          <div class=\"region-bar-fill\" style=\"width:100%\"></div>\n        </div>\n      </div>\n      <span class=\"region-count\">120</span>\n    </li>\n    <li class=\"region-item\" data-district=\"수원시\" onclick=\"selectDistrict('수원시')\">\n      <div class=\"region-rank\">02</div>\n      <div class=\"region-bar-wrap\">\n        <div class=\"region-name\">경기도 수원시</div>\n        <div class=\"region-bar\">\n          <div class=\"region-bar-fill\" style=\"width:25%\"></div>\n        </div>\n      </div>\n      <span class=\"region-count\">30</span>\n    </li>",
+  "listingsGrid": "\n    <div class=\"listing-card urgent-card-item property-shop\"\n         onclick=\"openNaver('A100')\"\n         data-id=\"1\"\n         data-article-no=\"A100\"\n         data-naver-url=\"https://new.land.naver.com/x?a=1&amp;b=2\"\n         title=\"네이버 부동산에서 보기\">\n      <div class=\"card-topline\">\n        <div class=\"card-badges\">\n          <span class=\"badge badge-urgent\">가격인하</span>\n          <span class=\"badge badge-trade-buy\">매매</span>\n          <span class=\"badge badge-type\">상가</span>\n          <span class=\"badge badge-code\">SG</span>\n        </div>\n        <div class=\"card-date-chip\">확인 2026.07.01</div>\n      </div>\n      <div class=\"card-price-row\">\n        <div class=\"card-price-block\">\n          <div class=\"card-price\">3억 5,000</div>\n          <div class=\"card-price-caption\">상가·권리금 지표 · 가격인하 감지</div>\n        </div>\n        <a class=\"naver-link-icon\" href=\"https://new.land.naver.com/x?a=1&amp;b=2\" target=\"_self\" rel=\"noopener noreferrer\" onclick=\"event.stopPropagation()\" title=\"네이버 부동산\">네이버 보기</a>\n      </div>\n      <div class=\"card-name\" title=\"테스트&lt;상가&gt;&amp;빌딩\">테스트&lt;상가&gt;&amp;빌딩</div>\n      <div class=\"card-location-line\">서울 강남구</div>\n      <div class=\"card-meta\">\n        <span>면적 33.1㎡</span><span>층 1/5</span><span>매매</span>\n      </div>\n      <div class=\"card-metrics\">\n        \n          <div class=\"card-metric\">\n            <span class=\"metric-label\">추정 수익률</span>\n            <strong class=\"metric-value\">확인 필요</strong>\n          </div>\n        \n          <div class=\"card-metric\">\n            <span class=\"metric-label\">권리금</span>\n            <strong class=\"metric-value\">무권리</strong>\n          </div>\n        \n          <div class=\"card-metric\">\n            <span class=\"metric-label\">도로접면</span>\n            <strong class=\"metric-value\">코너</strong>\n          </div>\n        \n          <div class=\"card-metric\">\n            <span class=\"metric-label\">가격인하율</span>\n            <strong class=\"metric-value\">8.5%</strong>\n          </div>\n        \n      </div>\n      <div class=\"card-desc\">무권리 코너 &quot;명당&quot;</div>\n      <div class=\"card-tags\">\n        <span class=\"tag urgent-tag\">가격인하</span>\n        <span class=\"tag price-down-tag\">가격인하</span><span class=\"tag \">1층</span>\n      </div>\n    </div>\n    <div class=\"listing-card urgent-card-item property-land\"\n         onclick=\"openNaver('B200')\"\n         data-id=\"2\"\n         data-article-no=\"B200\"\n         data-naver-url=\"\"\n         title=\"네이버 부동산에서 보기\">\n      <div class=\"card-topline\">\n        <div class=\"card-badges\">\n          <span class=\"badge badge-urgent\">급매</span>\n          <span class=\"badge badge-trade-month\">월세</span>\n          <span class=\"badge badge-type\">토지</span>\n          \n        </div>\n        <div class=\"card-date-chip\">확인 —</div>\n      </div>\n      <div class=\"card-price-row\">\n        <div class=\"card-price-block\">\n          <div class=\"card-price\">—</div>\n          <div class=\"card-price-caption\">면적·용도지역·지목 우선 · 급매 포착</div>\n        </div>\n        <span class=\"naver-link-icon disabled\" title=\"네이버 링크 없음\">링크 없음</span>\n      </div>\n      <div class=\"card-name\" title=\"null\">이름 없는 매물</div>\n      <div class=\"card-location-line\">경기도 수원시</div>\n      <div class=\"card-meta\">\n        <span>면적 확인 필요</span><span>용도지역 확인 필요</span><span>지목 확인 필요</span>\n      </div>\n      <div class=\"card-metrics\">\n        \n          <div class=\"card-metric\">\n            <span class=\"metric-label\">면적</span>\n            <strong class=\"metric-value\">확인 필요</strong>\n          </div>\n        \n          <div class=\"card-metric\">\n            <span class=\"metric-label\">용도지역</span>\n            <strong class=\"metric-value\">확인 필요</strong>\n          </div>\n        \n          <div class=\"card-metric\">\n            <span class=\"metric-label\">지목</span>\n            <strong class=\"metric-value\">확인 필요</strong>\n          </div>\n        \n          <div class=\"card-metric\">\n            <span class=\"metric-label\">도로접면</span>\n            <strong class=\"metric-value\">접면 미확인</strong>\n          </div>\n        \n      </div>\n      \n      <div class=\"card-tags\">\n        <span class=\"tag urgent-tag\">급매</span>\n        \n      </div>\n    </div>",
+  "pageInfo": "페이지 2 / 3",
+  "btnPrevDisabled": false,
+  "btnNextDisabled": false,
+  "statePageAfter": 2,
+  "stateTotalPagesAfter": 3,
+  "listingsEmpty": "<div class=\"empty-state\">조건에 맞는 급매가 없습니다.</div>",
+  "pageInfoEmpty": "페이지 1 / 1",
+  "statTotal": "100",
+  "statShop": "60",
+  "statOffice": "30",
+  "statLand": "0",
+  "statPriceDown": "7",
+  "listingsSummaryAfterStats": "전체 상업용 급매 조건 결과 100건",
+  "dashboardAfterStats": "{\"total\":100,\"priceDownCount\":7}",
+  "insightAfterStats": "전국 급매 100건, 가격인하 7건입니다.",
+  "insightSubAfterStats": "아직 등록된 알림은 없습니다.",
+  "insightWithTrends": "1일 기준 2개 지역 증가, 1개 지역 감소입니다. 증가폭 최대는 서울 강남구(+5)입니다. 감소폭 최대는 서울특별시 마포구(-3)입니다.",
+  "insightSubWithTrends": "서울에서는 강남구(+5), 마포구(-3) 변화가 컸습니다. 현재 가격인하 매물은 7건입니다. 아직 등록된 알림은 없습니다.",
+  "insightEmpty": "전국 급매 흐름과 알림 현황을 계산 중입니다.",
+  "dailyChart": "\n      <div class=\"hero-mini-bar-wrap  has-tooltip\" data-tooltip=\"7/1 100건\">\n        <div class=\"hero-mini-bar flat\" style=\"height:68px\"></div>\n      </div>\n    \n      <div class=\"hero-mini-bar-wrap  has-tooltip\" data-tooltip=\"7/2 120건\">\n        <div class=\"hero-mini-bar up\" style=\"height:78px\"></div>\n      </div>\n    \n      <div class=\"hero-mini-bar-wrap  has-tooltip\" data-tooltip=\"7/3 0건\">\n        <div class=\"hero-mini-bar down\" style=\"height:18px\"></div>\n      </div>\n    \n      <div class=\"hero-mini-bar-wrap latest \">\n        <div class=\"hero-mini-bar up\" style=\"height:63px\"></div>\n      </div>\n    ",
+  "dailyLabels": "<span class=\"hero-mini-chart-day \">7/1</span><span class=\"hero-mini-chart-day \">7/2</span><span class=\"hero-mini-chart-day \">7/3</span><span class=\"hero-mini-chart-day \">7/4</span>",
+  "dailyCurrent": "90건",
+  "dailyChange": "전일 대비 +90건",
+  "dailyEmptyHidden": true,
+  "dailyChartEmpty": "",
+  "dailyCurrentEmpty": "—",
+  "dailyChangeEmpty": "최근 7일 성공 크롤링 데이터가 없습니다.",
+  "dailyEmptyShown": true,
+  "alertRulesList": "\n      <li class=\"alert-rule-item\">\n        <div>\n          <div class=\"alert-rule-name\">강남 상가</div>\n          <div class=\"alert-rule-meta\">키워드 테헤란로 · 지역 강남구 · 유형 상가 · 거래 매매 · 매매 전용 · 면적 20㎡ 이상 · 가격인하율 5% 이상</div>\n        </div>\n        <button class=\"alert-rule-remove\" data-alert-id=\"1\">삭제</button>\n      </li>\n    \n      <li class=\"alert-rule-item\">\n        <div>\n          <div class=\"alert-rule-name\">전체 감시</div>\n          <div class=\"alert-rule-meta\">전체 조건</div>\n        </div>\n        <button class=\"alert-rule-remove\" data-alert-id=\"2\">삭제</button>\n      </li>\n    ",
+  "heroAlertPreview": "<span class=\"hero-alert-chip\">강남 상가 · 강남구</span><span class=\"hero-alert-chip\">전체 감시 · 전체</span>",
+  "alertRulesEmpty": "<li class=\"alert-empty\">등록된 알림이 없습니다.</li>",
+  "heroAlertPreviewEmpty": "<span class=\"hero-alert-chip muted\">등록된 알림이 없습니다</span>",
+  "alertDraftSummary": "저장될 조건: 키워드: 역삼역 · 지역: 강남구 · 유형: 상가 · 임대 전용 · 면적 30㎡ 이상",
+  "heroFilterSummary": "현재 조건: 지역 강남구 · 유형 상가",
+  "alertDraftSummaryEmpty": "검색어나 지역/유형/거래 필터를 먼저 선택하세요.",
+  "notifStatusUnsupported": "{\"text\":\"이 브라우저는 알림을 지원하지 않습니다.\",\"cls\":\"blocked\"}",
+  "summaryLoading": "전체 상업용 급매 조건의 급매를 불러오는 중입니다.",
+  "summaryDone": "전체 상업용 급매 조건 결과 1,234건"
+}
