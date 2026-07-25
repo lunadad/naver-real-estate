@@ -5,21 +5,16 @@ Flask + Playwright app for browsing urgent listings from Naver Real Estate.
 ## Current Production Architecture
 
 The production web app is served by Vercel. The crawler runs on the Mac mini and
-writes to Neon Postgres. Render is kept as a backup deployment target.
+writes to Neon Postgres.
 
 ```text
 Mac mini launchd -> Naver crawl -> Neon DB
 Vercel web app   -> Neon DB
-Render           -> backup web deployment
 ```
 
-Primary production URL:
+Production URL:
 
 - Vercel: https://naver-real-estate-henna.vercel.app
-
-Backup URL:
-
-- Render: https://naver-real-estate.onrender.com
 
 ## GitHub Branches
 
@@ -35,9 +30,15 @@ Local development uses separate folders so production maintenance and 2.0 work
 do not fight over the same checkout:
 
 ```text
-/Users/haluna/workspace/naver-real-estate     -> main
-/Users/haluna/workspace/naver-real-estate-v2  -> version-2.0
+/Users/haluna/workspace/naver-real-estate     -> main         (crawler host: .venv-migrate, daily 09:00 launchd job)
+/Users/haluna/workspace/naver-real-estate-v1  -> main-kakao    (1.x development and Vercel deploys)
+/Users/haluna/workspace/naver-real-estate-v2  -> version-2.0   (commercial 2.0, daily 10:00 launchd job)
 ```
+
+`naver-real-estate-v1` and `-v2` are git worktrees of the first folder, so they
+share one object store. Both `naver-real-estate` and `naver-real-estate-v1` are
+linked to the same Vercel project — keep them on the same commit so a deploy
+from either folder produces the same result.
 
 Useful commands:
 
@@ -101,17 +102,11 @@ curl -fsSL 'https://naver-real-estate-henna.vercel.app/api/listings?page=1&per_p
 On Vercel, `/api/crawl` should return `403` because crawling belongs to the Mac
 mini launchd job.
 
-## Backup Deploy to Render + Neon
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/lunadad/naver-real-estate)
-
 ## Notes
 
-- Render deployment is configured with `render.yaml` as a free backup web service.
-- Create the Postgres database separately in Neon, then provide its connection string as Render's `DATABASE_URL` secret.
 - The app uses `DATABASE_URL` first and falls back to local SQLite via `DB_PATH`.
-- Production crawling should run outside Render and write directly to the same Neon database.
-- Do not commit the real Neon URL. Use `.env.local` locally and Render secret env vars in hosting.
+- Production crawling runs outside the web host and writes directly to Neon.
+- Do not commit the real Neon URL. Use `.env.local` locally and Vercel env vars in hosting.
 
 ## Free Hosting Setup
 
@@ -119,21 +114,11 @@ This repo is set up for a low-cost/free hobby deployment shape:
 
 1. Create a Neon Postgres project and copy the pooled or direct connection string.
 2. Make sure the URL includes `sslmode=require`; the app and crawler also add it automatically if it is missing.
-3. Click the Render deploy button above.
-4. When Render prompts for `DATABASE_URL`, paste the Neon connection string.
-5. Keep these production env vars as configured in `render.yaml`:
+3. Set that connection string as `DATABASE_URL` in the Vercel project settings.
+4. Keep the production env vars listed above.
 
-```bash
-ENABLE_SCHEDULER=false
-ENABLE_CRAWL_ENDPOINT=false
-SEED_DEMO_DATA=false
-ALLOW_DEMO_FALLBACK=false
-DB_POOL_MIN_SIZE=0
-DB_POOL_MAX_SIZE=3
-```
-
-Vercel serves the primary dashboard. Render is kept as a backup dashboard. The
-Mac mini runs the crawler and writes fresh rows to Neon.
+Vercel serves the dashboard. The Mac mini runs the crawler and writes fresh rows
+to Neon.
 
 ## Production Safety (Important)
 
@@ -160,47 +145,22 @@ curl -sS -i -X POST https://naver-real-estate-henna.vercel.app/api/crawl
 
 The POST to `/api/crawl` should return `403`.
 
-After each backup Render deploy, run:
+Or run the full check script, which defaults to the production URL:
 
 ```bash
-./scripts/verify_deploy.sh https://naver-real-estate.onrender.com
+./scripts/verify_deploy.sh
 ```
 
 The script validates:
 
 1. `/api/crawl-status`: `source=demo` must not be `status=success`
-2. `/api/crawl`: success should come from `source=naver`
+2. `/api/crawl`: a `403` is expected on the web host; if enabled, success must come from `source=naver`
 3. Re-check crawl status consistency
 4. `/api/listings` sample endpoint health
 
-## Render CLI Deploy
+## Publishing
 
-After `render login`, you can deploy by service name. The script defaults to `naver-real-estate`:
-
-```bash
-scripts/deploy_render.sh
-```
-
-If your Render service name is different, set it once:
-
-```bash
-export RENDER_SERVICE_NAME=<your-render-service-name>
-```
-
-Deploy a specific commit:
-
-```bash
-scripts/deploy_render.sh <commit-sha>
-```
-
-If auto-discovery fails, set the service ID directly:
-
-```bash
-export RENDER_SERVICE_ID=<your-render-web-service-id>
-scripts/deploy_render.sh
-```
-
-Push and deploy the current branch in one step:
+Push the current branch after the working tree is clean:
 
 ```bash
 scripts/publish.sh
@@ -214,9 +174,9 @@ REMOTE_NAME=origin BRANCH_NAME=main scripts/publish.sh
 
 ## Recommended Production Crawl Setup
 
-Vercel and Render should serve the web app only. Run the crawler from your local Mac mini and write directly to Neon Postgres.
+Vercel should serve the web app only. Run the crawler from your local Mac mini and write directly to Neon Postgres.
 
-1. Keep Render `ENABLE_SCHEDULER=false`
+1. Keep `ENABLE_SCHEDULER=false` on the web host
 2. On the Mac mini, set the same Neon URL:
 
 ```bash

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${1:-https://naver-real-estate.onrender.com}"
+BASE_URL="${1:-https://naver-real-estate-henna.vercel.app}"
 
 echo "[1/4] GET /api/crawl-status"
 STATUS_JSON=$(curl -fsSL "$BASE_URL/api/crawl-status")
@@ -17,20 +17,31 @@ if [[ "$LAST_SOURCE" == "demo" && "$LAST_STATUS" == "success" ]]; then
 fi
 
 echo "[2/4] POST /api/crawl"
-CRAWL_JSON=$(curl -fsSL -X POST "$BASE_URL/api/crawl")
-echo "$CRAWL_JSON" | jq . >/dev/null
-CRAWL_SOURCE=$(echo "$CRAWL_JSON" | jq -r '.source // ""')
-CRAWL_STATUS=$(echo "$CRAWL_JSON" | jq -r '.status // ""')
-echo "crawl source=$CRAWL_SOURCE, status=$CRAWL_STATUS"
+CRAWL_RESPONSE=$(curl -sSL -w $'\n%{http_code}' -X POST "$BASE_URL/api/crawl")
+CRAWL_CODE=$(tail -n1 <<<"$CRAWL_RESPONSE")
+CRAWL_JSON=$(sed '$d' <<<"$CRAWL_RESPONSE")
 
-if [[ "$CRAWL_STATUS" == "success" && "$CRAWL_SOURCE" != "naver" ]]; then
-  echo "❌ FAIL: success crawl must come from naver source"
+if [[ "$CRAWL_CODE" == "403" ]]; then
+  # Expected on the web host: crawling belongs to the Mac mini launchd job.
+  echo "crawl endpoint disabled (403), skipping crawl assertions"
+elif [[ "$CRAWL_CODE" != "200" ]]; then
+  echo "❌ FAIL: /api/crawl returned HTTP $CRAWL_CODE"
   exit 1
-fi
+else
+  echo "$CRAWL_JSON" | jq . >/dev/null
+  CRAWL_SOURCE=$(echo "$CRAWL_JSON" | jq -r '.source // ""')
+  CRAWL_STATUS=$(echo "$CRAWL_JSON" | jq -r '.status // ""')
+  echo "crawl source=$CRAWL_SOURCE, status=$CRAWL_STATUS"
 
-if [[ "$CRAWL_STATUS" == "failed" && "$CRAWL_SOURCE" == "demo" ]]; then
-  echo "❌ FAIL: failed crawl should not silently switch to demo"
-  exit 1
+  if [[ "$CRAWL_STATUS" == "success" && "$CRAWL_SOURCE" != "naver" ]]; then
+    echo "❌ FAIL: success crawl must come from naver source"
+    exit 1
+  fi
+
+  if [[ "$CRAWL_STATUS" == "failed" && "$CRAWL_SOURCE" == "demo" ]]; then
+    echo "❌ FAIL: failed crawl should not silently switch to demo"
+    exit 1
+  fi
 fi
 
 echo "[3/4] GET /api/crawl-status (again)"

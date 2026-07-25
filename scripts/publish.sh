@@ -25,6 +25,3 @@ fi
 
 echo "Pushing $COMMIT_ID to $REMOTE_NAME/$BRANCH_NAME"
 git push "$REMOTE_NAME" "$BRANCH_NAME"
-
-echo "Triggering Render deploy for $COMMIT_ID"
-"$ROOT_DIR/scripts/deploy_render.sh" "$COMMIT_ID"
