@@ -1,8 +1,10 @@
 import atexit
+import hashlib
 import logging
 import os
 import json
 import plistlib
+from functools import lru_cache
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -54,6 +56,11 @@ def load_local_runtime_env():
         load_env_file(BASE_DIR / name)
 
     if os.getenv("DATABASE_URL", "").strip():
+        return
+
+    # 로컬 개발 시 LaunchAgent plist의 프로덕션 DATABASE_URL을 끌어오지 않고
+    # SQLite 모드를 강제하는 opt-in 플래그 (.claude/launch.json 등에서 사용)
+    if os.getenv("FORCE_LOCAL_SQLITE", "").strip().lower() in {"1", "true", "yes", "on"}:
         return
 
     plist_candidates = [
@@ -146,6 +153,8 @@ ENABLE_SCHEDULER = env_flag("ENABLE_SCHEDULER", not IS_VERCEL)
 ENABLE_CRAWL_ENDPOINT = env_flag("ENABLE_CRAWL_ENDPOINT", not IS_VERCEL)
 SEED_DEMO_DATA = env_flag("SEED_DEMO_DATA", False)
 SKIP_STARTUP_BACKFILL = env_flag("SKIP_STARTUP_BACKFILL", bool(DATABASE_URL))
+# 카카오맵 JS SDK 앱 키 (developers.kakao.com 앱의 JavaScript 키, 도메인 등록 필요)
+KAKAO_MAP_APP_KEY = os.getenv("KAKAO_MAP_APP_KEY", "").strip()
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "").strip()
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "").strip()
 VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:alerts@example.com").strip()
@@ -155,7 +164,23 @@ EXTERNAL_CRAWL_GRACE_MINUTES = int((os.getenv("LOCAL_CRAWL_GRACE_MINUTES") or "1
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
+# 정적 자산은 asset_url() 핑거프린트로 무효화하므로 길게 캐시해도 안전하다
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = timedelta(days=30)
 CORS(app)
+
+
+@lru_cache(maxsize=32)
+def _asset_fingerprint(rel_path: str) -> str:
+    asset_path = BASE_DIR / "static" / rel_path
+    try:
+        return hashlib.md5(asset_path.read_bytes()).hexdigest()[:10]
+    except OSError:
+        return "0"
+
+
+@app.template_global()
+def asset_url(rel_path: str) -> str:
+    return f"/static/{rel_path}?v={_asset_fingerprint(rel_path)}"
 
 db = Database(
     db_path=DB_PATH,
@@ -454,7 +479,7 @@ def dispatch_push_alerts(limit: int = 5):
 # ── Routes ───────────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", kakao_map_app_key=KAKAO_MAP_APP_KEY)
 
 
 @app.route("/manifest.json")
@@ -500,6 +525,38 @@ def get_listings():
         price_down_only=request.args.get("price_down_only", "false").lower() == "true",
     )
     return jsonify(serialize_api_value(result))
+
+
+@app.route("/api/map-listings")
+def get_map_listings():
+    def opt_coord(name):
+        value = request.args.get(name)
+        if value in (None, ""):
+            return None
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    try:
+        limit = min(500, max(1, int(request.args.get("limit", 500))))
+    except (ValueError, TypeError):
+        limit = 500
+
+    listings = db.get_map_listings(
+        min_lat=opt_coord("min_lat"),
+        max_lat=opt_coord("max_lat"),
+        min_lng=opt_coord("min_lng"),
+        max_lng=opt_coord("max_lng"),
+        region=request.args.get("region", ""),
+        district=request.args.get("district", ""),
+        property_type=request.args.get("property_type", ""),
+        trade_type=request.args.get("trade_type", ""),
+        search=request.args.get("search", ""),
+        price_down_only=request.args.get("price_down_only", "false").lower() == "true",
+        limit=limit,
+    )
+    return jsonify(serialize_api_value({"listings": listings, "count": len(listings)}))
 
 
 @app.route("/api/alert-rules", methods=["GET"])

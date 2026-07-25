@@ -1862,6 +1862,93 @@ class Database:
             "listings": listings_payload,
         }
 
+    def get_map_listings(
+        self,
+        min_lat=None,
+        max_lat=None,
+        min_lng=None,
+        max_lng=None,
+        region="",
+        district="",
+        property_type="",
+        trade_type="",
+        search="",
+        price_down_only=False,
+        limit=500,
+    ):
+        """지도 화면 영역(bounds) 안의 좌표 보유 매물을 가벼운 필드로 반환한다."""
+        conditions = [
+            "property_type IN ('상가', '업무', '토지')",
+            "latitude IS NOT NULL",
+            "longitude IS NOT NULL",
+        ]
+        params = []
+
+        if min_lat is not None:
+            conditions.append("latitude >= ?")
+            params.append(min_lat)
+        if max_lat is not None:
+            conditions.append("latitude <= ?")
+            params.append(max_lat)
+        if min_lng is not None:
+            conditions.append("longitude >= ?")
+            params.append(min_lng)
+        if max_lng is not None:
+            conditions.append("longitude <= ?")
+            params.append(max_lng)
+        if region:
+            conditions.append("region LIKE ?")
+            params.append(f"%{region}%")
+        if district:
+            conditions.append("district LIKE ?")
+            params.append(f"%{district}%")
+        if property_type:
+            conditions.append("property_type = ?")
+            params.append(property_type)
+        if trade_type:
+            conditions.append("trade_type = ?")
+            params.append(trade_type)
+        if price_down_only:
+            conditions.append("tags LIKE '%가격인하%'")
+        if search:
+            conditions.append(
+                "(region LIKE ? OR district LIKE ? OR building_name LIKE ? OR description LIKE ? OR tags LIKE ? OR land_use_zone LIKE ? OR land_category LIKE ? OR road_access LIKE ? OR premium_info LIKE ?)"
+            )
+            params.extend([f"%{search}%"] * 9)
+
+        with self.get_connection() as conn:
+            latest_session = self._get_latest_visible_session_id(conn)
+            if latest_session:
+                conditions.insert(0, "crawl_session = ?")
+                params = [latest_session] + params
+
+            rows = conn.execute(
+                f"""
+                SELECT id, article_no, building_name, price, latitude, longitude,
+                       property_type, trade_type, tags, price_drop_rate, naver_url,
+                       (
+                         SELECT source
+                         FROM crawl_history h
+                         WHERE h.session_id = listings.crawl_session
+                         ORDER BY h.crawled_at DESC
+                         LIMIT 1
+                       ) AS crawl_source
+                FROM listings
+                WHERE {" AND ".join(conditions)}
+                ORDER BY crawled_at DESC
+                LIMIT ?
+                """,
+                params + [limit],
+            ).fetchall()
+
+        payload = []
+        for row in rows:
+            item = dict(row)
+            source = item.pop("crawl_source", None)
+            item["naver_url"] = self._sanitize_naver_url(item.get("naver_url"), source)
+            payload.append(item)
+        return payload
+
     def get_region_stats(self):
         with self.get_connection() as conn:
             latest_session = self._get_latest_visible_session_id(conn)
