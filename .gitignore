@@ -17,3 +17,5 @@ tmp_geocode_cache.json
 .env.production
 .env.*.local
 logs/
+.vercel
+AGENTS.md

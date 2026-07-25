@@ -3,11 +3,12 @@
   "configurations": [
     {
       "name": "부동산 급매 터미널",
-      "runtimeExecutable": "python3",
+      "runtimeExecutable": ".venv/bin/python",
       "runtimeArgs": ["app.py"],
       "port": 5101,
       "env": {
-        "DATABASE_URL": ""
+        "DATABASE_URL": "",
+        "FORCE_LOCAL_SQLITE": "1"
       }
     }
   ]
