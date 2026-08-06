@@ -73,8 +73,9 @@ CREATE TABLE IF NOT EXISTS crawl_building_stats (
 **`_build_building_stats_rows(session_id, listings, created_at)` (신규, staticmethod 아님 —
 `_build_region_stats_rows`와 동일하게 인스턴스 메서드)**
 
-- `_build_region_stats_rows()`와 같은 방식으로 `(region, district, building_name)` 기준
-  그룹핑. `district`나 `building_name`이 빈 문자열이면 스킵.
+- `_build_region_stats_rows()`와 같은 방식으로 `(district, building_name)` 기준 그룹핑
+  (`UNIQUE(session_id, district, building_name)` 제약과 일치 — `region`은 키에 넣지 않는다).
+  `district`나 `building_name`이 빈 문자열이면 스킵.
 - 그룹당 `total_count` 증가, `tags`에 `"가격인하"` 있으면 `price_down_count` 증가
   (기존 `_build_region_stats_rows`의 태그 파싱 로직 그대로 재사용).
 - **반환 직전에 `total_count < 2`인 그룹을 제외한다.**
