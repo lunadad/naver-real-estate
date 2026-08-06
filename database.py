@@ -1253,6 +1253,39 @@ class Database:
                     region_payload,
                 )
 
+            building_stats_rows = self._build_building_stats_rows(session_id, listings, now)
+            building_payload = [
+                (
+                    row["session_id"],
+                    row["region"],
+                    row["district"],
+                    row["building_name"],
+                    row["total_count"],
+                    row["price_down_count"],
+                    row["created_at"],
+                )
+                for row in building_stats_rows
+            ]
+            if building_payload:
+                conn.executemany(
+                    """
+                    INSERT INTO crawl_building_stats
+                    (session_id, region, district, building_name, total_count, price_down_count, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(session_id, district, building_name) DO UPDATE SET
+                        total_count = excluded.total_count,
+                        price_down_count = excluded.price_down_count,
+                        created_at = excluded.created_at
+                    """,
+                    building_payload,
+                )
+
+            building_stats_cutoff = (datetime.now() - timedelta(days=180)).isoformat()
+            conn.execute(
+                "DELETE FROM crawl_building_stats WHERE created_at < ?",
+                (building_stats_cutoff,),
+            )
+
     @staticmethod
     def _parse_tags(raw) -> List[str]:
         """tags 컬럼(JSON 문자열 또는 리스트)을 태그 문자열 리스트로 파싱한다."""

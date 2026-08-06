@@ -123,5 +123,80 @@ class BuildingStatsRowsTest(unittest.TestCase):
         self.assertEqual(rows[0]["price_down_count"], 1)
 
 
+class BuildingSnapshotInsertTest(unittest.TestCase):
+    def setUp(self):
+        tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tmpdir.cleanup)
+        self.db = Database(
+            db_path=os.path.join(tmpdir.name, "test.db"),
+            skip_price_backfill=True,
+        )
+        self.addCleanup(self.db.close)
+
+    def _building_stats_rows(self):
+        with self.db.get_connection() as conn:
+            return conn.execute(
+                """
+                SELECT session_id, district, building_name, total_count, price_down_count, created_at
+                FROM crawl_building_stats
+                ORDER BY building_name
+                """
+            ).fetchall()
+
+    def test_insert_listings_persists_stats_for_qualifying_buildings_only(self):
+        listings = [
+            make_listing("A1", building_name="래미안원베일리"),
+            make_listing("A2", building_name="래미안원베일리"),
+            make_listing("A3", building_name="반포자이"),  # 1건뿐 -> 제외되어야 함
+        ]
+        self.db.insert_listings(listings, "session-1")
+
+        rows = self._building_stats_rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["building_name"], "래미안원베일리")
+        self.assertEqual(rows[0]["total_count"], 2)
+
+    def test_reinserting_same_session_upserts_instead_of_duplicating(self):
+        listings_v1 = [
+            make_listing("A1", building_name="래미안원베일리"),
+            make_listing("A2", building_name="래미안원베일리"),
+        ]
+        self.db.insert_listings(listings_v1, "session-1")
+
+        listings_v2 = [
+            make_listing("A3", building_name="래미안원베일리"),
+            make_listing("A4", building_name="래미안원베일리"),
+            make_listing("A5", building_name="래미안원베일리"),
+        ]
+        self.db.insert_listings(listings_v2, "session-1")
+
+        rows = self._building_stats_rows()
+        self.assertEqual(len(rows), 1)  # 중복 행 없이 하나로 유지
+        self.assertEqual(rows[0]["total_count"], 3)  # 최신 값으로 갱신
+
+    def test_stats_older_than_180_days_are_pruned_on_next_insert(self):
+        old_date = (datetime.now() - timedelta(days=200)).isoformat()
+        with self.db.get_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO crawl_building_stats
+                (session_id, region, district, building_name, total_count, price_down_count, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                ("old-session", "서울특별시", "서초구", "오래된단지", 3, 0, old_date),
+            )
+
+        listings = [
+            make_listing("A1", building_name="래미안원베일리"),
+            make_listing("A2", building_name="래미안원베일리"),
+        ]
+        self.db.insert_listings(listings, "session-new")
+
+        rows = self._building_stats_rows()
+        names = [row["building_name"] for row in rows]
+        self.assertNotIn("오래된단지", names)
+        self.assertIn("래미안원베일리", names)
+
+
 if __name__ == "__main__":
     unittest.main()
