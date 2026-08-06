@@ -74,5 +74,54 @@ class BuildingSnapshotSchemaTest(unittest.TestCase):
         self.assertEqual(row["price_down_count"], 2)
 
 
+class BuildingStatsRowsTest(unittest.TestCase):
+    def setUp(self):
+        tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tmpdir.cleanup)
+        self.db = Database(
+            db_path=os.path.join(tmpdir.name, "test.db"),
+            skip_price_backfill=True,
+        )
+        self.addCleanup(self.db.close)
+
+    def test_building_with_two_or_more_listings_is_included(self):
+        listings = [
+            make_listing("B1", building_name="래미안원베일리"),
+            make_listing("B2", building_name="래미안원베일리"),
+        ]
+        rows = self.db._build_building_stats_rows("session-1", listings, "2026-08-06T09:00:00")
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertEqual(row["district"], "서초구")
+        self.assertEqual(row["building_name"], "래미안원베일리")
+        self.assertEqual(row["total_count"], 2)
+        self.assertEqual(row["price_down_count"], 0)
+
+    def test_building_with_single_listing_is_excluded(self):
+        listings = [make_listing("B1", building_name="반포자이")]
+        rows = self.db._build_building_stats_rows("session-1", listings, "2026-08-06T09:00:00")
+        self.assertEqual(rows, [])
+
+    def test_listing_missing_district_or_building_name_is_skipped(self):
+        listings = [
+            make_listing("B1", district="", building_name="반포자이"),
+            make_listing("B2", district="서초구", building_name=""),
+            make_listing("B3", building_name="반포자이"),
+            make_listing("B4", building_name="반포자이"),
+        ]
+        rows = self.db._build_building_stats_rows("session-1", listings, "2026-08-06T09:00:00")
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["building_name"], "반포자이")
+        self.assertEqual(rows[0]["total_count"], 2)  # B3, B4만 집계됨
+
+    def test_price_down_tag_is_counted(self):
+        listings = [
+            make_listing("B1", building_name="반포자이", tags=["가격인하"]),
+            make_listing("B2", building_name="반포자이", tags=[]),
+        ]
+        rows = self.db._build_building_stats_rows("session-1", listings, "2026-08-06T09:00:00")
+        self.assertEqual(rows[0]["price_down_count"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()

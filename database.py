@@ -671,6 +671,38 @@ class Database:
                 entry["price_down_count"] += 1
         return list(grouped.values())
 
+    def _build_building_stats_rows(self, session_id: str, listings: List[Dict], created_at: str):
+        grouped = {}
+        for listing in listings:
+            region = str(listing.get("region") or "").strip()
+            district = str(listing.get("district") or "").strip()
+            building_name = str(listing.get("building_name") or "").strip()
+            if not district or not building_name:
+                continue
+            key = (district, building_name)
+            entry = grouped.setdefault(
+                key,
+                {
+                    "session_id": session_id,
+                    "region": region,
+                    "district": district,
+                    "building_name": building_name,
+                    "total_count": 0,
+                    "price_down_count": 0,
+                    "created_at": created_at,
+                },
+            )
+            entry["total_count"] += 1
+            tags = listing.get("tags") or []
+            if isinstance(tags, str):
+                try:
+                    tags = json.loads(tags)
+                except Exception:
+                    tags = [tags]
+            if "가격인하" in tags:
+                entry["price_down_count"] += 1
+        return [row for row in grouped.values() if row["total_count"] >= 2]
+
     def replace_crawl_region_stats(
         self,
         session_id: str,
