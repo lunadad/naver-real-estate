@@ -314,6 +314,18 @@ class Database:
                 UNIQUE(session_id, region, district)
             );
 
+            CREATE TABLE IF NOT EXISTS crawl_building_stats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                region TEXT NOT NULL,
+                district TEXT NOT NULL,
+                building_name TEXT NOT NULL,
+                total_count INTEGER NOT NULL DEFAULT 0,
+                price_down_count INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT,
+                UNIQUE(session_id, district, building_name)
+            );
+
             CREATE TABLE IF NOT EXISTS alert_rules (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 client_id TEXT NOT NULL,
@@ -351,6 +363,8 @@ class Database:
             CREATE INDEX IF NOT EXISTS idx_crawled_at ON listings(crawled_at);
             CREATE INDEX IF NOT EXISTS idx_session ON listings(crawl_session);
             CREATE INDEX IF NOT EXISTS idx_crawl_region_stats_session ON crawl_region_stats(session_id);
+            CREATE INDEX IF NOT EXISTS idx_building_stats_lookup ON crawl_building_stats(district, building_name, created_at);
+            CREATE INDEX IF NOT EXISTS idx_building_stats_created_at ON crawl_building_stats(created_at);
             CREATE INDEX IF NOT EXISTS idx_alert_rules_client_id ON alert_rules(client_id);
             CREATE INDEX IF NOT EXISTS idx_alert_deliveries_alert_id ON alert_deliveries(alert_id);
             CREATE INDEX IF NOT EXISTS idx_push_subscriptions_client_id ON push_subscriptions(client_id);
@@ -413,6 +427,19 @@ class Database:
             )
             """,
             """
+            CREATE TABLE IF NOT EXISTS crawl_building_stats (
+                id BIGSERIAL PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                region TEXT NOT NULL,
+                district TEXT NOT NULL,
+                building_name TEXT NOT NULL,
+                total_count INTEGER NOT NULL DEFAULT 0,
+                price_down_count INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP,
+                UNIQUE(session_id, district, building_name)
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS alert_rules (
                 id BIGSERIAL PRIMARY KEY,
                 client_id TEXT NOT NULL,
@@ -452,6 +479,8 @@ class Database:
             "CREATE INDEX IF NOT EXISTS idx_crawled_at ON listings(crawled_at)",
             "CREATE INDEX IF NOT EXISTS idx_session ON listings(crawl_session)",
             "CREATE INDEX IF NOT EXISTS idx_crawl_region_stats_session ON crawl_region_stats(session_id)",
+            "CREATE INDEX IF NOT EXISTS idx_building_stats_lookup ON crawl_building_stats(district, building_name, created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_building_stats_created_at ON crawl_building_stats(created_at)",
             "CREATE INDEX IF NOT EXISTS idx_alert_rules_client_id ON alert_rules(client_id)",
             "CREATE INDEX IF NOT EXISTS idx_alert_deliveries_alert_id ON alert_deliveries(alert_id)",
             "CREATE INDEX IF NOT EXISTS idx_push_subscriptions_client_id ON push_subscriptions(client_id)",
