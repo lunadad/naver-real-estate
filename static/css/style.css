@@ -847,6 +847,18 @@ a { color: var(--accent); text-decoration: none; }
 .badge-trade-jeon { background: rgba(63,185,80,0.1); color: var(--up); }
 .badge-trade-month { background: rgba(210,153,34,0.1); color: var(--warn); }
 .badge-date { background: transparent; color: var(--text3); font-weight: 400; }
+.badge-building-change {
+  background: rgba(210,153,34,0.12);
+  color: var(--warn);
+  border: 1px solid rgba(210,153,34,0.35);
+  font-weight: 600;
+}
+.badge-building-change-price_down,
+.badge-building-change-both {
+  background: var(--urgent-bg);
+  color: var(--urgent);
+  border-color: rgba(248,81,73,0.35);
+}
 .naver-link-icon {
   margin-left: auto;
   font-size: 11px;

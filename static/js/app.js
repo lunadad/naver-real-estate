@@ -883,6 +883,7 @@ function renderListings(data) {
           <span class="badge badge-urgent">${hasPriceDown ? '가격인하' : '급매'}</span>
           <span class="badge ${tradeBadgeClass(l.trade_type)}">${escHtml(l.trade_type)}</span>
           <span class="badge badge-type">${escHtml(l.property_type)}</span>
+          ${l.building_change_badge ? `<span class="badge badge-building-change badge-building-change-${escHtml(l.building_change_badge.kind)}" title="직전 일별 스냅샷 대비">${escHtml(l.building_change_badge.label)}</span>` : ''}
         </div>
         <div class="card-date-chip">확인 ${formatDate(l.confirmed_date) || '—'}</div>
       </div>

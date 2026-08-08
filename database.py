@@ -1627,6 +1627,78 @@ class Database:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def get_latest_building_changes(self, buildings: Sequence[Tuple[str, str]]):
+        """여러 단지의 최신/직전 일별 스냅샷을 한 쿼리로 반환한다."""
+        keys = list(
+            dict.fromkeys(
+                (str(district or "").strip(), str(building_name or "").strip())
+                for district, building_name in buildings
+                if str(district or "").strip() and str(building_name or "").strip()
+            )
+        )
+        if not keys:
+            return {}
+
+        key_conditions = " OR ".join(
+            ["(cb.district = ? AND cb.building_name = ?)"] * len(keys)
+        )
+        params = [value for key in keys for value in key]
+        with self.get_connection() as conn:
+            rows = conn.execute(
+                f"""
+                WITH ranked AS (
+                    SELECT cb.district,
+                           cb.building_name,
+                           cb.total_count,
+                           cb.price_down_count,
+                           cb.session_id,
+                           ch.crawled_at,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY cb.district, cb.building_name
+                               ORDER BY ch.crawled_at DESC
+                           ) AS snapshot_rank
+                    FROM crawl_building_stats cb
+                    JOIN crawl_history ch ON ch.session_id = cb.session_id
+                    WHERE ch.status = 'success'
+                      AND COALESCE(ch.source, 'naver') <> 'demo'
+                      AND ({key_conditions})
+                )
+                SELECT *
+                FROM ranked
+                WHERE snapshot_rank <= 2
+                ORDER BY district, building_name, snapshot_rank
+                """,
+                params,
+            ).fetchall()
+
+        grouped = {}
+        for row in rows:
+            key = (row["district"], row["building_name"])
+            grouped.setdefault(key, []).append(row)
+
+        changes = {}
+        for key, snapshots in grouped.items():
+            if len(snapshots) < 2:
+                continue
+            current, previous = snapshots[0], snapshots[1]
+            current_total = int(current["total_count"] or 0)
+            previous_total = int(previous["total_count"] or 0)
+            current_price_down = int(current["price_down_count"] or 0)
+            previous_price_down = int(previous["price_down_count"] or 0)
+            changes[key] = {
+                "current_session_id": current["session_id"],
+                "previous_session_id": previous["session_id"],
+                "current_crawled_at": current["crawled_at"],
+                "previous_crawled_at": previous["crawled_at"],
+                "current_total": current_total,
+                "previous_total": previous_total,
+                "total_diff": current_total - previous_total,
+                "current_price_down": current_price_down,
+                "previous_price_down": previous_price_down,
+                "price_down_diff": current_price_down - previous_price_down,
+            }
+        return changes
+
     def get_last_crawl(self, prefer_visible: bool = False):
         with self.get_connection() as conn:
             row = None

@@ -420,6 +420,54 @@ def build_building_history_series(district, building_name, days=14):
     return series
 
 
+def build_building_change_badge(change):
+    if not change:
+        return None
+
+    total_diff = int(change.get("total_diff") or 0)
+    previous_total = int(change.get("previous_total") or 0)
+    price_down_diff = int(change.get("price_down_diff") or 0)
+    increase_ratio = total_diff / previous_total if previous_total > 0 else 0
+
+    # +20%만 쓰면 2→3건 같은 작은 모수가 과장되므로 최소 +3건을 함께 요구한다.
+    # 반대로 대단지는 비율이 작아도 +5건이면 사용자가 체감할 변화라 별도로 포착한다.
+    notable_total_increase = total_diff >= 5 or (
+        total_diff >= 3 and increase_ratio >= 0.2
+    )
+    # 가격인하는 전체 매물보다 희소하므로 절대 +3건이면 급증으로 간주한다.
+    notable_price_down = price_down_diff >= 3
+    if not notable_total_increase and not notable_price_down:
+        return None
+
+    parts = []
+    if notable_total_increase:
+        parts.append(f"매물 +{total_diff}")
+    if notable_price_down:
+        parts.append(f"인하 +{price_down_diff}")
+    return {
+        "kind": "both" if len(parts) == 2 else ("total" if notable_total_increase else "price_down"),
+        "label": "🔥 " + " · ".join(parts),
+        "total_diff": total_diff,
+        "price_down_diff": price_down_diff,
+    }
+
+
+def add_building_change_badges(listings_result):
+    listings = listings_result.get("listings") or []
+    keys = [
+        (listing.get("district"), listing.get("building_name"))
+        for listing in listings
+        if listing.get("district") and listing.get("building_name")
+    ]
+    changes = db.get_latest_building_changes(keys)
+    for listing in listings:
+        key = (listing.get("district"), listing.get("building_name"))
+        badge = build_building_change_badge(changes.get(key))
+        if badge:
+            listing["building_change_badge"] = badge
+    return listings_result
+
+
 def build_push_payload(matches):
     first = matches[0]
     extra_count = max(0, len(matches) - 1)
@@ -562,6 +610,7 @@ def get_listings():
         price_down_only=request.args.get("price_down_only", "false").lower() == "true",
         tags=parse_tag_args(request.args.get("tags", "")),
     )
+    add_building_change_badges(result)
     return jsonify(serialize_api_value(result))
 
 
