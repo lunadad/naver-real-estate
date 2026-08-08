@@ -347,6 +347,7 @@ function renderBuildingTrendBody(items) {
     return `
       <div class="building-trend-bar-wrap has-tooltip" data-tooltip="${escHtml(tooltip)}">
         <div class="building-trend-bar ${hasValue ? directionClass : 'missing'}" style="height:${height}px"></div>
+        <span class="building-trend-mobile-value">${hasValue ? escHtml(fmtNum(value)) : '—'}</span>
       </div>
     `;
   }).join('');
