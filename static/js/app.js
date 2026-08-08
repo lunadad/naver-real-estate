@@ -4,6 +4,7 @@
 
 const APP_NAME = '부동산 급매 알리미';
 const ALERT_POLL_MS = 60000;
+let modalTrigger = null;
 
 // ── State ──────────────────────────────────────────────────────────────────
 const state = {
@@ -298,15 +299,17 @@ function renderHeroDailySeries(series) {
   }).join('');
 }
 
-async function openBuildingTrendModal(district, buildingName) {
+async function openBuildingTrendModal(district, buildingName, triggerElement = null) {
   const overlay = document.getElementById('modal-overlay');
   const titleEl = document.getElementById('modal-title');
   const bodyEl = document.getElementById('modal-body');
   if (!overlay || !titleEl || !bodyEl) return;
 
+  modalTrigger = triggerElement;
   titleEl.textContent = buildingName;
   bodyEl.innerHTML = '<div class="building-trend-loading">불러오는 중…</div>';
   overlay.classList.remove('hidden');
+  document.getElementById('modal-close')?.focus();
 
   try {
     const data = await api(`/api/building-history?district=${encodeURIComponent(district)}&building_name=${encodeURIComponent(buildingName)}&days=14`);
@@ -314,6 +317,38 @@ async function openBuildingTrendModal(district, buildingName) {
   } catch (err) {
     console.warn('Building trend load error:', err);
     bodyEl.innerHTML = '<div class="building-trend-empty">추이를 불러오지 못했습니다.</div>';
+  }
+}
+
+function closeModal() {
+  const overlay = document.getElementById('modal-overlay');
+  if (!overlay || overlay.classList.contains('hidden')) return;
+
+  overlay.classList.add('hidden');
+  if (modalTrigger?.isConnected) modalTrigger.focus();
+  modalTrigger = null;
+}
+
+function trapModalFocus(event) {
+  if (event.key !== 'Tab') return;
+
+  const overlay = document.getElementById('modal-overlay');
+  const modal = document.getElementById('modal');
+  if (!overlay || overlay.classList.contains('hidden') || !modal) return;
+
+  const focusableElements = Array.from(modal.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  ));
+  if (!focusableElements.length) return;
+
+  const first = focusableElements[0];
+  const last = focusableElements[focusableElements.length - 1];
+  if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) {
+    event.preventDefault();
+    first.focus();
   }
 }
 
@@ -896,7 +931,7 @@ function renderListings(data) {
       </div>
       <div class="card-name-row">
         <div class="card-name" title="${escHtml(l.building_name)}">${escHtml(l.building_name)}</div>
-        ${l.district && l.building_name ? `<button type="button" class="card-trend-btn" data-district="${escHtml(l.district)}" data-building-name="${escHtml(l.building_name)}" title="일별 매물수 추이">📈</button>` : ''}
+        ${l.district && l.building_name ? `<button type="button" class="card-trend-btn" data-district="${escHtml(l.district)}" data-building-name="${escHtml(l.building_name)}" title="일별 매물수 추이" aria-label="일별 매물수 추이 보기">📈</button>` : ''}
       </div>
       <div class="card-location-line">${escHtml(compactRegion)}</div>
       <div class="card-meta">
@@ -1727,7 +1762,7 @@ function wireEvents() {
     const trendBtn = e.target.closest('.card-trend-btn');
     if (trendBtn) {
       e.stopPropagation();
-      openBuildingTrendModal(trendBtn.dataset.district, trendBtn.dataset.buildingName);
+      openBuildingTrendModal(trendBtn.dataset.district, trendBtn.dataset.buildingName, trendBtn);
       return;
     }
     const card = e.target.closest('.listing-card');
@@ -1736,11 +1771,9 @@ function wireEvents() {
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
   });
 
-  document.getElementById('modal-close')?.addEventListener('click', () => {
-    document.getElementById('modal-overlay')?.classList.add('hidden');
-  });
+  document.getElementById('modal-close')?.addEventListener('click', closeModal);
   document.getElementById('modal-overlay')?.addEventListener('click', e => {
-    if (e.target.id === 'modal-overlay') e.target.classList.add('hidden');
+    if (e.target.id === 'modal-overlay') closeModal();
   });
 
   // Trend / region lists → district filter (delegated)
@@ -1835,7 +1868,8 @@ function wireEvents() {
 
   // ESC 키
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') document.getElementById('modal-overlay')?.classList.add('hidden');
+    if (e.key === 'Escape') closeModal();
+    trapModalFocus(e);
     if (e.key === 'Escape' && state.mobileSidebarOpen) setMobileSidebar(false);
   });
 
