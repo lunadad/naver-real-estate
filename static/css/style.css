@@ -1103,6 +1103,18 @@ a { color: var(--accent); text-decoration: none; }
 }
 .building-trend-summary strong { font-family: var(--font-mono); }
 
+.building-trend-comparison {
+  margin-top: -7px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: var(--text2);
+}
+.building-trend-comparison strong { font-family: var(--font-mono); }
+.building-trend-comparison.up strong { color: var(--urgent); }
+.building-trend-comparison.down strong { color: var(--up); }
+.building-trend-comparison.flat strong { color: var(--text2); }
+.building-trend-comparison.muted { color: var(--text3); }
+
 .building-trend-chart {
   display: grid;
   grid-template-columns: repeat(14, minmax(0, 1fr));

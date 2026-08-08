@@ -420,6 +420,34 @@ def build_building_history_series(district, building_name, days=14):
     return series
 
 
+def build_building_history_summary(series):
+    """오늘을 제외한 직전 7개 달력일의 유효 스냅샷 평균과 오늘을 비교한다."""
+    if not series or series[-1].get("total_count") is None:
+        return None
+
+    baseline_values = [
+        float(item["total_count"])
+        for item in series[-8:-1]
+        if item.get("total_count") is not None
+    ]
+    if not baseline_values:
+        return None
+
+    today_count = float(series[-1]["total_count"])
+    average_count = sum(baseline_values) / len(baseline_values)
+
+    def rounded_count(value):
+        rounded = round(value, 1)
+        return int(rounded) if rounded.is_integer() else rounded
+
+    return {
+        "today_count": rounded_count(today_count),
+        "average_count": rounded_count(average_count),
+        "difference": rounded_count(today_count - average_count),
+        "sample_count": len(baseline_values),
+    }
+
+
 def build_building_change_badge(change):
     if not change:
         return None
@@ -824,6 +852,7 @@ def get_building_history():
             "district": district,
             "building_name": building_name,
             "days": serialize_api_value(series),
+            "summary": serialize_api_value(build_building_history_summary(series)),
         },
         max_age=300,
     )

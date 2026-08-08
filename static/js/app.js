@@ -310,7 +310,12 @@ async function openBuildingTrendModal(district, buildingName) {
 
   try {
     const data = await api(`/api/building-history?district=${encodeURIComponent(district)}&building_name=${encodeURIComponent(buildingName)}&days=14`);
-    bodyEl.innerHTML = renderBuildingTrendBody(data.days || [], district, buildingName);
+    bodyEl.innerHTML = renderBuildingTrendBody(
+      data.days || [],
+      district,
+      buildingName,
+      data.summary || null
+    );
   } catch (err) {
     console.warn('Building trend load error:', err);
     bodyEl.innerHTML = '<div class="building-trend-empty">추이를 불러오지 못했습니다.</div>';
@@ -329,7 +334,7 @@ function renderBuildingChangeAlertControl(district, buildingName) {
   `;
 }
 
-function renderBuildingTrendBody(items, district = '', buildingName = '') {
+function renderBuildingTrendBody(items, district = '', buildingName = '', summary = null) {
   const validItems = items.filter(item => hasNumericValue(item));
   const alertControl = renderBuildingChangeAlertControl(district, buildingName);
 
@@ -365,12 +370,25 @@ function renderBuildingTrendBody(items, district = '', buildingName = '') {
   }).join('');
 
   const labels = items.map(item => `<span class="building-trend-day">${escHtml(item.label || '')}</span>`).join('');
+  const comparison = summary
+    ? (() => {
+        const difference = Number(summary.difference || 0);
+        const sign = difference > 0 ? '+' : '';
+        const direction = difference > 0 ? 'up' : (difference < 0 ? 'down' : 'flat');
+        return `
+          <div class="building-trend-comparison ${direction}">
+            최근 7일 평균 ${fmtNum(summary.average_count)}건 대비 오늘
+            <strong>${sign}${fmtNum(difference)}건</strong>
+          </div>`;
+      })()
+    : '<div class="building-trend-comparison muted">최근 7일 비교 데이터가 아직 부족합니다.</div>';
 
   return `
     <div class="building-trend-summary">
       현재 매물수 <strong>${fmtNum(Number(latest.total_count || 0))}건</strong>
       · 가격인하 <strong>${fmtNum(Number(latest.price_down_count || 0))}건</strong>
     </div>
+    ${comparison}
     <div class="building-trend-chart">${bars}</div>
     <div class="building-trend-labels">${labels}</div>
     ${alertControl}

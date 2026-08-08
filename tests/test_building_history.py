@@ -145,6 +145,37 @@ class BuildingHistoryAPITest(unittest.TestCase):
         self.assertEqual(payload["days"][-1]["total_count"], 5)
         self.assertIn("max-age=300", response.headers.get("Cache-Control", ""))
 
+    def test_route_returns_today_vs_previous_seven_day_average(self):
+        for days_ago, total_count in enumerate([15, 14, 13, 12, 11, 10, 9, 8]):
+            self._seed_day(
+                f"s-{days_ago}",
+                days_ago,
+                "서초구",
+                "래미안원베일리",
+                total_count,
+                0,
+            )
+
+        payload = self.client.get(
+            "/api/building-history",
+            query_string={"district": "서초구", "building_name": "래미안원베일리", "days": 14},
+        ).get_json()
+
+        self.assertEqual(payload["summary"]["today_count"], 15)
+        self.assertEqual(payload["summary"]["average_count"], 11)
+        self.assertEqual(payload["summary"]["difference"], 4)
+        self.assertEqual(payload["summary"]["sample_count"], 7)
+
+    def test_route_summary_is_none_without_today_snapshot(self):
+        self._seed_day("s-yesterday", 1, "서초구", "래미안원베일리", 10, 0)
+
+        payload = self.client.get(
+            "/api/building-history",
+            query_string={"district": "서초구", "building_name": "래미안원베일리", "days": 14},
+        ).get_json()
+
+        self.assertIsNone(payload["summary"])
+
 
 if __name__ == "__main__":
     unittest.main()
