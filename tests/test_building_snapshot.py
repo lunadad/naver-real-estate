@@ -114,6 +114,37 @@ class BuildingStatsRowsTest(unittest.TestCase):
         self.assertEqual(rows[0]["building_name"], "반포자이")
         self.assertEqual(rows[0]["total_count"], 2)  # B3, B4만 집계됨
 
+    def test_generic_property_type_building_names_are_skipped(self):
+        generic_names = [
+            "아파트",
+            "오피스텔",
+            "빌라/연립",
+            "빌라",
+            "연립",
+            "다세대주택",
+            "단독/다가구",
+            "단독주택",
+            "상가/업무",
+            "상가주택",
+            "원룸",
+        ]
+        listings = [
+            make_listing(f"G{index}-1", building_name=name)
+            for index, name in enumerate(generic_names)
+        ] + [
+            make_listing(f"G{index}-2", building_name=name)
+            for index, name in enumerate(generic_names)
+        ] + [
+            make_listing("B1", building_name="한남더힐"),
+            make_listing("B2", building_name="한남더힐"),
+        ]
+
+        rows = self.db._build_building_stats_rows("session-1", listings, "2026-08-06T09:00:00")
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["building_name"], "한남더힐")
+        self.assertEqual(rows[0]["total_count"], 2)
+
     def test_price_down_tag_is_counted(self):
         listings = [
             make_listing("B1", building_name="반포자이", tags=["가격인하"]),

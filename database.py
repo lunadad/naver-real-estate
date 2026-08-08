@@ -20,6 +20,31 @@ except ImportError:  # pragma: no cover - optional for sqlite-only use
 
 logger = logging.getLogger(__name__)
 
+# 물리적으로 다른 주택이 같은 이름으로 합쳐지는 것을 막기 위해,
+# 고유 건물명이 아닌 매물 유형명은 건물별 스냅샷 집계에서 제외한다.
+GENERIC_BUILDING_NAMES = frozenset(
+    {
+        "아파트",
+        "오피스텔",
+        "빌라/연립",
+        "빌라",
+        "연립",
+        "연립주택",
+        "다세대",
+        "다세대주택",
+        "단독/다가구",
+        "단독주택",
+        "다가구",
+        "다가구주택",
+        "주택",
+        "상가/업무",
+        "상가",
+        "상가주택",
+        "근린상가",
+        "원룸",
+    }
+)
+
 
 def ensure_postgres_sslmode(database_url: str) -> str:
     if not database_url.startswith(("postgresql://", "postgres://")):
@@ -678,6 +703,8 @@ class Database:
             district = str(listing.get("district") or "").strip()
             building_name = str(listing.get("building_name") or "").strip()
             if not district or not building_name:
+                continue
+            if building_name in GENERIC_BUILDING_NAMES:
                 continue
             key = (district, building_name)
             entry = grouped.setdefault(
