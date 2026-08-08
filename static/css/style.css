@@ -1070,6 +1070,52 @@ a { color: var(--accent); text-decoration: none; }
   min-height: 94px;
   position: relative;
 }
+.building-trend-bar-wrap.has-tooltip {
+  cursor: help;
+}
+.building-trend-bar-wrap.has-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(4px);
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: rgba(17, 24, 39, 0.94);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  z-index: 3;
+}
+.building-trend-bar-wrap.has-tooltip::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  width: 8px;
+  height: 8px;
+  background: rgba(17, 24, 39, 0.94);
+  transform: translateX(-50%) translateY(4px) rotate(45deg);
+  opacity: 0;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+.building-trend-bar-wrap.has-tooltip:hover::after,
+.building-trend-bar-wrap.has-tooltip:hover::before {
+  opacity: 1;
+}
+.building-trend-bar-wrap.has-tooltip:hover::after {
+  transform: translateX(-50%) translateY(0);
+}
+.building-trend-bar-wrap.has-tooltip:hover::before {
+  transform: translateX(-50%) translateY(0) rotate(45deg);
+}
 .building-trend-bar {
   width: 100%;
   max-width: 16px;
