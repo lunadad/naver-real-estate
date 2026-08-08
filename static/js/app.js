@@ -222,6 +222,10 @@ function formatSeoulTrendSummary(items) {
     .join(', ');
 }
 
+function hasNumericValue(item, field = 'total_count') {
+  return item != null && item[field] != null && Number.isFinite(Number(item[field]));
+}
+
 function renderHeroDailySeries(series) {
   const chartEl = document.getElementById('hero-daily-chart');
   const labelsEl = document.getElementById('hero-daily-labels');
@@ -231,7 +235,7 @@ function renderHeroDailySeries(series) {
   if (!chartEl || !labelsEl || !emptyEl || !currentEl || !changeEl) return;
 
   const items = Array.isArray(series) ? series.slice(-7) : [];
-  const validItems = items.filter(item => Number.isFinite(Number(item.total_count)));
+  const validItems = items.filter(item => hasNumericValue(item));
 
   if (!validItems.length) {
     chartEl.innerHTML = '';
@@ -266,8 +270,8 @@ function renderHeroDailySeries(series) {
 
   let previousValidValue = null;
   chartEl.innerHTML = items.map((item, index) => {
-    const value = Number(item.total_count);
-    const hasValue = Number.isFinite(value);
+    const hasValue = hasNumericValue(item);
+    const value = hasValue ? Number(item.total_count) : NaN;
     const showTooltip = index < items.length - 1;
     let directionClass = 'flat';
     if (hasValue && previousValidValue != null) {
@@ -289,7 +293,7 @@ function renderHeroDailySeries(series) {
   }).join('');
 
   labelsEl.innerHTML = items.map(item => {
-    const missing = !Number.isFinite(Number(item.total_count));
+    const missing = !hasNumericValue(item);
     return `<span class="hero-mini-chart-day ${missing ? 'missing' : ''}">${escHtml(item.label || '')}</span>`;
   }).join('');
 }
@@ -308,12 +312,13 @@ async function openBuildingTrendModal(district, buildingName) {
     const data = await api(`/api/building-history?district=${encodeURIComponent(district)}&building_name=${encodeURIComponent(buildingName)}&days=14`);
     bodyEl.innerHTML = renderBuildingTrendBody(data.days || []);
   } catch (err) {
+    console.warn('Building trend load error:', err);
     bodyEl.innerHTML = '<div class="building-trend-empty">추이를 불러오지 못했습니다.</div>';
   }
 }
 
 function renderBuildingTrendBody(items) {
-  const validItems = items.filter(item => Number.isFinite(Number(item.total_count)));
+  const validItems = items.filter(item => hasNumericValue(item));
 
   if (!validItems.length) {
     return '<div class="building-trend-empty">데이터를 모으는 중입니다. 내일부터 표시됩니다.</div>';
@@ -327,8 +332,8 @@ function renderBuildingTrendBody(items) {
 
   let previousValidValue = null;
   const bars = items.map(item => {
-    const value = Number(item.total_count);
-    const hasValue = Number.isFinite(value);
+    const hasValue = hasNumericValue(item);
+    const value = hasValue ? Number(item.total_count) : NaN;
     let directionClass = 'flat';
     if (hasValue && previousValidValue != null) {
       if (value > previousValidValue) directionClass = 'up';

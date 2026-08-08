@@ -9,6 +9,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from database import Database  # noqa: E402
+
 
 class BuildingHistoryAPITest(unittest.TestCase):
     """app.py를 임포트하기 전에 환경변수로 로컬 SQLite 모드를 강제한다."""
@@ -26,7 +28,15 @@ class BuildingHistoryAPITest(unittest.TestCase):
 
         import app as app_module  # noqa: E402
 
+        # `app` is a process-wide sys.modules-cached singleton: `import app` only
+        # re-executes on the *first* import in the process, so whichever test file's
+        # setUpClass runs first "wins" the shared app_module.db instance and later
+        # imports' env vars (DB_PATH etc.) are silently inert. Rebind db explicitly
+        # here so this file's tests always use their own isolated tempdir/db,
+        # independent of import order or what any other test file already did to
+        # the shared `app` module.
         cls.app_module = app_module
+        app_module.db = Database(db_path=db_path, skip_price_backfill=True)
         cls.client = app_module.app.test_client()
         cls.today = datetime.now(app_module.KST).date()
 
