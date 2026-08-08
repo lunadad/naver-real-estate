@@ -479,6 +479,41 @@ a { color: var(--accent); text-decoration: none; }
   margin-top: 2px;
 }
 
+.building-change-alert-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 11px;
+}
+.building-change-alert-control label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.building-change-threshold {
+  width: 52px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg3);
+  color: var(--text);
+  text-align: center;
+}
+.building-change-alert-btn {
+  padding: 6px 9px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+.building-change-alert-btn:disabled { opacity: 0.55; }
+
 .alert-rule-item {
   background: var(--bg3);
   border: 1px solid var(--border);
@@ -847,6 +882,18 @@ a { color: var(--accent); text-decoration: none; }
 .badge-trade-jeon { background: rgba(63,185,80,0.1); color: var(--up); }
 .badge-trade-month { background: rgba(210,153,34,0.1); color: var(--warn); }
 .badge-date { background: transparent; color: var(--text3); font-weight: 400; }
+.badge-building-change {
+  background: rgba(210,153,34,0.12);
+  color: var(--warn);
+  border: 1px solid rgba(210,153,34,0.35);
+  font-weight: 600;
+}
+.badge-building-change-price_down,
+.badge-building-change-both {
+  background: var(--urgent-bg);
+  color: var(--urgent);
+  border-color: rgba(248,81,73,0.35);
+}
 .naver-link-icon {
   margin-left: auto;
   font-size: 11px;
@@ -1055,6 +1102,18 @@ a { color: var(--accent); text-decoration: none; }
   margin-bottom: 12px;
 }
 .building-trend-summary strong { font-family: var(--font-mono); }
+
+.building-trend-comparison {
+  margin-top: -7px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: var(--text2);
+}
+.building-trend-comparison strong { font-family: var(--font-mono); }
+.building-trend-comparison.up strong { color: var(--urgent); }
+.building-trend-comparison.down strong { color: var(--up); }
+.building-trend-comparison.flat strong { color: var(--text2); }
+.building-trend-comparison.muted { color: var(--text3); }
 
 .building-trend-chart {
   display: grid;

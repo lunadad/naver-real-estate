@@ -4,7 +4,7 @@ import logging
 import sqlite3
 import re
 from collections import Counter
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Optional, Sequence, Tuple
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -273,6 +273,14 @@ class Database:
             if "rent_sort_value" not in cols:
                 conn.execute("ALTER TABLE listings ADD COLUMN rent_sort_value BIGINT")
 
+            alert_cols = self._get_table_columns(conn, "alert_rules")
+            if "building_name" not in alert_cols:
+                conn.execute("ALTER TABLE alert_rules ADD COLUMN building_name TEXT")
+            if "min_daily_change" not in alert_cols:
+                conn.execute(
+                    "ALTER TABLE alert_rules ADD COLUMN min_daily_change INTEGER DEFAULT 0"
+                )
+
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_price_sort ON listings(price_sort_value)"
             )
@@ -359,6 +367,8 @@ class Database:
                 district TEXT,
                 property_type TEXT,
                 trade_type TEXT,
+                building_name TEXT,
+                min_daily_change INTEGER DEFAULT 0,
                 enabled INTEGER DEFAULT 1,
                 created_at TEXT
             );
@@ -369,6 +379,14 @@ class Database:
                 article_no TEXT NOT NULL,
                 delivered_at TEXT,
                 UNIQUE(alert_id, article_no)
+            );
+
+            CREATE TABLE IF NOT EXISTS building_alert_deliveries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                alert_id INTEGER NOT NULL,
+                session_id TEXT NOT NULL,
+                delivered_at TEXT,
+                UNIQUE(alert_id, session_id)
             );
 
             CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -392,6 +410,7 @@ class Database:
             CREATE INDEX IF NOT EXISTS idx_building_stats_created_at ON crawl_building_stats(created_at);
             CREATE INDEX IF NOT EXISTS idx_alert_rules_client_id ON alert_rules(client_id);
             CREATE INDEX IF NOT EXISTS idx_alert_deliveries_alert_id ON alert_deliveries(alert_id);
+            CREATE INDEX IF NOT EXISTS idx_building_alert_deliveries_alert_id ON building_alert_deliveries(alert_id);
             CREATE INDEX IF NOT EXISTS idx_push_subscriptions_client_id ON push_subscriptions(client_id);
             """
         )
@@ -473,6 +492,8 @@ class Database:
                 district TEXT,
                 property_type TEXT,
                 trade_type TEXT,
+                building_name TEXT,
+                min_daily_change INTEGER DEFAULT 0,
                 enabled INTEGER DEFAULT 1,
                 created_at TIMESTAMP
             )
@@ -484,6 +505,15 @@ class Database:
                 article_no TEXT NOT NULL,
                 delivered_at TIMESTAMP,
                 UNIQUE(alert_id, article_no)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS building_alert_deliveries (
+                id BIGSERIAL PRIMARY KEY,
+                alert_id BIGINT NOT NULL,
+                session_id TEXT NOT NULL,
+                delivered_at TIMESTAMP,
+                UNIQUE(alert_id, session_id)
             )
             """,
             """
@@ -508,6 +538,7 @@ class Database:
             "CREATE INDEX IF NOT EXISTS idx_building_stats_created_at ON crawl_building_stats(created_at)",
             "CREATE INDEX IF NOT EXISTS idx_alert_rules_client_id ON alert_rules(client_id)",
             "CREATE INDEX IF NOT EXISTS idx_alert_deliveries_alert_id ON alert_deliveries(alert_id)",
+            "CREATE INDEX IF NOT EXISTS idx_building_alert_deliveries_alert_id ON building_alert_deliveries(alert_id)",
             "CREATE INDEX IF NOT EXISTS idx_push_subscriptions_client_id ON push_subscriptions(client_id)",
         ]
         for statement in statements:
@@ -654,7 +685,11 @@ class Database:
         district: str,
         property_type: str,
         trade_type: str,
+        building_name: str = "",
+        min_daily_change: int = 0,
     ) -> str:
+        if building_name and min_daily_change > 0:
+            return f"{building_name} 하루 ±{min_daily_change}건"
         parts = []
         if keyword:
             parts.append(keyword)
@@ -843,6 +878,8 @@ class Database:
         district: str = "",
         property_type: str = "",
         trade_type: str = "",
+        building_name: str = "",
+        min_daily_change: int = 0,
         name: str = "",
     ):
         client_id = self._normalize_alert_value(client_id)
@@ -850,8 +887,15 @@ class Database:
         district = self._normalize_alert_value(district)
         property_type = self._normalize_alert_value(property_type)
         trade_type = self._normalize_alert_value(trade_type)
+        building_name = self._normalize_alert_value(building_name)
+        min_daily_change = max(0, int(min_daily_change or 0))
         name = self._normalize_alert_value(name) or self._build_alert_name(
-            keyword, district, property_type, trade_type
+            keyword,
+            district,
+            property_type,
+            trade_type,
+            building_name,
+            min_daily_change,
         )
 
         with self.get_connection() as conn:
@@ -859,8 +903,9 @@ class Database:
                 cursor = conn.execute(
                     """
                     INSERT INTO alert_rules
-                    (client_id, name, keyword, district, property_type, trade_type, enabled, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+                    (client_id, name, keyword, district, property_type, trade_type,
+                     building_name, min_daily_change, enabled, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
                     RETURNING id
                     """,
                     (
@@ -870,6 +915,8 @@ class Database:
                         district,
                         property_type,
                         trade_type,
+                        building_name,
+                        min_daily_change,
                         datetime.now().isoformat(),
                     ),
                 )
@@ -878,8 +925,9 @@ class Database:
                 cursor = conn.execute(
                     """
                     INSERT INTO alert_rules
-                    (client_id, name, keyword, district, property_type, trade_type, enabled, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+                    (client_id, name, keyword, district, property_type, trade_type,
+                     building_name, min_daily_change, enabled, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
                     """,
                     (
                         client_id,
@@ -888,6 +936,8 @@ class Database:
                         district,
                         property_type,
                         trade_type,
+                        building_name,
+                        min_daily_change,
                         datetime.now().isoformat(),
                     ),
                 )
@@ -931,6 +981,9 @@ class Database:
 
             conn.execute("DELETE FROM alert_deliveries WHERE alert_id = ?", (alert_id,))
             conn.execute(
+                "DELETE FROM building_alert_deliveries WHERE alert_id = ?", (alert_id,)
+            )
+            conn.execute(
                 "DELETE FROM alert_rules WHERE client_id = ? AND id = ?",
                 (client_id, alert_id),
             )
@@ -946,6 +999,7 @@ class Database:
             SELECT *
             FROM alert_rules
             WHERE client_id = ? AND enabled = 1
+              AND COALESCE(min_daily_change, 0) = 0
             ORDER BY created_at DESC
             """,
             (client_id,),
@@ -1013,6 +1067,94 @@ class Database:
         )
         return matches[:limit]
 
+    @staticmethod
+    def _alert_datetime(value):
+        if isinstance(value, datetime):
+            parsed = value
+        else:
+            try:
+                parsed = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+            except ValueError:
+                return None
+        if parsed.tzinfo is not None:
+            parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+        return parsed
+
+    def _collect_building_change_alert_matches(
+        self, conn: ConnectionWrapper, client_id: str
+    ):
+        rules = conn.execute(
+            """
+            SELECT *
+            FROM alert_rules
+            WHERE client_id = ? AND enabled = 1
+              AND COALESCE(min_daily_change, 0) > 0
+            ORDER BY created_at DESC
+            """,
+            (client_id,),
+        ).fetchall()
+        if not rules:
+            return []
+
+        changes = self._get_latest_building_changes(
+            conn,
+            [(rule["district"], rule["building_name"]) for rule in rules],
+        )
+        placeholders = ", ".join(["?"] * len(rules))
+        delivered_rows = conn.execute(
+            f"""
+            SELECT alert_id, session_id
+            FROM building_alert_deliveries
+            WHERE alert_id IN ({placeholders})
+            """,
+            [rule["id"] for rule in rules],
+        ).fetchall()
+        delivered = {(row["alert_id"], row["session_id"]) for row in delivered_rows}
+
+        matches_by_event = {}
+        for rule in rules:
+            key = (rule["district"], rule["building_name"])
+            change = changes.get(key)
+            if not change or abs(change["total_diff"]) < int(rule["min_daily_change"]):
+                continue
+
+            current_at = self._alert_datetime(change["current_crawled_at"])
+            previous_at = self._alert_datetime(change["previous_crawled_at"])
+            created_at = self._alert_datetime(rule["created_at"])
+            if not current_at or not previous_at or (current_at.date() - previous_at.date()).days != 1:
+                continue
+            if created_at and current_at < created_at:
+                continue
+
+            session_id = change["current_session_id"]
+            if (rule["id"], session_id) in delivered:
+                continue
+
+            event_key = (session_id, rule["district"], rule["building_name"])
+            if event_key not in matches_by_event:
+                total_diff = change["total_diff"]
+                matches_by_event[event_key] = {
+                    "event_type": "building_daily_change",
+                    "article_no": f"building-change:{session_id}:{rule['district']}:{rule['building_name']}",
+                    "region": "",
+                    "district": rule["district"],
+                    "building_name": rule["building_name"],
+                    "previous_count": change["previous_total"],
+                    "current_count": change["current_total"],
+                    "change_count": total_diff,
+                    "current_session_id": session_id,
+                    "crawled_at": change["current_crawled_at"],
+                    "naver_url": "/",
+                    "alert_names": [rule["name"]],
+                    "_building_delivery_refs": [(rule["id"], session_id)],
+                }
+            else:
+                matches_by_event[event_key]["alert_names"].append(rule["name"])
+                matches_by_event[event_key]["_building_delivery_refs"].append(
+                    (rule["id"], session_id)
+                )
+        return list(matches_by_event.values())
+
     def _mark_delivery_refs(self, conn: ConnectionWrapper, delivery_refs):
         delivered_at = datetime.now().isoformat()
         for alert_id, article_no in delivery_refs:
@@ -1028,22 +1170,38 @@ class Database:
     def _sanitize_alert_match(self, match: Dict):
         item = dict(match)
         item.pop("_delivery_refs", None)
+        item.pop("_building_delivery_refs", None)
         return item
 
     def get_pending_alert_matches(self, client_id: str, limit: int = 10):
         with self.get_connection() as conn:
-            return self._collect_alert_matches(conn, client_id, limit)
+            matches = self._collect_alert_matches(conn, client_id, limit)
+            matches.extend(self._collect_building_change_alert_matches(conn, client_id))
+            matches.sort(key=lambda item: str(item.get("crawled_at") or ""), reverse=True)
+            return matches[:limit]
 
     def mark_alert_matches_delivered(self, matches: List[Dict]):
         delivery_refs = []
+        building_delivery_refs = []
         for match in matches:
             delivery_refs.extend(match.get("_delivery_refs", []))
+            building_delivery_refs.extend(match.get("_building_delivery_refs", []))
 
-        if not delivery_refs:
+        if not delivery_refs and not building_delivery_refs:
             return
 
         with self.get_connection() as conn:
             self._mark_delivery_refs(conn, delivery_refs)
+            delivered_at = datetime.now().isoformat()
+            for alert_id, session_id in building_delivery_refs:
+                conn.execute(
+                    """
+                    INSERT INTO building_alert_deliveries (alert_id, session_id, delivered_at)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(alert_id, session_id) DO NOTHING
+                    """,
+                    (alert_id, session_id, delivered_at),
+                )
 
     def get_new_alert_matches(self, client_id: str, limit: int = 10):
         matches = self.get_pending_alert_matches(client_id, limit)
@@ -1653,6 +1811,89 @@ class Database:
                 (district, building_name, limit),
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def _get_latest_building_changes(
+        self,
+        conn: ConnectionWrapper,
+        buildings: Sequence[Tuple[str, str]],
+    ):
+        keys = list(
+            dict.fromkeys(
+                (str(district or "").strip(), str(building_name or "").strip())
+                for district, building_name in buildings
+                if str(district or "").strip() and str(building_name or "").strip()
+            )
+        )
+        if not keys:
+            return {}
+
+        key_conditions = " OR ".join(
+            ["(cb.district = ? AND cb.building_name = ?)"] * len(keys)
+        )
+        params = [value for key in keys for value in key]
+        rows = conn.execute(
+            f"""
+            WITH live_sessions AS (
+                SELECT session_id,
+                       crawled_at,
+                       ROW_NUMBER() OVER (ORDER BY crawled_at DESC) AS session_rank
+                FROM crawl_history
+                WHERE status = 'success'
+                  AND COALESCE(source, 'naver') <> 'demo'
+            ),
+            ranked AS (
+                SELECT cb.district,
+                       cb.building_name,
+                       cb.total_count,
+                       cb.price_down_count,
+                       cb.session_id,
+                       ls.crawled_at,
+                       ls.session_rank AS snapshot_rank
+                FROM crawl_building_stats cb
+                JOIN live_sessions ls ON ls.session_id = cb.session_id
+                WHERE ls.session_rank <= 2
+                  AND ({key_conditions})
+            )
+            SELECT *
+            FROM ranked
+            WHERE snapshot_rank <= 2
+            ORDER BY district, building_name, snapshot_rank
+            """,
+            params,
+        ).fetchall()
+
+        grouped = {}
+        for row in rows:
+            key = (row["district"], row["building_name"])
+            grouped.setdefault(key, []).append(row)
+
+        changes = {}
+        for key, snapshots in grouped.items():
+            if len(snapshots) < 2:
+                continue
+            current, previous = snapshots[0], snapshots[1]
+            current_total = int(current["total_count"] or 0)
+            previous_total = int(previous["total_count"] or 0)
+            current_price_down = int(current["price_down_count"] or 0)
+            previous_price_down = int(previous["price_down_count"] or 0)
+            changes[key] = {
+                "current_session_id": current["session_id"],
+                "previous_session_id": previous["session_id"],
+                "current_crawled_at": current["crawled_at"],
+                "previous_crawled_at": previous["crawled_at"],
+                "current_total": current_total,
+                "previous_total": previous_total,
+                "total_diff": current_total - previous_total,
+                "current_price_down": current_price_down,
+                "previous_price_down": previous_price_down,
+                "price_down_diff": current_price_down - previous_price_down,
+            }
+        return changes
+
+    def get_latest_building_changes(self, buildings: Sequence[Tuple[str, str]]):
+        """여러 단지의 최신/직전 일별 스냅샷을 한 쿼리로 반환한다."""
+        with self.get_connection() as conn:
+            return self._get_latest_building_changes(conn, buildings)
 
     def get_last_crawl(self, prefer_visible: bool = False):
         with self.get_connection() as conn:

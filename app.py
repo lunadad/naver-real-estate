@@ -420,17 +420,113 @@ def build_building_history_series(district, building_name, days=14):
     return series
 
 
+def build_building_history_summary(series):
+    """오늘을 제외한 직전 7개 달력일의 유효 스냅샷 평균과 오늘을 비교한다."""
+    if not series or series[-1].get("total_count") is None:
+        return None
+
+    baseline_values = [
+        float(item["total_count"])
+        for item in series[-8:-1]
+        if item.get("total_count") is not None
+    ]
+    if not baseline_values:
+        return None
+
+    today_count = float(series[-1]["total_count"])
+    average_count = sum(baseline_values) / len(baseline_values)
+
+    def rounded_count(value):
+        rounded = round(value, 1)
+        return int(rounded) if rounded.is_integer() else rounded
+
+    return {
+        "today_count": rounded_count(today_count),
+        "average_count": rounded_count(average_count),
+        "difference": rounded_count(today_count - average_count),
+        "sample_count": len(baseline_values),
+    }
+
+
+def build_building_change_badge(change):
+    if not change:
+        return None
+
+    current_at = coerce_kst_datetime(change.get("current_crawled_at"))
+    previous_at = coerce_kst_datetime(change.get("previous_crawled_at"))
+    if (
+        not current_at
+        or not previous_at
+        or (current_at.date() - previous_at.date()).days != 1
+    ):
+        return None
+
+    total_diff = int(change.get("total_diff") or 0)
+    previous_total = int(change.get("previous_total") or 0)
+    price_down_diff = int(change.get("price_down_diff") or 0)
+    increase_ratio = total_diff / previous_total if previous_total > 0 else 0
+
+    # +20%만 쓰면 2→3건 같은 작은 모수가 과장되므로 최소 +3건을 함께 요구한다.
+    # 반대로 대단지는 비율이 작아도 +5건이면 사용자가 체감할 변화라 별도로 포착한다.
+    notable_total_increase = total_diff >= 5 or (
+        total_diff >= 3 and increase_ratio >= 0.2
+    )
+    # 가격인하는 전체 매물보다 희소하므로 절대 +3건이면 급증으로 간주한다.
+    notable_price_down = price_down_diff >= 3
+    if not notable_total_increase and not notable_price_down:
+        return None
+
+    parts = []
+    if notable_total_increase:
+        parts.append(f"매물 +{total_diff}")
+    if notable_price_down:
+        parts.append(f"인하 +{price_down_diff}")
+    return {
+        "kind": "both" if len(parts) == 2 else ("total" if notable_total_increase else "price_down"),
+        "label": "🔥 " + " · ".join(parts),
+        "total_diff": total_diff,
+        "price_down_diff": price_down_diff,
+    }
+
+
+def add_building_change_badges(listings_result):
+    listings = listings_result.get("listings") or []
+    keys = [
+        (listing.get("district"), listing.get("building_name"))
+        for listing in listings
+        if listing.get("district") and listing.get("building_name")
+    ]
+    changes = db.get_latest_building_changes(keys)
+    for listing in listings:
+        key = (listing.get("district"), listing.get("building_name"))
+        badge = build_building_change_badge(changes.get(key))
+        if badge:
+            listing["building_change_badge"] = badge
+    return listings_result
+
+
 def build_push_payload(matches):
     first = matches[0]
     extra_count = max(0, len(matches) - 1)
-    app_name = "부동산 급매 알리미"
-    label = ", ".join(first.get("alert_names") or []) or "새 급매"
+    is_building_change = first.get("event_type") == "building_daily_change"
+    app_name = "단지 매물수 변동 알림" if is_building_change else "부동산 급매 알리미"
+    label = ", ".join(first.get("alert_names") or []) or (
+        "단지 매물수 변동" if is_building_change else "새 급매"
+    )
     location = " ".join(
         part
         for part in [first.get("region", "").strip(), first.get("district", "").strip()]
         if part
     ).strip()
-    first_line = f"[{first.get('property_type', '-')}/{first.get('trade_type', '-')}] {first.get('building_name', '매물')} {first.get('price', '')}".strip()
+    if is_building_change:
+        change_count = int(first.get("change_count") or 0)
+        first_line = (
+            f"{first.get('building_name', '단지')} "
+            f"{first.get('previous_count', 0)}→{first.get('current_count', 0)}건 "
+            f"({change_count:+d})"
+        )
+    else:
+        first_line = f"[{first.get('property_type', '-')}/{first.get('trade_type', '-')}] {first.get('building_name', '매물')} {first.get('price', '')}".strip()
     body_parts = [label, first_line]
     if location:
         body_parts.append(location)
@@ -562,6 +658,7 @@ def get_listings():
         price_down_only=request.args.get("price_down_only", "false").lower() == "true",
         tags=parse_tag_args(request.args.get("tags", "")),
     )
+    add_building_change_badges(result)
     return jsonify(serialize_api_value(result))
 
 
@@ -613,7 +710,26 @@ def create_alert_rule():
     if not client_id:
         return jsonify({"status": "error", "message": "client_id required"}), 400
 
-    if not any(
+    building_name = (data.get("building_name") or "").strip()
+    try:
+        min_daily_change = int(data.get("min_daily_change") or 0)
+    except (TypeError, ValueError):
+        return jsonify({"status": "error", "message": "min_daily_change must be an integer"}), 400
+
+    is_building_change = bool(building_name or min_daily_change)
+    if is_building_change and (
+        not (data.get("district") or "").strip()
+        or not building_name
+        or min_daily_change < 1
+    ):
+        return jsonify(
+            {
+                "status": "error",
+                "message": "district, building_name and positive min_daily_change required",
+            }
+        ), 400
+
+    if not is_building_change and not any(
         [
             (data.get("keyword") or "").strip(),
             (data.get("district") or "").strip(),
@@ -629,6 +745,8 @@ def create_alert_rule():
         district=data.get("district", ""),
         property_type=data.get("property_type", ""),
         trade_type=data.get("trade_type", ""),
+        building_name=building_name,
+        min_daily_change=min_daily_change,
         name=data.get("name", ""),
     )
     return jsonify(serialize_api_value({"status": "success", "rule": rule}))
@@ -734,6 +852,7 @@ def get_building_history():
             "district": district,
             "building_name": building_name,
             "days": serialize_api_value(series),
+            "summary": serialize_api_value(build_building_history_summary(series)),
         },
         max_age=300,
     )
