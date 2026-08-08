@@ -378,10 +378,10 @@ def get_building_history():
 - [ ] **Step 4: 테스트 통과 확인**
 
 Run: `python3 -m unittest tests.test_building_history -v`
-Expected: PASS (6개 전부 통과)
+Expected: PASS (5개 전부 통과)
 
 Run: `python3 -m unittest discover tests -v`
-Expected: PASS (기존 24 + Task 1의 4 + Task 2의 6 = 34개 전부 통과)
+Expected: PASS (기존 24 + Task 1의 4 + Task 2의 5 = 33개 전부 통과)
 
 - [ ] **Step 5: 커밋**
 
@@ -655,7 +655,7 @@ curl -s "http://127.0.0.1:5000/api/building-history?district=서초구&building_
 - [ ] **Step 7: 전체 테스트 스위트 재확인 (회귀 없음 확인)**
 
 Run: `python3 -m unittest discover tests -v`
-Expected: PASS (34개 전부 통과 — 프런트엔드만 수정했으므로 숫자 변화 없어야 함)
+Expected: PASS (33개 전부 통과 — 프런트엔드만 수정했으므로 숫자 변화 없어야 함)
 
 - [ ] **Step 8: 커밋**
 

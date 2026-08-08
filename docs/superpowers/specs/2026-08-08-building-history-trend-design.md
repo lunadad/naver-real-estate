@@ -192,7 +192,8 @@ def get_building_history():
 
 ## 테스트 (TDD)
 
-**`tests/test_building_snapshot.py` 확장** (또는 신규 `tests/test_building_history.py`):
+**`tests/test_building_snapshot.py` 확장** (`get_building_stats_history()` 테스트,
+아래 1-2번):
 
 1. `get_building_stats_history()` — 다른 구/단지명의 데이터가 섞여 있어도 정확히
    해당 `(district, building_name)`만 반환한다.
@@ -205,8 +206,8 @@ def get_building_history():
 5. `build_building_history_series()` — 전혀 데이터가 없는 신규 단지는 전부 `None`인
    시리즈를 반환한다 (빈 상태 처리 확인용).
 
-**라우트 테스트** (기존 Flask 라우트 테스트 파일이 없으므로
-`tests/test_building_history_route.py` 신규 생성):
+**`build_building_history_series()` + 라우트 테스트** (기존 Flask 라우트 테스트
+파일이 없으므로 신규 `tests/test_building_history.py`에 3-7번 전부 구현됨):
 
 6. `district`/`building_name` 파라미터 누락 시 400 + 에러 메시지.
 7. 정상 요청 시 200, 응답에 `district`/`building_name`/`days` 키 포함, `Cache-Control`
