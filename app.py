@@ -489,6 +489,42 @@ def build_building_change_badge(change):
     }
 
 
+def build_price_down_ratio_insight(trend):
+    if not trend or trend.get("today_ratio") is None:
+        return None
+    return {
+        "today_ratio": round(trend["today_ratio"], 1),
+        "yesterday_ratio": (
+            round(trend["yesterday_ratio"], 1)
+            if trend.get("yesterday_ratio") is not None
+            else None
+        ),
+        "diff_pp": (
+            round(trend["diff_pp"], 1) if trend.get("diff_pp") is not None else None
+        ),
+    }
+
+
+def build_top_building_movers(raw_changes, limit=5):
+    movers = []
+    for change in raw_changes:
+        badge = build_building_change_badge(change)
+        if not badge:
+            continue
+        movers.append(
+            {
+                "district": change["district"],
+                "building_name": change["building_name"],
+                **badge,
+            }
+        )
+    movers.sort(
+        key=lambda mover: mover["total_diff"] + mover["price_down_diff"],
+        reverse=True,
+    )
+    return movers[:limit]
+
+
 def add_building_change_badges(listings_result):
     listings = listings_result.get("listings") or []
     keys = [
@@ -826,6 +862,23 @@ def get_region_stats():
 @app.route("/api/trends")
 def get_trends():
     return cacheable_json(serialize_api_value(db.get_trends()), max_age=300)
+
+
+@app.route("/api/hero-insight")
+def get_hero_insight():
+    ratio_trend = db.get_price_down_ratio_trend()
+    raw_movers = db.get_top_building_movers()
+    return cacheable_json(
+        {
+            "price_down_ratio": serialize_api_value(
+                build_price_down_ratio_insight(ratio_trend)
+            ),
+            "building_movers": serialize_api_value(
+                build_top_building_movers(raw_movers)
+            ),
+        },
+        max_age=300,
+    )
 
 
 @app.route("/api/tags")
