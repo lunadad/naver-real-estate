@@ -5,6 +5,7 @@
 const APP_NAME = '부동산 급매 알리미';
 const ALERT_POLL_MS = 60000;
 let modalTrigger = null;
+let buildingTrendRequestToken = 0;
 
 // ── State ──────────────────────────────────────────────────────────────────
 const state = {
@@ -305,6 +306,7 @@ async function openBuildingTrendModal(district, buildingName, triggerElement = n
   const bodyEl = document.getElementById('modal-body');
   if (!overlay || !titleEl || !bodyEl) return;
 
+  const requestToken = ++buildingTrendRequestToken;
   modalTrigger = triggerElement;
   titleEl.textContent = buildingName;
   bodyEl.innerHTML = '<div class="building-trend-loading">불러오는 중…</div>';
@@ -313,8 +315,10 @@ async function openBuildingTrendModal(district, buildingName, triggerElement = n
 
   try {
     const data = await api(`/api/building-history?district=${encodeURIComponent(district)}&building_name=${encodeURIComponent(buildingName)}&days=14`);
+    if (requestToken !== buildingTrendRequestToken) return;
     bodyEl.innerHTML = renderBuildingTrendBody(data.days || []);
   } catch (err) {
+    if (requestToken !== buildingTrendRequestToken) return;
     console.warn('Building trend load error:', err);
     bodyEl.innerHTML = '<div class="building-trend-empty">추이를 불러오지 못했습니다.</div>';
   }
@@ -325,6 +329,7 @@ function closeModal() {
   if (!overlay || overlay.classList.contains('hidden')) return;
 
   overlay.classList.add('hidden');
+  buildingTrendRequestToken += 1;
   if (modalTrigger?.isConnected) modalTrigger.focus();
   modalTrigger = null;
 }
