@@ -364,6 +364,7 @@ function renderBuildingTrendBody(items) {
   const maxValue = Math.max(...values);
   const range = Math.max(maxValue - minValue, 1);
   const latest = validItems[validItems.length - 1];
+  const gridStyle = `grid-template-columns:repeat(${items.length},minmax(0,1fr))`;
 
   let previousValidValue = null;
   const bars = items.map(item => {
@@ -394,8 +395,8 @@ function renderBuildingTrendBody(items) {
       현재 매물수 <strong>${fmtNum(Number(latest.total_count || 0))}건</strong>
       · 가격인하 <strong>${fmtNum(Number(latest.price_down_count || 0))}건</strong>
     </div>
-    <div class="building-trend-chart">${bars}</div>
-    <div class="building-trend-labels">${labels}</div>
+    <div class="building-trend-chart" style="${gridStyle}">${bars}</div>
+    <div class="building-trend-labels" style="${gridStyle}">${labels}</div>
   `;
 }
 
