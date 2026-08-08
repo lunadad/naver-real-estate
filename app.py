@@ -384,6 +384,42 @@ def build_daily_crawl_series(days=7):
     return series
 
 
+def build_building_history_series(district, building_name, days=14):
+    days = max(1, min(int(days or 14), 30))
+    today = datetime.now(KST).date()
+    rows = db.get_building_stats_history(district, building_name, limit=max(days * 6, 30))
+    latest_by_day = {}
+
+    for row in rows:
+        crawled_at = coerce_kst_datetime(row.get("crawled_at"))
+        if not crawled_at:
+            continue
+        day_key = crawled_at.date().isoformat()
+        if day_key in latest_by_day:
+            continue
+        latest_by_day[day_key] = {
+            "date": day_key,
+            "label": f"{crawled_at.month}.{crawled_at.day}",
+            "total_count": row.get("total_count"),
+            "price_down_count": row.get("price_down_count"),
+        }
+
+    series = []
+    for offset in range(days - 1, -1, -1):
+        target = today - timedelta(days=offset)
+        key = target.isoformat()
+        series.append(
+            latest_by_day.get(key)
+            or {
+                "date": key,
+                "label": f"{target.month}.{target.day}",
+                "total_count": None,
+                "price_down_count": None,
+            }
+        )
+    return series
+
+
 def build_push_payload(matches):
     first = matches[0]
     extra_count = max(0, len(matches) - 1)
@@ -683,6 +719,24 @@ def get_tags():
 def get_crawl_daily_series():
     days = request.args.get("days", default=7, type=int)
     return cacheable_json(serialize_api_value(build_daily_crawl_series(days)), max_age=300)
+
+
+@app.route("/api/building-history")
+def get_building_history():
+    district = (request.args.get("district") or "").strip()
+    building_name = (request.args.get("building_name") or "").strip()
+    if not district or not building_name:
+        return jsonify({"status": "error", "message": "district and building_name required"}), 400
+    days = request.args.get("days", default=14, type=int)
+    series = build_building_history_series(district, building_name, days)
+    return cacheable_json(
+        {
+            "district": district,
+            "building_name": building_name,
+            "days": serialize_api_value(series),
+        },
+        max_age=300,
+    )
 
 
 @lru_cache(maxsize=1)
