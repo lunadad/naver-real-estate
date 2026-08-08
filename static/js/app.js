@@ -52,6 +52,8 @@ const state = {
     crawlSummary: '',
     trends: [],
     dailySeries: [],
+    priceDownRatio: null,
+    buildingMovers: [],
   },
 };
 
@@ -183,8 +185,12 @@ function updateHeroInsight() {
     const alertLabel = alertCount
       ? `알림 ${fmtNum(alertCount)}개가 새 매물을 감시 중입니다.`
       : '아직 등록된 알림은 없습니다.';
-    el.textContent = `전국 급매 ${fmtNum(total)}건, 가격인하 ${fmtNum(priceDown)}건입니다.`;
-    subEl.textContent = alertLabel;
+    el.textContent = `전국 급매 ${fmtNum(total)}건입니다.`
+      + computeMomentumText(state.dashboard.dailySeries);
+    subEl.textContent = [
+      formatPriceDownRatioLine(state.dashboard.priceDownRatio, priceDown),
+      alertLabel,
+    ].join(' ');
     return;
   }
 
@@ -206,12 +212,22 @@ function updateHeroInsight() {
   ].filter(Boolean).join(' ');
   const secondLine = [
     seoulMovers.length ? `서울에서는 ${formatSeoulTrendSummary(seoulMovers)} 변화가 컸습니다.` : '',
-    `현재 가격인하 매물은 ${fmtNum(priceDown)}건입니다.`,
+    formatPriceDownRatioLine(state.dashboard.priceDownRatio, priceDown),
     alertLabel,
   ].filter(Boolean).join(' ');
 
-  el.textContent = firstLine;
+  el.textContent = firstLine + computeMomentumText(state.dashboard.dailySeries);
   subEl.textContent = secondLine;
+}
+
+function formatPriceDownRatioLine(ratio, fallbackCount) {
+  if (!ratio || ratio.today_ratio == null) {
+    return `현재 가격인하 매물은 ${fmtNum(fallbackCount)}건입니다.`;
+  }
+  const base = `가격인하 비중 ${ratio.today_ratio}%`;
+  if (ratio.yesterday_ratio == null || ratio.diff_pp == null) return `${base}입니다.`;
+  const arrow = ratio.diff_pp > 0 ? '▲' : ratio.diff_pp < 0 ? '▼' : '-';
+  return `${base}(전일 ${ratio.yesterday_ratio}%, ${arrow}${Math.abs(ratio.diff_pp)}%p)입니다.`;
 }
 
 function formatTrendInsightName(item) {
@@ -226,6 +242,50 @@ function formatSeoulTrendSummary(items) {
 
 function hasNumericValue(item, field = 'total_count') {
   return item != null && item[field] != null && Number.isFinite(Number(item[field]));
+}
+
+function computeMomentumText(dailySeries) {
+  const items = (dailySeries || []).filter(hasNumericValue);
+  if (items.length < 2) return '';
+
+  const today = items[items.length - 1];
+  const rest = items.slice(0, -1);
+  const avg = rest.reduce((sum, item) => sum + Number(item.total_count), 0) / rest.length;
+  const diff = Math.round(Number(today.total_count) - avg);
+  const pct = avg ? Math.round((diff / avg) * 100) : null;
+  const sign = diff > 0 ? '+' : '';
+
+  let streak = 0;
+  let dir = null;
+  for (let i = items.length - 1; i > 0; i--) {
+    const delta = Number(items[i].total_count) - Number(items[i - 1].total_count);
+    const curDir = delta > 0 ? 'up' : delta < 0 ? 'down' : null;
+    if (!curDir || (dir && curDir !== dir)) break;
+    dir = curDir;
+    streak++;
+  }
+  const streakTag = streak >= 3
+    ? ` (${streak}일 연속 ${dir === 'up' ? '증가' : '감소'})`
+    : '';
+
+  return ` 최근 7일 평균 대비 오늘 ${sign}${fmtNum(diff)}건${pct != null ? `(${sign}${pct}%)` : ''}입니다.${streakTag}`;
+}
+
+function renderHeroMovers(movers) {
+  const el = document.getElementById('hero-insight-movers');
+  if (!el) return;
+  if (!movers || !movers.length) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    return;
+  }
+  el.classList.remove('hidden');
+  el.innerHTML = movers.map(mover => `
+    <span class="hero-mover-chip hero-mover-chip-${escHtml(mover.kind)}"
+          title="${escHtml(mover.district)} ${escHtml(mover.building_name)}">
+      ${escHtml(mover.label)} · ${escHtml(mover.building_name)}
+    </span>
+  `).join('');
 }
 
 function renderHeroDailySeries(series) {
@@ -1064,6 +1124,7 @@ async function loadSidebar() {
     .then(series => {
       state.dashboard.dailySeries = series;
       renderHeroDailySeries(series);
+      updateHeroInsight();
     })
     .catch(e => {
       console.warn('Daily series load error:', e);
@@ -1089,7 +1150,23 @@ async function loadSidebar() {
       console.warn('Trends load error:', e);
     });
 
-  await Promise.allSettled([dailySeriesPromise, regionStatsPromise, trendsPromise]);
+  const heroInsightPromise = api('/api/hero-insight')
+    .then(data => {
+      state.dashboard.priceDownRatio = data.price_down_ratio || null;
+      state.dashboard.buildingMovers = data.building_movers || [];
+      updateHeroInsight();
+      renderHeroMovers(state.dashboard.buildingMovers);
+    })
+    .catch(e => {
+      console.warn('Hero insight load error:', e);
+    });
+
+  await Promise.allSettled([
+    dailySeriesPromise,
+    regionStatsPromise,
+    trendsPromise,
+    heroInsightPromise,
+  ]);
 }
 
 function renderTrends(trends) {

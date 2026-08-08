@@ -1716,44 +1716,46 @@ class Database:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def _get_latest_and_prev_sessions(self, conn: ConnectionWrapper):
+        latest_session_row = conn.execute(
+            """
+            SELECT session_id, DATE(crawled_at) AS crawl_date
+            FROM crawl_history
+            WHERE status = 'success' AND COALESCE(source, 'naver') <> 'demo'
+            ORDER BY crawled_at DESC
+            LIMIT 1
+            """
+        ).fetchone()
+        latest_session = latest_session_row["session_id"] if latest_session_row else None
+        latest_date = latest_session_row["crawl_date"] if latest_session_row else None
+        if not latest_date:
+            return None, None, None, None
+        if isinstance(latest_date, datetime):
+            latest_date = latest_date.date().isoformat()
+        elif not isinstance(latest_date, str):
+            latest_date = str(latest_date)
+
+        prev_date = (date.fromisoformat(latest_date) - timedelta(days=1)).isoformat()
+        prev_session_row = conn.execute(
+            """
+            SELECT session_id FROM crawl_history
+            WHERE status = 'success' AND COALESCE(source, 'naver') <> 'demo'
+              AND DATE(crawled_at) = ?
+            ORDER BY crawled_at DESC
+            LIMIT 1
+            """,
+            (prev_date,),
+        ).fetchone()
+        prev_session = prev_session_row["session_id"] if prev_session_row else None
+        return latest_session, latest_date, prev_session, prev_date
+
     def get_trends(self):
         with self.get_connection() as conn:
-            latest_session_row = conn.execute(
-                """
-                SELECT session_id, DATE(crawled_at) AS crawl_date
-                FROM crawl_history
-                WHERE status = 'success'
-                  AND COALESCE(source, 'naver') <> 'demo'
-                ORDER BY crawled_at DESC
-                LIMIT 1
-                """
-            ).fetchone()
-
-            latest_session = latest_session_row["session_id"] if latest_session_row else None
-            latest_date = latest_session_row["crawl_date"] if latest_session_row else None
+            latest_session, latest_date, prev_session, prev_date = (
+                self._get_latest_and_prev_sessions(conn)
+            )
             if not latest_date:
                 return []
-
-            if isinstance(latest_date, datetime):
-                latest_date = latest_date.date().isoformat()
-            elif not isinstance(latest_date, str):
-                latest_date = str(latest_date)
-
-            prev_date = (date.fromisoformat(latest_date) - timedelta(days=1)).isoformat()
-
-            prev_session_row = conn.execute(
-                """
-                SELECT session_id
-                FROM crawl_history
-                WHERE status = 'success'
-                  AND COALESCE(source, 'naver') <> 'demo'
-                  AND DATE(crawled_at) = ?
-                ORDER BY crawled_at DESC
-                LIMIT 1
-                """,
-                (prev_date,),
-            ).fetchone()
-            prev_session = prev_session_row["session_id"] if prev_session_row else None
 
             rows = conn.execute(
                 """
@@ -1794,6 +1796,37 @@ class Database:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def get_price_down_ratio_trend(self):
+        with self.get_connection() as conn:
+            latest_session, _, prev_session, _ = self._get_latest_and_prev_sessions(conn)
+            if not latest_session:
+                return None
+
+            def _ratio(session_id):
+                row = conn.execute(
+                    """
+                    SELECT SUM(total_count) AS total, SUM(price_down_count) AS price_down
+                    FROM crawl_region_stats WHERE session_id = ?
+                    """,
+                    (session_id,),
+                ).fetchone()
+                total = int(row["total"] or 0)
+                price_down = int(row["price_down"] or 0)
+                return (price_down / total * 100) if total else None
+
+            today_ratio = _ratio(latest_session)
+            yesterday_ratio = _ratio(prev_session) if prev_session else None
+            diff_pp = (
+                today_ratio - yesterday_ratio
+                if today_ratio is not None and yesterday_ratio is not None
+                else None
+            )
+            return {
+                "today_ratio": today_ratio,
+                "yesterday_ratio": yesterday_ratio,
+                "diff_pp": diff_pp,
+            }
+
     def get_building_stats_history(self, district: str, building_name: str, limit: int = 90):
         limit = max(1, int(limit or 90))
         with self.get_connection() as conn:
@@ -1812,60 +1845,36 @@ class Database:
             ).fetchall()
         return [dict(row) for row in rows]
 
-    def _get_latest_building_changes(
+    def _rank_recent_building_snapshots(
         self,
         conn: ConnectionWrapper,
-        buildings: Sequence[Tuple[str, str]],
+        where_sql: str = "",
+        params: Sequence[object] = (),
     ):
-        keys = list(
-            dict.fromkeys(
-                (str(district or "").strip(), str(building_name or "").strip())
-                for district, building_name in buildings
-                if str(district or "").strip() and str(building_name or "").strip()
-            )
-        )
-        if not keys:
-            return {}
-
-        key_conditions = " OR ".join(
-            ["(cb.district = ? AND cb.building_name = ?)"] * len(keys)
-        )
-        params = [value for key in keys for value in key]
+        """최근 2개 라이브 세션의 단지별 스냅샷 차이를 계산한다."""
         rows = conn.execute(
             f"""
             WITH live_sessions AS (
-                SELECT session_id,
-                       crawled_at,
+                SELECT session_id, crawled_at,
                        ROW_NUMBER() OVER (ORDER BY crawled_at DESC) AS session_rank
                 FROM crawl_history
-                WHERE status = 'success'
-                  AND COALESCE(source, 'naver') <> 'demo'
+                WHERE status = 'success' AND COALESCE(source, 'naver') <> 'demo'
             ),
             ranked AS (
-                SELECT cb.district,
-                       cb.building_name,
-                       cb.total_count,
-                       cb.price_down_count,
-                       cb.session_id,
-                       ls.crawled_at,
-                       ls.session_rank AS snapshot_rank
+                SELECT cb.district, cb.building_name, cb.total_count, cb.price_down_count,
+                       cb.session_id, ls.crawled_at, ls.session_rank AS snapshot_rank
                 FROM crawl_building_stats cb
                 JOIN live_sessions ls ON ls.session_id = cb.session_id
-                WHERE ls.session_rank <= 2
-                  AND ({key_conditions})
+                WHERE ls.session_rank <= 2 {where_sql}
             )
-            SELECT *
-            FROM ranked
-            WHERE snapshot_rank <= 2
-            ORDER BY district, building_name, snapshot_rank
+            SELECT * FROM ranked ORDER BY district, building_name, snapshot_rank
             """,
             params,
         ).fetchall()
 
         grouped = {}
         for row in rows:
-            key = (row["district"], row["building_name"])
-            grouped.setdefault(key, []).append(row)
+            grouped.setdefault((row["district"], row["building_name"]), []).append(row)
 
         changes = {}
         for key, snapshots in grouped.items():
@@ -1890,10 +1899,39 @@ class Database:
             }
         return changes
 
+    def _get_latest_building_changes(
+        self,
+        conn: ConnectionWrapper,
+        buildings: Sequence[Tuple[str, str]],
+    ):
+        keys = list(
+            dict.fromkeys(
+                (str(district or "").strip(), str(building_name or "").strip())
+                for district, building_name in buildings
+                if str(district or "").strip() and str(building_name or "").strip()
+            )
+        )
+        if not keys:
+            return {}
+        where_sql = "AND (" + " OR ".join(
+            ["(cb.district = ? AND cb.building_name = ?)"] * len(keys)
+        ) + ")"
+        params = [value for key in keys for value in key]
+        return self._rank_recent_building_snapshots(conn, where_sql, params)
+
     def get_latest_building_changes(self, buildings: Sequence[Tuple[str, str]]):
         """여러 단지의 최신/직전 일별 스냅샷을 한 쿼리로 반환한다."""
         with self.get_connection() as conn:
             return self._get_latest_building_changes(conn, buildings)
+
+    def get_top_building_movers(self):
+        """최근 2개 라이브 세션 사이의 전체 단지 diff를 반환한다."""
+        with self.get_connection() as conn:
+            changes = self._rank_recent_building_snapshots(conn)
+        return [
+            {"district": district, "building_name": building_name, **change}
+            for (district, building_name), change in changes.items()
+        ]
 
     def get_last_crawl(self, prefer_visible: bool = False):
         with self.get_connection() as conn:
