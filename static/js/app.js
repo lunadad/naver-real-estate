@@ -310,18 +310,31 @@ async function openBuildingTrendModal(district, buildingName) {
 
   try {
     const data = await api(`/api/building-history?district=${encodeURIComponent(district)}&building_name=${encodeURIComponent(buildingName)}&days=14`);
-    bodyEl.innerHTML = renderBuildingTrendBody(data.days || []);
+    bodyEl.innerHTML = renderBuildingTrendBody(data.days || [], district, buildingName);
   } catch (err) {
     console.warn('Building trend load error:', err);
     bodyEl.innerHTML = '<div class="building-trend-empty">추이를 불러오지 못했습니다.</div>';
   }
 }
 
-function renderBuildingTrendBody(items) {
+function renderBuildingChangeAlertControl(district, buildingName) {
+  return `
+    <div class="building-change-alert-control">
+      <label>하루
+        <input class="building-change-threshold" type="number" min="1" max="999" value="3" inputmode="numeric">
+        건 이상 변하면
+      </label>
+      <button type="button" class="building-change-alert-btn" data-district="${escHtml(district)}" data-building-name="${escHtml(buildingName)}">🔔 알림 등록</button>
+    </div>
+  `;
+}
+
+function renderBuildingTrendBody(items, district = '', buildingName = '') {
   const validItems = items.filter(item => hasNumericValue(item));
+  const alertControl = renderBuildingChangeAlertControl(district, buildingName);
 
   if (!validItems.length) {
-    return '<div class="building-trend-empty">데이터를 모으는 중입니다. 내일부터 표시됩니다.</div>';
+    return '<div class="building-trend-empty">데이터를 모으는 중입니다. 내일부터 표시됩니다.</div>' + alertControl;
   }
 
   const values = validItems.map(item => Number(item.total_count));
@@ -360,6 +373,7 @@ function renderBuildingTrendBody(items) {
     </div>
     <div class="building-trend-chart">${bars}</div>
     <div class="building-trend-labels">${labels}</div>
+    ${alertControl}
   `;
 }
 
@@ -1190,6 +1204,8 @@ function renderAlertRules() {
       rule.district ? `지역 ${rule.district}` : '',
       rule.property_type ? `유형 ${rule.property_type}` : '',
       rule.trade_type ? `거래 ${rule.trade_type}` : '',
+      rule.building_name ? `단지 ${rule.building_name}` : '',
+      Number(rule.min_daily_change) > 0 ? `하루 ±${rule.min_daily_change}건` : '',
     ].filter(Boolean).join(' · ');
 
     return `
@@ -1345,6 +1361,33 @@ async function saveAlertRule() {
   showToast(`알림 등록: ${result.rule.name}`, 'success');
 }
 
+async function saveBuildingChangeAlertRule(district, buildingName, threshold) {
+  const minDailyChange = Number(threshold);
+  if (!Number.isInteger(minDailyChange) || minDailyChange < 1) {
+    showToast('변화 기준은 1건 이상이어야 합니다.', 'error');
+    return;
+  }
+
+  const ready = await ensureNotificationsReady(true);
+  if (!ready) {
+    showToast('브라우저 알림 권한이 필요합니다.', 'error');
+    return;
+  }
+
+  const result = await api('/api/alert-rules', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: state.clientId,
+      district,
+      building_name: buildingName,
+      min_daily_change: minDailyChange,
+    }),
+  });
+  await loadAlertRules();
+  showToast(`알림 등록: ${result.rule.name}`, 'success');
+}
+
 async function removeAlertRule(alertId) {
   await api(`/api/alert-rules/${alertId}?client_id=${encodeURIComponent(state.clientId)}`, {
     method: 'DELETE',
@@ -1354,17 +1397,24 @@ async function removeAlertRule(alertId) {
 }
 
 async function showAlertNotification(match) {
-  const title = APP_NAME;
-  const body = [
-    (match.alert_names || []).join(', '),
-    `[${match.property_type}/${match.trade_type}] ${match.building_name} ${match.price}`,
-    `${match.region} ${match.district}`,
-  ].filter(Boolean).join(' · ');
+  const isBuildingChange = match.event_type === 'building_daily_change';
+  const title = isBuildingChange ? '단지 매물수 변동 알림' : APP_NAME;
+  const body = isBuildingChange
+    ? [
+        (match.alert_names || []).join(', '),
+        `${match.building_name} ${match.previous_count}→${match.current_count}건 (${Number(match.change_count) >= 0 ? '+' : ''}${match.change_count})`,
+        match.district,
+      ].filter(Boolean).join(' · ')
+    : [
+        (match.alert_names || []).join(', '),
+        `[${match.property_type}/${match.trade_type}] ${match.building_name} ${match.price}`,
+        `${match.region} ${match.district}`,
+      ].filter(Boolean).join(' · ');
 
   const options = {
     body,
     data: { url: match.naver_url || '/' },
-    tag: `listing-${match.article_no}`,
+    tag: `${isBuildingChange ? 'building' : 'listing'}-${match.article_no}`,
   };
 
   if (state.swRegistration?.showNotification) {
@@ -1741,6 +1791,23 @@ function wireEvents() {
   });
   document.getElementById('modal-overlay')?.addEventListener('click', e => {
     if (e.target.id === 'modal-overlay') e.target.classList.add('hidden');
+  });
+  document.getElementById('modal-body')?.addEventListener('click', async e => {
+    const button = e.target.closest('.building-change-alert-btn');
+    if (!button) return;
+    const input = button.closest('.building-change-alert-control')?.querySelector('.building-change-threshold');
+    button.disabled = true;
+    try {
+      await saveBuildingChangeAlertRule(
+        button.dataset.district,
+        button.dataset.buildingName,
+        input?.value
+      );
+    } catch (err) {
+      showToast('알림 등록 실패: ' + err.message, 'error');
+    } finally {
+      button.disabled = false;
+    }
   });
 
   // Trend / region lists → district filter (delegated)

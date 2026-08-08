@@ -424,6 +424,15 @@ def build_building_change_badge(change):
     if not change:
         return None
 
+    current_at = coerce_kst_datetime(change.get("current_crawled_at"))
+    previous_at = coerce_kst_datetime(change.get("previous_crawled_at"))
+    if (
+        not current_at
+        or not previous_at
+        or (current_at.date() - previous_at.date()).days != 1
+    ):
+        return None
+
     total_diff = int(change.get("total_diff") or 0)
     previous_total = int(change.get("previous_total") or 0)
     price_down_diff = int(change.get("price_down_diff") or 0)
@@ -471,14 +480,25 @@ def add_building_change_badges(listings_result):
 def build_push_payload(matches):
     first = matches[0]
     extra_count = max(0, len(matches) - 1)
-    app_name = "부동산 급매 알리미"
-    label = ", ".join(first.get("alert_names") or []) or "새 급매"
+    is_building_change = first.get("event_type") == "building_daily_change"
+    app_name = "단지 매물수 변동 알림" if is_building_change else "부동산 급매 알리미"
+    label = ", ".join(first.get("alert_names") or []) or (
+        "단지 매물수 변동" if is_building_change else "새 급매"
+    )
     location = " ".join(
         part
         for part in [first.get("region", "").strip(), first.get("district", "").strip()]
         if part
     ).strip()
-    first_line = f"[{first.get('property_type', '-')}/{first.get('trade_type', '-')}] {first.get('building_name', '매물')} {first.get('price', '')}".strip()
+    if is_building_change:
+        change_count = int(first.get("change_count") or 0)
+        first_line = (
+            f"{first.get('building_name', '단지')} "
+            f"{first.get('previous_count', 0)}→{first.get('current_count', 0)}건 "
+            f"({change_count:+d})"
+        )
+    else:
+        first_line = f"[{first.get('property_type', '-')}/{first.get('trade_type', '-')}] {first.get('building_name', '매물')} {first.get('price', '')}".strip()
     body_parts = [label, first_line]
     if location:
         body_parts.append(location)
@@ -662,7 +682,26 @@ def create_alert_rule():
     if not client_id:
         return jsonify({"status": "error", "message": "client_id required"}), 400
 
-    if not any(
+    building_name = (data.get("building_name") or "").strip()
+    try:
+        min_daily_change = int(data.get("min_daily_change") or 0)
+    except (TypeError, ValueError):
+        return jsonify({"status": "error", "message": "min_daily_change must be an integer"}), 400
+
+    is_building_change = bool(building_name or min_daily_change)
+    if is_building_change and (
+        not (data.get("district") or "").strip()
+        or not building_name
+        or min_daily_change < 1
+    ):
+        return jsonify(
+            {
+                "status": "error",
+                "message": "district, building_name and positive min_daily_change required",
+            }
+        ), 400
+
+    if not is_building_change and not any(
         [
             (data.get("keyword") or "").strip(),
             (data.get("district") or "").strip(),
@@ -678,6 +717,8 @@ def create_alert_rule():
         district=data.get("district", ""),
         property_type=data.get("property_type", ""),
         trade_type=data.get("trade_type", ""),
+        building_name=building_name,
+        min_daily_change=min_daily_change,
         name=data.get("name", ""),
     )
     return jsonify(serialize_api_value({"status": "success", "rule": rule}))

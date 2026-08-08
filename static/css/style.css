@@ -479,6 +479,41 @@ a { color: var(--accent); text-decoration: none; }
   margin-top: 2px;
 }
 
+.building-change-alert-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 11px;
+}
+.building-change-alert-control label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.building-change-threshold {
+  width: 52px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg3);
+  color: var(--text);
+  text-align: center;
+}
+.building-change-alert-btn {
+  padding: 6px 9px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+.building-change-alert-btn:disabled { opacity: 0.55; }
+
 .alert-rule-item {
   background: var(--bg3);
   border: 1px solid var(--border);

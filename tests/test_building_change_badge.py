@@ -126,6 +126,15 @@ class BuildingChangeBadgeAPITest(unittest.TestCase):
         self.assertEqual(changes[("서초구", "테스트단지")]["current_total"], 15)
         self.assertEqual(changes[("서초구", "테스트단지")]["previous_total"], 10)
 
+    def test_badge_requires_consecutive_daily_snapshots(self):
+        self._seed_snapshot("old", "2026-08-05T09:00:00", {"테스트단지": (10, 0)})
+        self._seed_snapshot("current", "2026-08-08T09:00:00", {"테스트단지": (20, 0)})
+        self._seed_current_listings(["테스트단지"])
+
+        rows = self.client.get("/api/listings").get_json()["listings"]
+
+        self.assertNotIn("building_change_badge", rows[0])
+
 
 if __name__ == "__main__":
     unittest.main()
