@@ -294,6 +294,70 @@ function renderHeroDailySeries(series) {
   }).join('');
 }
 
+async function openBuildingTrendModal(district, buildingName) {
+  const overlay = document.getElementById('modal-overlay');
+  const titleEl = document.getElementById('modal-title');
+  const bodyEl = document.getElementById('modal-body');
+  if (!overlay || !titleEl || !bodyEl) return;
+
+  titleEl.textContent = buildingName;
+  bodyEl.innerHTML = '<div class="building-trend-loading">불러오는 중…</div>';
+  overlay.classList.remove('hidden');
+
+  try {
+    const data = await api(`/api/building-history?district=${encodeURIComponent(district)}&building_name=${encodeURIComponent(buildingName)}&days=14`);
+    bodyEl.innerHTML = renderBuildingTrendBody(data.days || []);
+  } catch (err) {
+    bodyEl.innerHTML = '<div class="building-trend-empty">추이를 불러오지 못했습니다.</div>';
+  }
+}
+
+function renderBuildingTrendBody(items) {
+  const validItems = items.filter(item => Number.isFinite(Number(item.total_count)));
+
+  if (!validItems.length) {
+    return '<div class="building-trend-empty">데이터를 모으는 중입니다. 내일부터 표시됩니다.</div>';
+  }
+
+  const values = validItems.map(item => Number(item.total_count));
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const range = Math.max(maxValue - minValue, 1);
+  const latest = validItems[validItems.length - 1];
+
+  let previousValidValue = null;
+  const bars = items.map(item => {
+    const value = Number(item.total_count);
+    const hasValue = Number.isFinite(value);
+    let directionClass = 'flat';
+    if (hasValue && previousValidValue != null) {
+      if (value > previousValidValue) directionClass = 'up';
+      else if (value < previousValidValue) directionClass = 'down';
+    }
+    const height = hasValue
+      ? Math.max(18, Math.round(((value - minValue) / range) * 60) + 18)
+      : 12;
+    const tooltip = hasValue ? `${item.label} ${fmtNum(value)}건` : `${item.label} 데이터 없음`;
+    if (hasValue) previousValidValue = value;
+    return `
+      <div class="building-trend-bar-wrap has-tooltip" data-tooltip="${escHtml(tooltip)}">
+        <div class="building-trend-bar ${hasValue ? directionClass : 'missing'}" style="height:${height}px"></div>
+      </div>
+    `;
+  }).join('');
+
+  const labels = items.map(item => `<span class="building-trend-day">${escHtml(item.label || '')}</span>`).join('');
+
+  return `
+    <div class="building-trend-summary">
+      현재 매물수 <strong>${fmtNum(Number(latest.total_count || 0))}건</strong>
+      · 가격인하 <strong>${fmtNum(Number(latest.price_down_count || 0))}건</strong>
+    </div>
+    <div class="building-trend-chart">${bars}</div>
+    <div class="building-trend-labels">${labels}</div>
+  `;
+}
+
 function applyMapVisibility() {
   const wrap = document.getElementById('map-wrap');
   const btn = document.getElementById('btn-map-toggle');
@@ -824,7 +888,10 @@ function renderListings(data) {
         </div>
         <span class="naver-link-icon" title="네이버 부동산">네이버 보기</span>
       </div>
-      <div class="card-name" title="${escHtml(l.building_name)}">${escHtml(l.building_name)}</div>
+      <div class="card-name-row">
+        <div class="card-name" title="${escHtml(l.building_name)}">${escHtml(l.building_name)}</div>
+        ${l.district && l.building_name ? `<button type="button" class="card-trend-btn" data-district="${escHtml(l.district)}" data-building-name="${escHtml(l.building_name)}" title="일별 매물수 추이">📈</button>` : ''}
+      </div>
       <div class="card-location-line">${escHtml(compactRegion)}</div>
       <div class="card-meta">
         ${metaBits.map(bit => `<span>${escHtml(bit)}</span>`).join('')}
@@ -1651,10 +1718,23 @@ function wireEvents() {
 
   // Listing cards → Naver link (delegated: cards are re-rendered on every load)
   document.getElementById('listings-grid').addEventListener('click', e => {
+    const trendBtn = e.target.closest('.card-trend-btn');
+    if (trendBtn) {
+      e.stopPropagation();
+      openBuildingTrendModal(trendBtn.dataset.district, trendBtn.dataset.buildingName);
+      return;
+    }
     const card = e.target.closest('.listing-card');
     if (!card) return;
     const url = card.dataset.naverUrl;
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  });
+
+  document.getElementById('modal-close')?.addEventListener('click', () => {
+    document.getElementById('modal-overlay')?.classList.add('hidden');
+  });
+  document.getElementById('modal-overlay')?.addEventListener('click', e => {
+    if (e.target.id === 'modal-overlay') e.target.classList.add('hidden');
   });
 
   // Trend / region lists → district filter (delegated)
