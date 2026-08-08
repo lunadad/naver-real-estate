@@ -198,5 +198,75 @@ class BuildingSnapshotInsertTest(unittest.TestCase):
         self.assertIn("래미안원베일리", names)
 
 
+class BuildingStatsHistoryTest(unittest.TestCase):
+    def setUp(self):
+        tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tmpdir.cleanup)
+        self.db = Database(
+            db_path=os.path.join(tmpdir.name, "test.db"),
+            skip_price_backfill=True,
+        )
+        self.addCleanup(self.db.close)
+
+    def _insert_history(self, session_id, crawled_at, status="success", source="naver"):
+        with self.db.get_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO crawl_history
+                (session_id, crawled_at, total_count, urgent_count, status, source)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (session_id, crawled_at, 10, 10, status, source),
+            )
+
+    def _insert_stats(self, session_id, district, building_name, total_count, price_down_count, created_at):
+        with self.db.get_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO crawl_building_stats
+                (session_id, region, district, building_name, total_count, price_down_count, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (session_id, "서울특별시", district, building_name, total_count, price_down_count, created_at),
+            )
+
+    def test_returns_only_matching_district_and_building_name(self):
+        self._insert_history("s1", "2026-08-06T09:00:00")
+        self._insert_stats("s1", "서초구", "래미안원베일리", 5, 1, "2026-08-06T09:00:00")
+        self._insert_stats("s1", "서초구", "반포자이", 3, 0, "2026-08-06T09:00:00")
+
+        rows = self.db.get_building_stats_history("서초구", "래미안원베일리")
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["total_count"], 5)
+
+    def test_excludes_failed_and_demo_sessions(self):
+        self._insert_history("s-failed", "2026-08-06T09:00:00", status="failed")
+        self._insert_stats("s-failed", "서초구", "래미안원베일리", 5, 1, "2026-08-06T09:00:00")
+        self._insert_history("s-demo", "2026-08-07T09:00:00", source="demo")
+        self._insert_stats("s-demo", "서초구", "래미안원베일리", 6, 1, "2026-08-07T09:00:00")
+
+        rows = self.db.get_building_stats_history("서초구", "래미안원베일리")
+        self.assertEqual(rows, [])
+
+    def test_orders_by_crawled_at_desc(self):
+        self._insert_history("s-old", "2026-08-05T09:00:00")
+        self._insert_stats("s-old", "서초구", "래미안원베일리", 4, 0, "2026-08-05T09:00:00")
+        self._insert_history("s-new", "2026-08-06T09:00:00")
+        self._insert_stats("s-new", "서초구", "래미안원베일리", 5, 1, "2026-08-06T09:00:00")
+
+        rows = self.db.get_building_stats_history("서초구", "래미안원베일리")
+        self.assertEqual([row["session_id"] for row in rows], ["s-new", "s-old"])
+
+    def test_limit_caps_returned_rows(self):
+        for i in range(3):
+            session_id = f"s{i}"
+            crawled_at = f"2026-08-0{i + 4}T09:00:00"
+            self._insert_history(session_id, crawled_at)
+            self._insert_stats(session_id, "서초구", "래미안원베일리", 5 + i, 0, crawled_at)
+
+        rows = self.db.get_building_stats_history("서초구", "래미안원베일리", limit=2)
+        self.assertEqual(len(rows), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1609,6 +1609,24 @@ class Database:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def get_building_stats_history(self, district: str, building_name: str, limit: int = 90):
+        limit = max(1, int(limit or 90))
+        with self.get_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT cb.session_id, cb.total_count, cb.price_down_count, ch.crawled_at
+                FROM crawl_building_stats cb
+                JOIN crawl_history ch ON ch.session_id = cb.session_id
+                WHERE cb.district = ? AND cb.building_name = ?
+                  AND ch.status = 'success'
+                  AND COALESCE(ch.source, 'naver') <> 'demo'
+                ORDER BY ch.crawled_at DESC
+                LIMIT ?
+                """,
+                (district, building_name, limit),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def get_last_crawl(self, prefer_visible: bool = False):
         with self.get_connection() as conn:
             row = None
