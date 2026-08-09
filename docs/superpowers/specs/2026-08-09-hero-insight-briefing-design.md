@@ -412,3 +412,165 @@ function renderHeroMovers(movers) {
 프런트엔드(`computeMomentumText`, `formatPriceDownRatioLine`, `renderHeroMovers`)는
 이 저장소에 JS 테스트 인프라가 없으므로 기존 관례대로 로컬 서버 수동 스모크 테스트로
 검증한다.
+
+## 추가 설계 (2026-08-09, 배포 후) — 브리핑 카드형 재구성
+
+위 1차 구현이 배포된 뒤, 사용자가 브리핑 문장을 더 길게 만들어 달라고 요청했다.
+목업 3안(A 기준선 / B 문장 하나 추가 / C 항목형 재구성)을 비교한 결과 **C안(브리핑
+카드형)**을 선택했다. 이 절은 C안의 상세 구현 설계다.
+
+### 핵심 변경
+
+`hero-insight-copy` 안의 `<p id="hero-insight-text">`/`<p id="hero-insight-subtext">`
+두 줄 문단을, **증가 / 감소 / 추세 / 알림** 네 개의 짧은 행(row)으로 바꾼다. 각 행은
+왼쪽에 색상이 있는 태그, 오른쪽에 설명 문장을 붙인 한 줄이다.
+
+기존 "서울에서는 강남구(+24)... 변화가 컸습니다" 절(`seoulMovers`/
+`formatSeoulTrendSummary`)은 **제거한다** — 새 "증가"/"감소" 행이 전국 상위 지역을
+이미 구체적으로 보여주므로, 서울로 범위를 좁힌 별도 절을 남기면 "전국 1위는 A인데
+서울은 B가 컸다"는 식으로 같은 종류의 정보가 두 번 다른 스코프로 겹쳐 오히려
+혼란스럽다. `formatSeoulTrendSummary`는 이 자리에서만 쓰이므로 같이 삭제한다
+(dead code로 남기지 않는다).
+
+### `templates/index.html`
+
+```html
+<div class="hero-insight-copy">
+  <div id="hero-insight-rows" class="briefing-rows">
+    <div class="briefing-row">
+      <span class="briefing-row-tag info">상태</span>
+      <span class="briefing-row-text">전국 급매 흐름과 알림 현황을 계산 중입니다.</span>
+    </div>
+  </div>
+</div>
+```
+
+초기 로딩 상태를 정적 HTML에 그대로 남겨 둔다 (기존 두 `<p>`의 초기 텍스트와 동일한
+역할 — JS가 아직 실행되지 않았거나 API 응답 전에도 자연스러운 빈 상태로 보인다).
+
+### `static/css/style.css`
+
+`.hero-insight-text`/`.hero-insight-subtext` 규칙을 제거하고 (다른 곳에서 쓰이지
+않음 — 제거 전 `grep -rn "hero-insight-text\|hero-insight-subtext"`로 재확인할
+것), 목업에서 쓴 것과 동일한 아래 규칙으로 교체한다 (토큰 이름은 이미 앱과
+동일하므로 그대로 복사):
+
+```css
+.briefing-rows { display: grid; gap: 6px; }
+.briefing-row { display: flex; gap: 8px; align-items: baseline; font-size: 12px; line-height: 1.55; }
+.briefing-row-tag {
+  flex-shrink: 0; width: 40px; font-size: 10px; font-weight: 800;
+  letter-spacing: 0.03em; padding-top: 1px;
+}
+.briefing-row-tag.up { color: var(--up); }
+.briefing-row-tag.down { color: var(--down); }
+.briefing-row-tag.mid { color: var(--warn); }
+.briefing-row-tag.info { color: var(--text3); }
+.briefing-row-text { color: var(--text2); }
+```
+
+### `static/js/app.js`
+
+**`updateHeroInsight()` 전면 재작성** — `#hero-insight-text`/`#hero-insight-subtext`
+대신 `#hero-insight-rows`의 `innerHTML`을 채운다. 지역명/단지명은 크롤링 원본
+데이터라 반드시 `escHtml()`로 이스케이프한다 (기존 코드는 `textContent`라 이스케이프가
+필요 없었지만, `innerHTML`로 바뀌므로 이번에 새로 필요해지는 부분이다).
+
+```js
+function renderBriefingRow(tagClass, tagLabel, text) {
+  return `
+    <div class="briefing-row">
+      <span class="briefing-row-tag ${tagClass}">${escHtml(tagLabel)}</span>
+      <span class="briefing-row-text">${text}</span>
+    </div>
+  `;
+}
+
+function topRegionsPhrase(items, count = 3) {
+  // items: 이미 diff 기준으로 정렬된 trend 배열 (호출부에서 정렬해서 넘긴다)
+  if (!items.length) return null;
+  const top = items.slice(0, count);
+  const [first, ...rest] = top;
+  const firstPart = `${escHtml(formatTrendInsightName(first))}(${Number(first.diff) > 0 ? '+' : ''}${fmtNum(first.diff)})`;
+  if (!rest.length) return firstPart;
+  const restPart = rest
+    .map(item => `${escHtml(formatTrendInsightName(item))}(${Number(item.diff) > 0 ? '+' : ''}${fmtNum(item.diff)})`)
+    .join(', ');
+  return `${firstPart}, 이어서 ${restPart}`;
+}
+
+function updateHeroInsight() {
+  const rowsEl = document.getElementById('hero-insight-rows');
+  if (!rowsEl) return;
+
+  const total = Number(state.dashboard.total || 0);
+  const priceDown = Number(state.dashboard.priceDownCount || 0);
+  const alertCount = Number(state.alertRules.length || 0);
+  const trends = state.dashboard.trends || [];
+  const alertLabel = alertCount
+    ? `알림 ${fmtNum(alertCount)}개가 새 매물을 감시 중입니다.`
+    : '아직 등록된 알림은 없습니다.';
+
+  if (!total) {
+    rowsEl.innerHTML = renderBriefingRow(
+      'info', '상태',
+      '전국 급매 흐름과 알림 현황을 계산 중입니다. 데이터가 모이면 지역별 증감과 알림 현황을 보여드립니다.'
+    );
+    return;
+  }
+
+  if (!trends.length) {
+    rowsEl.innerHTML = [
+      renderBriefingRow('mid', '오늘', `전국 급매 ${fmtNum(total)}건입니다.${computeMomentumText(state.dashboard.dailySeries)}`),
+      renderBriefingRow('info', '가격', formatPriceDownRatioLine(state.dashboard.priceDownRatio, priceDown)),
+      renderBriefingRow('info', '알림', alertLabel),
+    ].join('');
+    return;
+  }
+
+  const increasing = [...trends.filter(item => Number(item.diff) > 0)]
+    .sort((a, b) => Number(b.diff) - Number(a.diff));
+  const decreasing = [...trends.filter(item => Number(item.diff) < 0)]
+    .sort((a, b) => Number(a.diff) - Number(b.diff));
+
+  const increaseText = increasing.length
+    ? `${fmtNum(increasing.length)}개 지역 증가 · 최대는 ${topRegionsPhrase(increasing)} 순입니다.`
+    : '오늘은 두드러진 증가 지역이 없습니다.';
+  const decreaseText = decreasing.length
+    ? `${fmtNum(decreasing.length)}개 지역 감소 · 최대는 ${topRegionsPhrase(decreasing)} 순입니다.`
+    : '오늘은 두드러진 감소 지역이 없습니다.';
+  const trendText = `${computeMomentumText(state.dashboard.dailySeries).trim()} ${formatPriceDownRatioLine(state.dashboard.priceDownRatio, priceDown)}`.trim();
+
+  rowsEl.innerHTML = [
+    renderBriefingRow('up', '증가', increaseText),
+    renderBriefingRow('down', '감소', decreaseText),
+    renderBriefingRow('mid', '추세', trendText),
+    renderBriefingRow('info', '알림', alertLabel),
+  ].join('');
+}
+```
+
+`formatTrendInsightName`, `computeMomentumText`, `formatPriceDownRatioLine`은 기존
+그대로 재사용한다 (이번 재작성은 이 세 헬퍼의 출력을 조합하는 방식만 바꾼다).
+`seoulMovers` 계산 블록과 `formatSeoulTrendSummary` 함수 정의는 삭제한다.
+
+### 비범위 (이번 추가 설계에서도 유지)
+
+- `hero-insight-movers`(단지 급변 칩 목록)는 이번 재구성 대상이 아니다 — 그대로 둔다.
+- 서울 외 다른 특정 도시 전용 하이라이트를 새로 추가하지 않는다 (서울 전용 절을
+  제거하는 것이지, 다른 도시로 대체하는 것이 아니다).
+
+### 테스트
+
+JS 테스트 인프라가 없으므로 기존 관례대로 로컬 서버 수동 스모크 테스트로 검증한다.
+확인 항목:
+
+1. `!total` 상태 — 로딩 문구 한 줄만 보인다.
+2. `!trends.length` 상태 (오늘 첫 크롤링 등) — 오늘/가격/알림 세 줄만 보이고 증가/감소
+   행은 없다.
+3. 정상 상태 — 증가/감소/추세/알림 네 줄이 모두 보이고, 지역명에 `<`/`>` 등 특수문자가
+   있어도(가정) `escHtml` 덕분에 깨지지 않는다.
+4. 증가 또는 감소 지역이 0개인 날(극단적 케이스) — 해당 행이 "두드러진 ... 없습니다"
+   폴백 문구로 보인다.
+5. 브라우저 콘솔에 에러가 없고, `node --check static/js/app.js` 통과.
+6. 기존 pytest 스위트(백엔드는 이번 재구성으로 변경되지 않음)가 그대로 54/54 통과.
