@@ -1507,13 +1507,6 @@ body {
   text-transform: uppercase;
 }
 
-.hero-insight-text {
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.5;
-}
-
 .hero-insight-copy {
   display: grid;
   flex: 1;
@@ -1521,11 +1514,17 @@ body {
   min-width: 0;
 }
 
-.hero-insight-subtext {
-  color: var(--text3);
-  font-size: 11px;
-  line-height: 1.55;
+.briefing-rows { display: grid; gap: 6px; }
+.briefing-row { display: flex; gap: 8px; align-items: baseline; font-size: 12px; line-height: 1.55; }
+.briefing-row-tag {
+  flex-shrink: 0; width: 40px; font-size: 10px; font-weight: 800;
+  letter-spacing: 0.03em; padding-top: 1px;
 }
+.briefing-row-tag.up { color: var(--up); }
+.briefing-row-tag.down { color: var(--down); }
+.briefing-row-tag.mid { color: var(--warn); }
+.briefing-row-tag.info { color: var(--text3); }
+.briefing-row-text { color: var(--text2); }
 
 .hero-insight-movers {
   display: flex;

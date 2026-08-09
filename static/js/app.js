@@ -165,59 +165,75 @@ function updateListingsSummary(total = null) {
   el.textContent = `${label} 조건 결과 ${fmtNum(total)}건`;
 }
 
+function renderBriefingRow(tagClass, tagLabel, text) {
+  return `
+    <div class="briefing-row">
+      <span class="briefing-row-tag ${tagClass}">${escHtml(tagLabel)}</span>
+      <span class="briefing-row-text">${text}</span>
+    </div>
+  `;
+}
+
+function topRegionsPhrase(items, count = 3) {
+  const top = items.slice(0, count);
+  if (!top.length) return null;
+  const [first, ...rest] = top;
+  const firstPart = `${escHtml(formatTrendInsightName(first))}(${Number(first.diff) > 0 ? '+' : ''}${fmtNum(first.diff)})`;
+  if (!rest.length) return firstPart;
+  const restPart = rest
+    .map(item => `${escHtml(formatTrendInsightName(item))}(${Number(item.diff) > 0 ? '+' : ''}${fmtNum(item.diff)})`)
+    .join(', ');
+  return `${firstPart}, 이어서 ${restPart}`;
+}
+
 function updateHeroInsight() {
-  const el = document.getElementById('hero-insight-text');
-  const subEl = document.getElementById('hero-insight-subtext');
-  if (!el || !subEl) return;
+  const rowsEl = document.getElementById('hero-insight-rows');
+  if (!rowsEl) return;
 
   const total = Number(state.dashboard.total || 0);
   const priceDown = Number(state.dashboard.priceDownCount || 0);
   const alertCount = Number(state.alertRules.length || 0);
   const trends = state.dashboard.trends || [];
+  const alertLabel = alertCount
+    ? `알림 ${fmtNum(alertCount)}개가 새 매물을 감시 중입니다.`
+    : '아직 등록된 알림은 없습니다.';
 
   if (!total) {
-    el.textContent = '전국 급매 흐름과 알림 현황을 계산 중입니다.';
-    subEl.textContent = '서울 주요 지역과 가격인하 변화는 트렌드 집계 후 함께 보여드립니다.';
+    rowsEl.innerHTML = renderBriefingRow(
+      'info', '상태',
+      '전국 급매 흐름과 알림 현황을 계산 중입니다. 데이터가 모이면 지역별 증감과 알림 현황을 보여드립니다.'
+    );
     return;
   }
 
   if (!trends.length) {
-    const alertLabel = alertCount
-      ? `알림 ${fmtNum(alertCount)}개가 새 매물을 감시 중입니다.`
-      : '아직 등록된 알림은 없습니다.';
-    el.textContent = `전국 급매 ${fmtNum(total)}건입니다.`
-      + computeMomentumText(state.dashboard.dailySeries);
-    subEl.textContent = [
-      formatPriceDownRatioLine(state.dashboard.priceDownRatio, priceDown),
-      alertLabel,
-    ].join(' ');
+    rowsEl.innerHTML = [
+      renderBriefingRow('mid', '오늘', `전국 급매 ${fmtNum(total)}건입니다.${computeMomentumText(state.dashboard.dailySeries)}`),
+      renderBriefingRow('info', '가격', formatPriceDownRatioLine(state.dashboard.priceDownRatio, priceDown)),
+      renderBriefingRow('info', '알림', alertLabel),
+    ].join('');
     return;
   }
 
-  const increasing = trends.filter(item => Number(item.diff) > 0);
-  const decreasing = trends.filter(item => Number(item.diff) < 0);
-  const topIncrease = [...increasing].sort((a, b) => Number(b.diff) - Number(a.diff))[0];
-  const topDecrease = [...decreasing].sort((a, b) => Number(a.diff) - Number(b.diff))[0];
-  const seoulMovers = trends
-    .filter(item => item.region === '서울특별시' && Number(item.diff) !== 0)
-    .sort((a, b) => Math.abs(Number(b.diff)) - Math.abs(Number(a.diff)))
-    .slice(0, 3);
-  const alertLabel = alertCount
-    ? `알림 ${fmtNum(alertCount)}개가 새 매물을 감시 중입니다.`
-    : '아직 등록된 알림은 없습니다.';
-  const firstLine = [
-    `1일 기준 ${fmtNum(increasing.length)}개 지역 증가, ${fmtNum(decreasing.length)}개 지역 감소입니다.`,
-    topIncrease ? `증가폭 최대는 ${formatTrendInsightName(topIncrease)}(+${fmtNum(topIncrease.diff)})입니다.` : '',
-    topDecrease ? `감소폭 최대는 ${formatTrendInsightName(topDecrease)}(${fmtNum(topDecrease.diff)})입니다.` : '',
-  ].filter(Boolean).join(' ');
-  const secondLine = [
-    seoulMovers.length ? `서울에서는 ${formatSeoulTrendSummary(seoulMovers)} 변화가 컸습니다.` : '',
-    formatPriceDownRatioLine(state.dashboard.priceDownRatio, priceDown),
-    alertLabel,
-  ].filter(Boolean).join(' ');
+  const increasing = [...trends.filter(item => Number(item.diff) > 0)]
+    .sort((a, b) => Number(b.diff) - Number(a.diff));
+  const decreasing = [...trends.filter(item => Number(item.diff) < 0)]
+    .sort((a, b) => Number(a.diff) - Number(b.diff));
 
-  el.textContent = firstLine + computeMomentumText(state.dashboard.dailySeries);
-  subEl.textContent = secondLine;
+  const increaseText = increasing.length
+    ? `${fmtNum(increasing.length)}개 지역 증가 · 최대는 ${topRegionsPhrase(increasing)} 순입니다.`
+    : '오늘은 두드러진 증가 지역이 없습니다.';
+  const decreaseText = decreasing.length
+    ? `${fmtNum(decreasing.length)}개 지역 감소 · 최대는 ${topRegionsPhrase(decreasing)} 순입니다.`
+    : '오늘은 두드러진 감소 지역이 없습니다.';
+  const trendText = `${computeMomentumText(state.dashboard.dailySeries).trim()} ${formatPriceDownRatioLine(state.dashboard.priceDownRatio, priceDown)}`.trim();
+
+  rowsEl.innerHTML = [
+    renderBriefingRow('up', '증가', increaseText),
+    renderBriefingRow('down', '감소', decreaseText),
+    renderBriefingRow('mid', '추세', trendText),
+    renderBriefingRow('info', '알림', alertLabel),
+  ].join('');
 }
 
 function formatPriceDownRatioLine(ratio, fallbackCount) {
@@ -232,12 +248,6 @@ function formatPriceDownRatioLine(ratio, fallbackCount) {
 
 function formatTrendInsightName(item) {
   return item.display_name || `${item.region} ${item.district}`;
-}
-
-function formatSeoulTrendSummary(items) {
-  return items
-    .map(item => `${item.district}(${Number(item.diff) > 0 ? '+' : ''}${fmtNum(item.diff)})`)
-    .join(', ');
 }
 
 function hasNumericValue(item, field = 'total_count') {
