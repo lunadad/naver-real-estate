@@ -937,6 +937,70 @@ class Database:
             )
         return metadata
 
+    def _bulk_update_by_id(
+        self,
+        conn: ConnectionWrapper,
+        table: str,
+        columns: List[str],
+        column_types: Dict[str, str],
+        rows: List[Tuple],
+        coalesce_columns: Optional[set] = None,
+        chunk_size: int = 500,
+    ):
+        """id 기준으로 여러 행을 한 번의 WITH v(...) AS (VALUES...) UPDATE로 갱신한다.
+
+        `rows`의 각 튜플은 (id, col1값, col2값, ...) 순서로 `columns`와 맞아야
+        한다. 행 하나당 UPDATE를 하나씩 날리는 대신 `chunk_size`개씩 묶어
+        라운드트립 수를 행 수가 아니라 청크 수에 비례하게 줄인다.
+
+        VALUES는 `FROM (VALUES ...) AS v(...)` 형태가 아니라 CTE
+        (`WITH v(...) AS (VALUES ...)`) 형태로 작성한다 — 전자는 SQLite가
+        컬럼 별칭이 붙은 인라인 서브쿼리를 지원하지 않아 구문 오류가 나지만,
+        후자는 SQLite와 Postgres 양쪽에서 동일하게 동작한다.
+
+        VALUES 리터럴은 각 값에 명시적으로 CAST를 씌운다 — 그러지 않으면
+        한 청크 안에서 특정 컬럼이 전부 NULL일 때 Postgres가 그 컬럼의
+        타입을 추론하지 못해 에러가 난다 (예: 월세가 아닌 매물만 모인
+        청크의 rent_sort_value). CAST(... AS TYPE)은 SQLite에서도 타입
+        어피니티 규칙에 따라 동일하게 동작하므로 두 드라이버 모두에서 안전하다.
+        """
+        if not rows:
+            return
+
+        coalesce_columns = coalesce_columns or set()
+        value_columns = ["id"] + columns
+        set_clause = ", ".join(
+            f"{col} = COALESCE(v.{col}, {table}.{col})"
+            if col in coalesce_columns
+            else f"{col} = v.{col}"
+            for col in columns
+        )
+        value_columns_sql = ", ".join(value_columns)
+
+        for start in range(0, len(rows), chunk_size):
+            chunk = rows[start : start + chunk_size]
+            row_placeholders = []
+            params: List[object] = []
+            for row in chunk:
+                casts = [
+                    f"CAST(? AS {column_types[col]})"
+                    for col in value_columns
+                ]
+                row_placeholders.append(f"({', '.join(casts)})")
+                params.extend(row)
+            values_sql = ", ".join(row_placeholders)
+
+            conn.execute(
+                f"""
+                WITH v({value_columns_sql}) AS (VALUES {values_sql})
+                UPDATE {table}
+                SET {set_clause}
+                FROM v
+                WHERE {table}.id = v.id
+                """,
+                params,
+            )
+
     def _backfill_price_sort_values(self, conn: ConnectionWrapper):
         rows = conn.execute(
             """
@@ -946,18 +1010,24 @@ class Database:
             """
         ).fetchall()
 
+        updates = []
         for row in rows:
             price_value, rent_value = self._parse_price_sort_values(
                 row["price"], row["trade_type"]
             )
-            conn.execute(
-                """
-                UPDATE listings
-                SET price_sort_value = ?, rent_sort_value = ?
-                WHERE id = ?
-                """,
-                (price_value, rent_value, row["id"]),
-            )
+            updates.append((row["id"], price_value, rent_value))
+
+        self._bulk_update_by_id(
+            conn,
+            table="listings",
+            columns=["price_sort_value", "rent_sort_value"],
+            column_types={
+                "id": "BIGINT",
+                "price_sort_value": "BIGINT",
+                "rent_sort_value": "BIGINT",
+            },
+            rows=updates,
+        )
 
     def _backfill_commercial_metadata(self, conn: ConnectionWrapper):
         rows = conn.execute(
@@ -974,33 +1044,47 @@ class Database:
             """
         ).fetchall()
 
+        columns = [
+            "raw_property_code",
+            "area_m2",
+            "land_use_zone",
+            "land_category",
+            "road_access",
+            "premium_info",
+            "estimated_yield_rate",
+            "price_drop_rate",
+        ]
+        updates = []
         for row in rows:
             metadata = self._build_listing_metadata(dict(row))
-            conn.execute(
-                """
-                UPDATE listings
-                SET raw_property_code = ?,
-                    area_m2 = ?,
-                    land_use_zone = COALESCE(?, land_use_zone),
-                    land_category = COALESCE(?, land_category),
-                    road_access = COALESCE(?, road_access),
-                    premium_info = COALESCE(?, premium_info),
-                    estimated_yield_rate = COALESCE(?, estimated_yield_rate),
-                    price_drop_rate = COALESCE(?, price_drop_rate)
-                WHERE id = ?
-                """,
-                (
-                    metadata["raw_property_code"],
-                    metadata["area_m2"],
-                    metadata["land_use_zone"],
-                    metadata["land_category"],
-                    metadata["road_access"],
-                    metadata["premium_info"],
-                    metadata["estimated_yield_rate"],
-                    metadata["price_drop_rate"],
-                    row["id"],
-                ),
-            )
+            updates.append((row["id"], *(metadata[col] for col in columns)))
+
+        self._bulk_update_by_id(
+            conn,
+            table="listings",
+            columns=columns,
+            column_types={
+                "id": "BIGINT",
+                "raw_property_code": "TEXT",
+                "area_m2": "DOUBLE PRECISION",
+                "land_use_zone": "TEXT",
+                "land_category": "TEXT",
+                "road_access": "TEXT",
+                "premium_info": "TEXT",
+                "estimated_yield_rate": "DOUBLE PRECISION",
+                "price_drop_rate": "DOUBLE PRECISION",
+            },
+            rows=updates,
+            # raw_property_code/area_m2는 원본 로직대로 COALESCE 없이 매번 덮어쓴다.
+            coalesce_columns={
+                "land_use_zone",
+                "land_category",
+                "road_access",
+                "premium_info",
+                "estimated_yield_rate",
+                "price_drop_rate",
+            },
+        )
 
     def _get_latest_session_id(
         self,
