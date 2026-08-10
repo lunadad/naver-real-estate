@@ -520,7 +520,7 @@ class NaverRealEstateCrawler:
                                         district_count += 1
 
                                 except Exception as e:
-                                    logger.debug(f"API 오류 ({district_name}/{ptype_code}/{ttype_code}): {e}")
+                                    logger.warning(f"API 오류 ({district_name}/{ptype_code}/{ttype_code}): {e}")
 
                         logger.info(
                             f"[{done}/{total_districts}] {region_name} {district_name}: "
