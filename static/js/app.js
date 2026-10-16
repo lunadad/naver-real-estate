@@ -476,12 +476,18 @@ function renderBuildingTrendBody(items, district = '', buildingName = '', summar
     return `
       <div class="building-trend-bar-wrap has-tooltip" data-tooltip="${escHtml(tooltip)}">
         <div class="building-trend-bar ${hasValue ? directionClass : 'missing'}" style="height:${height}px"></div>
-        <span class="building-trend-mobile-value">${hasValue ? escHtml(fmtNum(value)) : '—'}</span>
       </div>
     `;
   }).join('');
 
-  const labels = items.map(item => `<span class="building-trend-day">${escHtml(item.label || '')}</span>`).join('');
+  const labels = items.map(item => {
+    const count = hasNumericValue(item) ? fmtNum(Number(item.total_count)) : '—';
+    return `
+      <span class="building-trend-day">
+        <span class="building-trend-date">${escHtml(item.label || '')}</span>
+        <span class="building-trend-count">${escHtml(count)}</span>
+      </span>`;
+  }).join('');
   const comparison = summary
     ? (() => {
         const difference = Number(summary.difference || 0);

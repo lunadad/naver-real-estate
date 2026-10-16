@@ -1192,9 +1192,6 @@ a { color: var(--accent); text-decoration: none; }
   background: color-mix(in srgb, var(--border) 84%, transparent);
   opacity: 0.7;
 }
-.building-trend-mobile-value {
-  display: none;
-}
 .building-trend-labels {
   display: grid;
   grid-template-columns: repeat(14, minmax(0, 1fr));
@@ -1202,9 +1199,16 @@ a { color: var(--accent); text-decoration: none; }
   margin-top: 6px;
 }
 .building-trend-day {
+  display: grid;
+  gap: 2px;
   text-align: center;
   font-size: 9px;
   color: var(--text3);
+}
+.building-trend-count {
+  color: var(--text2);
+  font-family: var(--font-mono);
+  white-space: nowrap;
 }
 
 .modal-row {
@@ -2660,17 +2664,7 @@ body.sidebar-overlay-open {
 }
 
 @media (max-width: 480px) {
-  .building-trend-chart,
-  .building-trend-bar-wrap {
-    min-height: 108px;
-  }
-
-  .building-trend-mobile-value {
-    display: block;
-    margin-top: 4px;
-    color: var(--text2);
-    font-family: var(--font-mono);
+  .building-trend-count {
     font-size: 8px;
-    line-height: 1;
   }
 }
