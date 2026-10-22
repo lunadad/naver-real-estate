@@ -184,6 +184,49 @@ class RunTest(unittest.TestCase):
         self.assertEqual(self.sent, [failure_message])
         self.assertEqual(AlertState(self.state_path).take_pending(), [])
 
+    def test_retry_slot_after_local_success_skips_without_touching_db(self):
+        AlertState(self.state_path).record_attempt(date(2026, 10, 22), success=True)
+
+        def broken(url):
+            raise OSError("network is unreachable")
+
+        self.assertEqual(self._run(now=AT_15, db_factory=broken), 0)
+        self.assertEqual(self.sent, [])
+        self.crawler.crawl_all.assert_not_called()
+
+    def test_run_ending_after_midnight_counts_as_final_slot(self):
+        times = iter([datetime(2026, 10, 22, 15, 0), datetime(2026, 10, 23, 0, 40)])
+        self.crawler.crawl_all.return_value = {"status": "failed", "failed_combos": 0, "total_combos": 0}
+        result = run(
+            self._args(),
+            now_fn=lambda: next(times),
+            db_factory=lambda url: self.db,
+            crawler_factory=lambda db: self.crawler,
+            send=lambda text: self.sent.append(text) or True,
+        )
+        self.assertEqual(result, 1)
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn("최종 실패", self.sent[0])
+
+    def test_alert_redacts_database_credentials(self):
+        def broken(url):
+            raise RuntimeError('invalid dsn: "postgresql://neondb_owner:npg_SECRET@host/db" password=npg_SECRET2 x')
+
+        self._run(now=AT_15, db_factory=broken)
+        self.assertNotIn("npg_SECRET", self.sent[0])
+        self.assertIn("postgresql://***@host/db", self.sent[0])
+        self.assertIn("password=***", self.sent[0])
+
+    def test_unwritable_alert_state_still_crawls_and_alerts(self):
+        self.state_path.parent.chmod(0o500)
+        self.addCleanup(self.state_path.parent.chmod, 0o700)
+
+        def broken(url):
+            raise RuntimeError("down")
+
+        self.assertEqual(self._run(now=AT_15, db_factory=broken), 1)
+        self.assertEqual(len(self.sent), 1)
+
     def test_pending_that_fails_again_stays_pending_once(self):
         AlertState(self.state_path).add_pending("old")
         self._run(send_ok=False)

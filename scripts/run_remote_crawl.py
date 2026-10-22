@@ -1,9 +1,10 @@
 import argparse
 import logging
 import os
+import re
 import sys
 import time
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from typing import List, Optional
@@ -106,11 +107,16 @@ def decide_alerts(
     failed_combos: int,
     total_combos: int,
     error: Optional[str],
+    day: Optional[date] = None,
 ) -> List[str]:
-    """이번 실행 결과로 보낼 텔레그램 메시지 목록을 정한다. 정상 성공이면 빈 목록."""
+    """이번 실행 결과로 보낼 텔레그램 메시지 목록을 정한다. 정상 성공이면 빈 목록.
+
+    day는 실행을 시작한 날짜다. 자정을 넘겨 끝난 실행은 마지막 슬롯으로 본다.
+    """
     clock = now.strftime("%H:%M")
     if not success:
-        if now.hour < final_hour:
+        ended_on_later_day = day is not None and now.date() > day
+        if now.hour < final_hour and not ended_on_later_day:
             return []
         cause = error or "status=failed"
         if not error and failed_combos:
@@ -128,6 +134,12 @@ def decide_alerts(
     return ["\n".join(lines)] if lines else []
 
 
+def redact_secrets(text: str) -> str:
+    """오류 문자열에 섞인 DB 접속 정보(user:password@, password=...)를 가린다."""
+    text = re.sub(r"://[^/@\s]+@", "://***@", text)
+    return re.sub(r"(password=)\S+", r"\1***", text)
+
+
 def _send_or_keep(state: AlertState, send, messages: List[str]):
     for text in messages:
         if not send(text):
@@ -142,6 +154,10 @@ def run(args, *, now_fn=datetime.now, db_factory=None, crawler_factory=None, sen
     _send_or_keep(state, send, state.take_pending())
 
     today = now_fn().date()
+    if args.skip_if_succeeded_today and state.had_success(today):
+        logger.info("오늘(%s) 크롤링이 이미 성공해(로컬 기록) 이번 슬롯은 건너뜀", today.isoformat())
+        return 0
+
     db = None
     result = {}
     error = None
@@ -152,7 +168,7 @@ def run(args, *, now_fn=datetime.now, db_factory=None, crawler_factory=None, sen
             return 0
         result = crawler_factory(db).crawl_all()
     except Exception as exc:
-        error = f"{type(exc).__name__}: {exc}"
+        error = redact_secrets(f"{type(exc).__name__}: {exc}")
         logger.exception("Local remote crawl crashed")
     finally:
         if db is not None:
@@ -181,6 +197,7 @@ def run(args, *, now_fn=datetime.now, db_factory=None, crawler_factory=None, sen
         failed_combos=int(result.get("failed_combos") or 0),
         total_combos=int(result.get("total_combos") or 0),
         error=error,
+        day=today,
     )
     _send_or_keep(state, send, messages)
     return 0 if success else 1
