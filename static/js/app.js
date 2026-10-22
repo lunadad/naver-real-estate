@@ -17,6 +17,7 @@ const state = {
     district: '',
     sort_by: 'price-desc',
     price_down_only: false,
+    bargain_only: false,
     tags: [],
   },
   tagCounts: [],
@@ -110,6 +111,21 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
 
+// 진짜 급매: 단지 중앙값 대비 10~40% 싼 매매 (서버 bargain.py와 같은 기준)
+const BARGAIN_MIN = 0.10;
+const BARGAIN_MAX = 0.40;
+const BARGAIN_BASIS_TITLES = {
+  same_area: '같은 단지·같은 평형 매매 중앙값 대비',
+  complex_m2: '같은 단지 ㎡당 매매가 중앙값 대비',
+};
+
+function bargainBadge(listing) {
+  const d = Number(listing.bargain_discount);
+  if (listing.bargain_discount == null || !(d >= BARGAIN_MIN && d <= BARGAIN_MAX)) return '';
+  const title = BARGAIN_BASIS_TITLES[listing.bargain_basis] || '단지 중앙값 대비';
+  return `<span class="badge badge-bargain" title="${escHtml(title)}">💎 단지 중앙값 −${Math.round(d * 100)}%</span>`;
+}
+
 function buildCurrentFilterLabel() {
   const parts = [];
   if (state.filters.search) parts.push(`검색 ${state.filters.search}`);
@@ -118,6 +134,7 @@ function buildCurrentFilterLabel() {
   if (state.filters.property_type === '__OTHER__') parts.push('유형 기타');
   if (state.filters.trade_type) parts.push(`거래 ${state.filters.trade_type}`);
   if (state.filters.price_down_only) parts.push('가격인하만');
+  if (state.filters.bargain_only) parts.push('진짜 급매만');
   if (state.filters.tags.length) parts.push(`태그 ${state.filters.tags.join(',')}`);
   return parts.length ? parts.join(' · ') : '전체 급매';
 }
@@ -781,6 +798,7 @@ async function refreshMapListings() {
     if (state.filters[key]) q.set(key, state.filters[key]);
   });
   if (state.filters.price_down_only) q.set('price_down_only', 'true');
+  if (state.filters.bargain_only) q.set('bargain_only', 'true');
   if (state.filters.tags.length) q.set('tags', state.filters.tags.join(','));
 
   const token = ++state.mapListingsToken;
@@ -1033,6 +1051,7 @@ function renderListings(data) {
           <span class="badge badge-urgent">${hasPriceDown ? '가격인하' : '급매'}</span>
           <span class="badge ${tradeBadgeClass(l.trade_type)}">${escHtml(l.trade_type)}</span>
           <span class="badge badge-type">${escHtml(l.property_type)}</span>
+          ${bargainBadge(l)}
           ${l.building_change_badge ? `<span class="badge badge-building-change badge-building-change-${escHtml(l.building_change_badge.kind)}" title="직전 일별 스냅샷 대비">${escHtml(l.building_change_badge.label)}</span>` : ''}
         </div>
         <div class="card-date-chip">확인 ${formatDate(l.confirmed_date) || '—'}</div>
@@ -1073,6 +1092,8 @@ function updateStats(data) {
   // 가격인하 수 (서버에서 안 내려오면 0)
   const pdEl = document.getElementById('stat-price-down');
   if (pdEl) pdEl.textContent = fmtNum(data.price_down_count || 0);
+  const bargainEl = document.getElementById('stat-bargain');
+  if (bargainEl) bargainEl.textContent = fmtNum(data.bargain_count || 0);
   const heroTotal = document.getElementById('hero-total-count');
   if (heroTotal) heroTotal.textContent = fmtNum(data.total || 0);
   const heroPriceDown = document.getElementById('hero-price-down-count');
@@ -1891,14 +1912,18 @@ function wireEvents() {
       if (filter === 'all' || isActive) {
         state.activeStatFilter = '';
         state.filters.price_down_only = false;
+        state.filters.bargain_only = false;
         state.filters.property_type = '';
       } else {
         state.activeStatFilter = filter;
         state.filters.price_down_only = false;
+        state.filters.bargain_only = false;
         state.filters.property_type = '';
 
         if (filter === 'price-down') {
           state.filters.price_down_only = true;
+        } else if (filter === 'bargain') {
+          state.filters.bargain_only = true;
         } else if (filter === '__OTHER__') {
           state.filters.property_type = '__OTHER__';
         } else {
