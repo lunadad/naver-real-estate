@@ -5,6 +5,7 @@ Hermes 플러그인(integrations/hermes/real-estate)이 이 함수들을 호출�
 """
 
 import json
+import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
@@ -51,6 +52,18 @@ def describe_rule(rule: Dict) -> str:
     return f"#{rule['id']} {rule_label(rule)}"
 
 
+def _ambiguous_reply(parsed: Dict) -> Optional[str]:
+    if not parsed.get("ambiguous"):
+        return None
+    token = parsed["ambiguous"][0]
+    return (f"'{token}'가 가격인지 할인율인지 알 수 없어요. "
+            f"{token}% 또는 {token}억처럼 단위를 붙여 주세요.")
+
+
+def _is_not_found(exc: Exception) -> bool:
+    return isinstance(exc, urllib.error.HTTPError) and exc.code == 404
+
+
 def _unknown_region_reply(parsed: Dict) -> str:
     return f"지역을 찾지 못했습니다: {' '.join(parsed['unknown']) or '(없음)'}\n" + DEALS_USAGE
 
@@ -60,6 +73,8 @@ def handle_deals(raw: str, *, fetch: Callable = fetch_site,
     if not (raw or "").strip():
         return DEALS_USAGE
     parsed = parse_deal_args(raw, districts if districts is not None else load_districts())
+    if _ambiguous_reply(parsed):
+        return _ambiguous_reply(parsed)
     if not parsed["district"]:
         return _unknown_region_reply(parsed)
     params = {
@@ -100,7 +115,9 @@ def handle_complex(raw: str, *, fetch: Callable = fetch_site) -> str:
     district, building = candidates.most_common(1)[0][0]
     try:
         data = fetch("/api/complex", {"district": district, "building_name": building})
-    except Exception:
+    except Exception as exc:
+        if _is_not_found(exc):
+            return f"'{building}' ({district}) 단지 데이터를 찾지 못했습니다."
         return OFFLINE_REPLY
     stats = data.get("stats") or {}
     current, week_ago = stats.get("current_count"), stats.get("week_ago_count")
@@ -120,7 +137,9 @@ def handle_complex(raw: str, *, fetch: Callable = fetch_site) -> str:
 def handle_weekly(raw: str, *, fetch: Callable = fetch_site) -> str:
     try:
         return str(fetch("/api/weekly-report", None))
-    except Exception:
+    except Exception as exc:
+        if _is_not_found(exc):
+            return "아직 크롤링 데이터가 없습니다. 첫 크롤링이 끝난 뒤 다시 시도해 주세요."
         return OFFLINE_REPLY
 
 
@@ -130,6 +149,8 @@ def handle_dealalert(raw: str, *, store: Optional[TelegramRuleStore] = None,
     action, _, rest = (raw or "").strip().partition(" ")
     if action == "add":
         parsed = parse_deal_args(rest, districts if districts is not None else load_districts())
+        if _ambiguous_reply(parsed):
+            return _ambiguous_reply(parsed)
         if not parsed["district"]:
             return _unknown_region_reply(parsed)
         rule = store.add(district=parsed["district"], region=parsed["region"] or "",

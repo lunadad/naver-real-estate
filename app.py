@@ -214,13 +214,23 @@ def listing_filter_args():
     }
 
 
+MAX_PRICE_LIMIT = 10_000_000  # 만원 (= 1,000억)
+
+
 def optional_positive_int(value):
-    """양의 정수 문자열이면 int, 아니면 None (잘못된 값은 필터 없음으로 취급)."""
+    """1~MAX_PRICE_LIMIT 정수 문자열이면 int, 아니면 None (잘못된 값은 필터 없음으로 취급)."""
     try:
         number = int(str(value).strip())
     except (TypeError, ValueError):
         return None
-    return number if number > 0 else None
+    return number if 0 < number <= MAX_PRICE_LIMIT else None
+
+
+def parse_bool(value) -> bool:
+    """JSON의 true/1과 문자열 "true"/"1"/"yes"/"on"만 참. "false"·"0"·""은 거짓."""
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(value)
 
 db = Database(db_path=DB_PATH, database_url=DATABASE_URL)
 atexit.register(db.close)
@@ -284,7 +294,7 @@ def ensure_initial_data():
     import uuid as _uuid
 
     sid = str(_uuid.uuid4())[:8]
-    db.insert_listings(demo, sid)
+    db.insert_listings(demo, sid, record_tracking=False)
     db.log_crawl(sid, len(demo), len(demo), "degraded", "demo")
     logger.warning(f"데모 데이터 {len(demo)}개 로드 완료 [status=degraded, source=demo]")
 
@@ -776,7 +786,7 @@ def create_alert_rule():
             "district, building_name and positive min_daily_change required", 400
         )
 
-    bargain_only = bool(data.get("bargain_only"))
+    bargain_only = parse_bool(data.get("bargain_only"))
     min_discount = data.get("min_discount")
     if min_discount not in (None, ""):
         try:
@@ -793,8 +803,8 @@ def create_alert_rule():
             max_price = int(max_price)
         except (TypeError, ValueError):
             return error_response("max_price must be an integer (만원)", 400)
-        if max_price <= 0:
-            return error_response("max_price must be positive", 400)
+        if not 0 < max_price <= MAX_PRICE_LIMIT:
+            return error_response("max_price must be between 1 and 10,000,000 (만원)", 400)
     else:
         max_price = None
 

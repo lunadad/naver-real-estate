@@ -795,7 +795,7 @@ class NaverRealEstateCrawler:
                 urgent_count = len(all_listings)
 
                 def persist_degraded_crawl():
-                    self.db.insert_listings(all_listings, session_id)
+                    self.db.insert_listings(all_listings, session_id, record_tracking=False)
                     self.db.log_crawl(session_id, len(all_listings), urgent_count, "degraded", source)
                     return {"total": len(all_listings), "urgent": urgent_count, "source": source, "status": "degraded"}
 

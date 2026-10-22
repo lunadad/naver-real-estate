@@ -1555,7 +1555,7 @@ async function ensureNotificationsReady(interactive = false) {
 async function saveAlertRule() {
   const draft = buildAlertDraft();
   if (draft.max_price_invalid) {
-    showToast('매매가 상한은 "20억", "15억5천"처럼 입력하세요.', 'error');
+    showToast('가격 상한은 "20억", "15억5천"처럼 입력하세요.', 'error');
     return;
   }
   delete draft.max_price_invalid;
@@ -2169,24 +2169,6 @@ function presetDistrictFromQuery() {
   }
 }
 
-function addHeatmapLinks() {
-  const make = () => {
-    const a = document.createElement('a');
-    a.className = 'heatmap-nav-link';
-    a.href = '/heatmap';
-    a.textContent = '지역 히트맵';
-    return a;
-  };
-  const headerRight = document.querySelector('.header-right');
-  if (headerRight) headerRight.insertBefore(make(), headerRight.firstChild);
-  const sidebar = document.getElementById('sidebar');
-  if (sidebar) {
-    const link = make();
-    link.style.margin = '10px 12px 0';
-    sidebar.insertBefore(link, sidebar.firstChild);
-  }
-}
-
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   state.clientId = getClientId();
@@ -2201,7 +2183,6 @@ async function init() {
 
   wireEvents();
   presetDistrictFromQuery();
-  addHeatmapLinks();
   initMap();
   applyMapVisibility();
   refreshAlertDraftSummary();

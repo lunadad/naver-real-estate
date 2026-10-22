@@ -62,7 +62,8 @@
   </div>
 
   <div class="header-right">
-    <a class="tr-nav-link" href="/disappeared">사라진 매물</a>
+    <a class="nav-link-pill" href="/heatmap">지역 히트맵</a>
+    <a class="nav-link-pill" href="/disappeared">사라진 매물</a>
     <div class="divider-v"></div>
     <button id="theme-btn" title="다크/라이트 전환">
       <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -92,6 +93,7 @@
       <span>지역 트렌드</span>
       <button id="sidebar-toggle" title="사이드바 접기">◀</button>
     </div>
+    <a class="tr-sidebar-link" href="/heatmap">지역 히트맵 보기 →</a>
     <a class="tr-sidebar-link" href="/disappeared">사라진 매물 보기 →</a>
 
     <div class="sidebar-section alert-section">
@@ -126,8 +128,8 @@
               </select>
             </div>
             <div class="alert-bargain-row">
-              <label class="alert-field" for="alert-max-price">매매가 상한</label>
-              <input id="alert-max-price" class="alert-input" type="text" inputmode="text" placeholder="예: 20억, 15억5천" />
+              <label class="alert-field" for="alert-max-price">가격 상한</label>
+              <input id="alert-max-price" class="alert-input" type="text" inputmode="text" placeholder="매매가·보증금, 예: 20억" />
             </div>
           </div>
           <div id="alert-current-filters" class="alert-current-filters"></div>

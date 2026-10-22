@@ -1357,9 +1357,11 @@ class Database:
         listings: List[Dict],
         session_id: str,
         incomplete_scopes: Optional[Sequence[Sequence[str]]] = None,
+        record_tracking: bool = True,
     ):
         """세션을 저장한다. incomplete_scopes는 크롤러가 실패한 (구, 매물유형, 거래유형) 목록으로,
-        이 범위의 매물은 사라진 매물로 기록하지 않는다."""
+        이 범위의 매물은 사라진 매물로 기록하지 않는다. record_tracking=False(데모 데이터)면
+        가격 이력·사라진 매물 기록을 건너뛴다."""
         insert_sql = """
             INSERT INTO listings
             (article_no, region, district, property_type, trade_type, price,
@@ -1419,12 +1421,14 @@ class Database:
                 {**listing, "price_sort_value": price_value}
                 for listing, (price_value, _) in zip(listings, price_values)
             )
-            tracked = tracking_store.record_price_events(
-                conn, listings, price_values, session_id, now
+            tracked = (
+                tracking_store.record_price_events(conn, listings, price_values, session_id, now)
+                if record_tracking
+                else {}
             )
             rows = []
             for listing, (price_value, rent_value) in zip(listings, price_values):
-                first_seen_at, price_cut_count = tracked[str(listing.get("article_no"))]
+                first_seen_at, price_cut_count = tracked.get(str(listing.get("article_no")), (None, 0))
                 bargain_discount, bargain_basis = bargain_scores.get(
                     str(listing.get("article_no")), (None, None)
                 )
@@ -1465,11 +1469,12 @@ class Database:
                 for row in rows:
                     conn.execute(insert_sql, row)
 
-            tracking_store.mark_reappeared(
-                conn, (listing.get("article_no") for listing in listings), session_id, now
-            )
-            tracking_store.record_disappearances(conn, session_id, now, incomplete_scopes)
-            tracking_store.prune(conn, datetime.fromisoformat(now))
+            if record_tracking:
+                tracking_store.mark_reappeared(
+                    conn, (listing.get("article_no") for listing in listings), session_id, now
+                )
+                tracking_store.record_disappearances(conn, session_id, now, incomplete_scopes)
+                tracking_store.prune(conn, datetime.fromisoformat(now))
 
             conn.execute("DELETE FROM crawl_region_stats WHERE session_id = ?", (session_id,))
             region_payload = [

@@ -82,11 +82,16 @@ def match_district(text: str, districts: List[Dict[str, str]],
 
 def parse_deal_args(raw: str, districts: List[Dict[str, str]]) -> Dict:
     """"/deals 송파구 20억 15%" 인자 → {district, region, max_price, min_discount, unknown}."""
-    result = {"district": None, "region": None, "max_price": None, "min_discount": None, "unknown": []}
+    result = {"district": None, "region": None, "max_price": None, "min_discount": None,
+              "unknown": [], "ambiguous": []}
     place_tokens = []
     for token in (raw or "").split():
         if token.endswith("%") and parse_discount(token) is not None:
             result["min_discount"] = parse_discount(token)
+            continue
+        # 단위 없는 작은 숫자(예: 15)는 15%인지 15억인지 알 수 없어 따로 알린다
+        if re.fullmatch(r"\d{1,3}", token):
+            result["ambiguous"].append(token)
             continue
         price = parse_price(token) if re.search(r"\d", token) else None
         if price is not None:
