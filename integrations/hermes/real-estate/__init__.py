@@ -13,8 +13,10 @@ logger = logging.getLogger(__name__)
 
 # integrations/hermes/real-estate → 저장소 루트 (심볼릭 링크를 따라간다)
 REPO_ROOT = Path(__file__).resolve().parents[3]
+# 맨 뒤에 붙인다: 앞에 두면 저장소의 database.py·notifier.py 같은 모듈이 Hermes 자신의
+# 같은 이름 모듈을 가릴 수 있다.
 if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+    sys.path.append(str(REPO_ROOT))
 
 ERROR_REPLY = "명령 처리 중 오류가 났습니다. 잠시 후 다시 시도해 주세요."
 
