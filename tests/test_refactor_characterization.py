@@ -618,9 +618,13 @@ class _FakePage:
         self.evaluate_calls.append(dict(args))
         key = (args["cortarNo"], args["ptype"], args["ttype"], args["page"])
         value = self._responses.get(key)
+        if isinstance(value, list):  # 호출 순서대로 소비, 마지막 값은 계속 반복
+            value = value.pop(0) if len(value) > 1 else value[0]
         if isinstance(value, Exception):
             raise value
-        return value
+        if isinstance(value, dict) and "ok" in value:
+            return value
+        return {"ok": True, "data": value}
 
 
 class _FakePlaywright:
