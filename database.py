@@ -1511,23 +1511,21 @@ class Database:
             for tag, count in sorted(counter.items(), key=lambda item: (-item[1], item[0]))
         ]
 
-    def get_listings(
-        self,
+    @staticmethod
+    def _append_listing_filters(
+        conditions: List[str],
+        params: List[object],
+        *,
         region="",
         district="",
         property_type="",
         trade_type="",
         urgent_only=False,
-        search="",
-        page=1,
-        per_page=20,
-        sort_by="urgent",
         price_down_only=False,
         tags=None,
+        search="",
     ):
-        conditions = []
-        params = []
-
+        """목록/지도 조회가 공유하는 매물 필터 조건을 conditions/params에 덧붙인다."""
         if region:
             conditions.append("region LIKE ?")
             params.append(f"%{region}%")
@@ -1555,6 +1553,35 @@ class Database:
                 "(region LIKE ? OR district LIKE ? OR building_name LIKE ? OR description LIKE ?)"
             )
             params.extend([f"%{search}%"] * 4)
+
+    def get_listings(
+        self,
+        region="",
+        district="",
+        property_type="",
+        trade_type="",
+        urgent_only=False,
+        search="",
+        page=1,
+        per_page=20,
+        sort_by="urgent",
+        price_down_only=False,
+        tags=None,
+    ):
+        conditions = []
+        params = []
+        self._append_listing_filters(
+            conditions,
+            params,
+            region=region,
+            district=district,
+            property_type=property_type,
+            trade_type=trade_type,
+            urgent_only=urgent_only,
+            price_down_only=price_down_only,
+            tags=tags,
+            search=search,
+        )
 
         order_map = {
             "urgent": "is_urgent DESC, crawled_at DESC",
@@ -1647,31 +1674,17 @@ class Database:
         if max_lng is not None:
             conditions.append("longitude <= ?")
             params.append(max_lng)
-        if region:
-            conditions.append("region LIKE ?")
-            params.append(f"%{region}%")
-        if district:
-            conditions.append("district LIKE ?")
-            params.append(f"%{district}%")
-        if property_type:
-            if property_type == "__OTHER__":
-                conditions.append("property_type NOT IN ('아파트','오피스텔','빌라/연립')")
-            else:
-                conditions.append("property_type = ?")
-                params.append(property_type)
-        if trade_type:
-            conditions.append("trade_type = ?")
-            params.append(trade_type)
-        if price_down_only:
-            conditions.append("tags LIKE '%가격인하%'")
-        if tags:
-            conditions.append("(" + " OR ".join(["tags LIKE ?"] * len(tags)) + ")")
-            params.extend(f'%"{tag}"%' for tag in tags)
-        if search:
-            conditions.append(
-                "(region LIKE ? OR district LIKE ? OR building_name LIKE ? OR description LIKE ?)"
-            )
-            params.extend([f"%{search}%"] * 4)
+        self._append_listing_filters(
+            conditions,
+            params,
+            region=region,
+            district=district,
+            property_type=property_type,
+            trade_type=trade_type,
+            price_down_only=price_down_only,
+            tags=tags,
+            search=search,
+        )
 
         with self.get_connection() as conn:
             latest_session = self._get_latest_visible_session_id(conn)
