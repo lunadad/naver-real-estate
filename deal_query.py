@@ -1,0 +1,84 @@
+"""금액·지역 조건 파싱과 표기 (표준 라이브러리만 사용 — Hermes 플러그인에서도 import한다)."""
+
+import json
+import re
+from pathlib import Path
+from typing import Dict, List, Optional
+
+REGIONS_PATH = Path(__file__).resolve().parent / "data" / "regions.json"
+
+
+def parse_price(text: Optional[str]) -> Optional[int]:
+    """"20억", "15억5천", "15억 5,000", "9000", "9,000만" → 만원 단위 정수."""
+    raw = re.sub(r"[\s,]", "", str(text or "")).replace("만원", "").replace("만", "")
+    if not raw:
+        return None
+    match = re.fullmatch(r"(?:(\d+(?:\.\d+)?)억)?(?:(\d+)천)?(\d+)?", raw)
+    if not match or not any(match.groups()):
+        return None
+    eok, cheon, rest = match.groups()
+    total = 0.0
+    if eok:
+        total += float(eok) * 10000
+    if cheon:
+        total += int(cheon) * 1000
+    if rest:
+        total += int(rest)
+    return int(round(total))
+
+
+def format_manwon(value: int) -> str:
+    """200000 → "20억", 155000 → "15억 5,000", 9000 → "9,000만"."""
+    eok, rest = divmod(int(value), 10000)
+    if not eok:
+        return f"{rest:,}만"
+    return f"{eok}억" + (f" {rest:,}" if rest else "")
+
+
+def parse_discount(text: Optional[str]) -> Optional[float]:
+    """"15%" 또는 "15" → 0.15. 범위 밖이면 None."""
+    match = re.fullmatch(r"(\d+(?:\.\d+)?)%?", str(text or "").strip())
+    if not match:
+        return None
+    value = float(match.group(1)) / 100
+    return value if 0 < value <= 0.4 else None
+
+
+def load_districts(path: Path = REGIONS_PATH) -> List[Dict[str, str]]:
+    regions = json.loads(Path(path).read_text(encoding="utf-8"))
+    return [
+        {"region": region, "district": district}
+        for region, info in regions.items()
+        for district in info.get("districts", {})
+    ]
+
+
+def match_district(text: str, districts: List[Dict[str, str]]) -> Optional[Dict[str, str]]:
+    """"송파구", "송파", "분당" 같은 입력을 구/시 하나로 맞춘다. 모호하면 첫 정확 일치 우선."""
+    needle = (text or "").strip()
+    if not needle:
+        return None
+    exact = [d for d in districts if d["district"] == needle]
+    if exact:
+        return exact[0]
+    partial = [d for d in districts if needle in d["district"]]
+    return partial[0] if partial else None
+
+
+def parse_deal_args(raw: str, districts: List[Dict[str, str]]) -> Dict:
+    """"/deals 송파구 20억 15%" 인자 → {district, region, max_price, min_discount, unknown}."""
+    result = {"district": None, "region": None, "max_price": None, "min_discount": None, "unknown": []}
+    for token in (raw or "").split():
+        if token.endswith("%") and parse_discount(token) is not None:
+            result["min_discount"] = parse_discount(token)
+            continue
+        price = parse_price(token) if re.search(r"\d", token) else None
+        if price is not None:
+            result["max_price"] = price
+            continue
+        found = match_district(token, districts) if result["district"] is None else None
+        if found:
+            result.update(found)
+        else:
+            result["unknown"].append(token)
+    return result

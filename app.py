@@ -24,6 +24,7 @@ except ImportError:  # pragma: no cover - optional until dependency is installed
     webpush = None
 
 from database import Database
+from weekly_report import format_weekly_report
 
 logging.basicConfig(
     level=logging.INFO,
@@ -123,6 +124,7 @@ def env_flag(name: str, default: bool) -> bool:
 
 
 IS_VERCEL = env_flag("VERCEL", False)
+SITE_URL = "https://naver-real-estate-henna.vercel.app"
 
 
 def serialize_api_value(value):
@@ -208,7 +210,17 @@ def listing_filter_args():
         "price_down_only": request_flag("price_down_only"),
         "tags": parse_tag_args(request.args.get("tags", "")),
         "bargain_only": request_flag("bargain_only"),
+        "max_price": optional_positive_int(request.args.get("max_price")),
     }
+
+
+def optional_positive_int(value):
+    """양의 정수 문자열이면 int, 아니면 None (잘못된 값은 필터 없음으로 취급)."""
+    try:
+        number = int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+    return number if number > 0 else None
 
 db = Database(db_path=DB_PATH, database_url=DATABASE_URL)
 atexit.register(db.close)
@@ -758,12 +770,36 @@ def create_alert_rule():
             "district, building_name and positive min_daily_change required", 400
         )
 
+    bargain_only = bool(data.get("bargain_only"))
+    min_discount = data.get("min_discount")
+    if min_discount not in (None, ""):
+        try:
+            min_discount = float(min_discount)
+        except (TypeError, ValueError):
+            return error_response("min_discount must be a number", 400)
+        if not 0 <= min_discount <= 0.4:
+            return error_response("min_discount must be between 0 and 0.4", 400)
+    else:
+        min_discount = None
+    max_price = data.get("max_price")
+    if max_price not in (None, ""):
+        try:
+            max_price = int(max_price)
+        except (TypeError, ValueError):
+            return error_response("max_price must be an integer (만원)", 400)
+        if max_price <= 0:
+            return error_response("max_price must be positive", 400)
+    else:
+        max_price = None
+
     if not is_building_change and not any(
         [
             (data.get("keyword") or "").strip(),
             (data.get("district") or "").strip(),
             (data.get("property_type") or "").strip(),
             (data.get("trade_type") or "").strip(),
+            bargain_only,
+            max_price,
         ]
     ):
         return error_response("at least one filter required", 400)
@@ -777,6 +813,9 @@ def create_alert_rule():
         building_name=building_name,
         min_daily_change=min_daily_change,
         name=data.get("name", ""),
+        bargain_only=bargain_only,
+        min_discount=min_discount,
+        max_price=max_price,
     )
     return jsonify(serialize_api_value({"status": "success", "rule": rule}))
 
@@ -872,6 +911,19 @@ def get_hero_insight():
         },
         max_age=300,
     )
+
+
+@app.route("/api/weekly-report")
+def get_weekly_report():
+    """주간 리포트 텍스트 (텔레그램 /weekly 명령이 사용)."""
+    data = db.get_weekly_report_data(datetime.now())
+    if not data:
+        return error_response("no live crawl yet", 404)
+    response = app.response_class(
+        format_weekly_report(data, SITE_URL), mimetype="text/plain; charset=utf-8"
+    )
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return response
 
 
 @app.route("/api/tags")

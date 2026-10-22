@@ -22,6 +22,7 @@ except ImportError:  # pragma: no cover - optional for sqlite-only use
 logger = logging.getLogger(__name__)
 
 from bargain import BARGAIN_MAX, BARGAIN_MIN, GENERIC_BUILDING_NAMES, compute_bargain_scores, is_bargain
+from deal_query import format_manwon
 
 
 def ensure_postgres_sslmode(database_url: str) -> str:
@@ -263,6 +264,12 @@ class Database:
                 conn.execute(
                     "ALTER TABLE alert_rules ADD COLUMN min_daily_change INTEGER DEFAULT 0"
                 )
+            if "bargain_only" not in alert_cols:
+                conn.execute("ALTER TABLE alert_rules ADD COLUMN bargain_only INTEGER DEFAULT 0")
+            if "min_discount" not in alert_cols:
+                conn.execute("ALTER TABLE alert_rules ADD COLUMN min_discount REAL")
+            if "max_price" not in alert_cols:
+                conn.execute("ALTER TABLE alert_rules ADD COLUMN max_price INTEGER")
 
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_price_sort ON listings(price_sort_value)"
@@ -354,6 +361,9 @@ class Database:
                 trade_type TEXT,
                 building_name TEXT,
                 min_daily_change INTEGER DEFAULT 0,
+                bargain_only INTEGER DEFAULT 0,
+                min_discount REAL,
+                max_price INTEGER,
                 enabled INTEGER DEFAULT 1,
                 created_at TEXT
             );
@@ -481,6 +491,9 @@ class Database:
                 trade_type TEXT,
                 building_name TEXT,
                 min_daily_change INTEGER DEFAULT 0,
+                bargain_only INTEGER DEFAULT 0,
+                min_discount REAL,
+                max_price INTEGER,
                 enabled INTEGER DEFAULT 1,
                 created_at TIMESTAMP
             )
@@ -674,6 +687,9 @@ class Database:
         trade_type: str,
         building_name: str = "",
         min_daily_change: int = 0,
+        bargain_only: bool = False,
+        min_discount: Optional[float] = None,
+        max_price: Optional[int] = None,
     ) -> str:
         if building_name and min_daily_change > 0:
             return f"{building_name} 하루 ±{min_daily_change}건"
@@ -686,6 +702,10 @@ class Database:
             parts.append(property_type)
         if trade_type:
             parts.append(trade_type)
+        if bargain_only:
+            parts.append(f"진짜 급매 {round(max(min_discount or 0, BARGAIN_MIN) * 100)}%↓")
+        if max_price:
+            parts.append(f"{format_manwon(max_price)} 이하")
         return " · ".join(parts) if parts else "전체 급매 알림"
 
     @staticmethod
@@ -877,6 +897,9 @@ class Database:
         building_name: str = "",
         min_daily_change: int = 0,
         name: str = "",
+        bargain_only: bool = False,
+        min_discount: Optional[float] = None,
+        max_price: Optional[int] = None,
     ):
         client_id = self._normalize_alert_value(client_id)
         keyword = self._normalize_alert_value(keyword)
@@ -885,6 +908,9 @@ class Database:
         trade_type = self._normalize_alert_value(trade_type)
         building_name = self._normalize_alert_value(building_name)
         min_daily_change = max(0, int(min_daily_change or 0))
+        bargain_only = 1 if bargain_only else 0
+        min_discount = float(min_discount) if min_discount not in (None, "") else None
+        max_price = int(max_price) if max_price not in (None, "") else None
         name = self._normalize_alert_value(name) or self._build_alert_name(
             keyword,
             district,
@@ -892,13 +918,17 @@ class Database:
             trade_type,
             building_name,
             min_daily_change,
+            bargain_only,
+            min_discount,
+            max_price,
         )
 
         insert_sql = """
             INSERT INTO alert_rules
             (client_id, name, keyword, district, property_type, trade_type,
-             building_name, min_daily_change, enabled, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+             building_name, min_daily_change, bargain_only, min_discount, max_price,
+             enabled, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
         """
         with self.get_connection() as conn:
             params = (
@@ -910,6 +940,9 @@ class Database:
                 trade_type,
                 building_name,
                 min_daily_change,
+                bargain_only,
+                min_discount,
+                max_price,
                 datetime.now().isoformat(),
             )
             if self.driver == "postgres":
@@ -1003,6 +1036,12 @@ class Database:
             if rule["trade_type"]:
                 conditions.append("trade_type = ?")
                 params.append(rule["trade_type"])
+            if rule["bargain_only"]:
+                conditions.append("bargain_discount >= ? AND bargain_discount <= ?")
+                params.extend([max(float(rule["min_discount"] or 0), BARGAIN_MIN), BARGAIN_MAX])
+            if rule["max_price"]:
+                conditions.append("price_sort_value <= ?")
+                params.append(int(rule["max_price"]))
 
             rows = conn.execute(
                 f"""
@@ -1529,6 +1568,7 @@ class Database:
         tags=None,
         search="",
         bargain_only=False,
+        max_price=None,
     ):
         """목록/지도 조회가 공유하는 매물 필터 조건을 conditions/params에 덧붙인다."""
         if region:
@@ -1561,6 +1601,9 @@ class Database:
         if bargain_only:
             conditions.append("bargain_discount >= ? AND bargain_discount <= ?")
             params.extend([BARGAIN_MIN, BARGAIN_MAX])
+        if max_price:
+            conditions.append("price_sort_value <= ?")
+            params.append(int(max_price))
 
     def get_listings(
         self,
@@ -1576,6 +1619,7 @@ class Database:
         price_down_only=False,
         tags=None,
         bargain_only=False,
+        max_price=None,
     ):
         conditions = []
         params = []
@@ -1591,6 +1635,7 @@ class Database:
             tags=tags,
             search=search,
             bargain_only=bargain_only,
+            max_price=max_price,
         )
 
         order_map = {
@@ -1673,6 +1718,7 @@ class Database:
         tags=None,
         limit=500,
         bargain_only=False,
+        max_price=None,
     ):
         """지도 화면 영역(bounds) 안의 좌표 보유 매물을 가벼운 필드로 반환한다."""
         conditions = [
@@ -1704,6 +1750,7 @@ class Database:
             tags=tags,
             search=search,
             bargain_only=bargain_only,
+            max_price=max_price,
         )
 
         with self.get_connection() as conn:
