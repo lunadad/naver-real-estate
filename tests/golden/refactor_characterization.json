@@ -1,0 +1,5622 @@
+{
+  "client_id_routes": {
+    "bad_min_daily_change": {
+      "json": {
+        "message": "min_daily_change must be an integer",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "check": {
+      "json": {
+        "message": "client_id required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "delete_rule": {
+      "json": {
+        "message": "client_id required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "get_rules": {
+      "json": {
+        "message": "client_id required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "get_rules_blank": {
+      "json": {
+        "message": "client_id required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "incomplete_building": {
+      "json": {
+        "message": "district, building_name and positive min_daily_change required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "no_filter": {
+      "json": {
+        "message": "at least one filter required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "post_rule": {
+      "json": {
+        "message": "client_id required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "post_rule_blank": {
+      "json": {
+        "message": "client_id required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "subscribe": {
+      "json": {
+        "message": "client_id required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "unsubscribe": {
+      "json": {
+        "message": "client_id required",
+        "status": "error"
+      },
+      "status": 400
+    }
+  },
+  "crawler_fake_playwright": {
+    "evaluate_count": 29,
+    "first_call": {
+      "cortarNo": "111",
+      "page": 1,
+      "ptype": "APT",
+      "tag": ":::::::::FASTSELL",
+      "timeoutMs": 8000,
+      "token": "Bearer TEST",
+      "ttype": "A1"
+    },
+    "listings": [
+      {
+        "area": "84",
+        "article_no": "1",
+        "building_name": "건물1",
+        "confirmed_date": "20261020",
+        "description": "설명1",
+        "district": "강남구",
+        "floor": "3/10",
+        "is_urgent": true,
+        "latitude": 37.1,
+        "longitude": 127.1,
+        "naver_url": "https://new.land.naver.com/complexes?ms=37.1,127.1,16&a=APT&b=A1&articleNo=1",
+        "price": "5억",
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "tags": [
+          "급매"
+        ],
+        "trade_type": "매매"
+      },
+      {
+        "area": "84",
+        "article_no": "2",
+        "building_name": "",
+        "confirmed_date": "20261020",
+        "description": "설명2",
+        "district": "강남구",
+        "floor": "3/10",
+        "is_urgent": true,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://new.land.naver.com/complexes?ms=37.5,127.0,16&a=APT&b=A1&articleNo=2",
+        "price": "5억",
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "tags": [
+          "가격인하"
+        ],
+        "trade_type": "매매"
+      },
+      {
+        "area": "84",
+        "article_no": "3",
+        "building_name": "건물3",
+        "confirmed_date": "20261020",
+        "description": "설명3",
+        "district": "강남구",
+        "floor": "3/10",
+        "is_urgent": true,
+        "latitude": 37.1,
+        "longitude": 127.1,
+        "naver_url": "https://new.land.naver.com/complexes?ms=37.1,127.1,16&a=APT&b=A1&articleNo=3",
+        "price": "5억",
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "tags": [
+          "가격인하"
+        ],
+        "trade_type": "매매"
+      },
+      {
+        "area": "84",
+        "article_no": "4",
+        "building_name": "건물4",
+        "confirmed_date": "20261020",
+        "description": "설명4",
+        "district": "강남구",
+        "floor": "3/10",
+        "is_urgent": true,
+        "latitude": 37.1,
+        "longitude": 127.1,
+        "naver_url": "https://new.land.naver.com/complexes?ms=37.1,127.1,16&a=APT&b=B2&articleNo=4",
+        "price": "1,000/50",
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "tags": [
+          "급매"
+        ],
+        "trade_type": "월세"
+      },
+      {
+        "area": "84",
+        "article_no": "5",
+        "building_name": "건물5",
+        "confirmed_date": "20261020",
+        "description": "설명5",
+        "district": "강남구",
+        "floor": "3/10",
+        "is_urgent": true,
+        "latitude": 37.1,
+        "longitude": 127.1,
+        "naver_url": "https://new.land.naver.com/complexes?ms=37.1,127.1,16&a=APT&b=B2&articleNo=5",
+        "price": "5억",
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "tags": [
+          "가격인하",
+          "역세권"
+        ],
+        "trade_type": "월세"
+      },
+      {
+        "area": "",
+        "article_no": "6",
+        "building_name": "건물6",
+        "confirmed_date": "",
+        "description": "",
+        "district": "수원시",
+        "floor": "",
+        "is_urgent": true,
+        "latitude": 37.1,
+        "longitude": 127.1,
+        "naver_url": "https://new.land.naver.com/complexes?ms=37.1,127.1,16&a=OPST&b=B1&articleNo=6",
+        "price": "",
+        "property_type": "오피스텔",
+        "region": "경기도",
+        "tags": [
+          "급매"
+        ],
+        "trade_type": "전세"
+      }
+    ]
+  },
+  "create_alert_rule_variants": {
+    "created": [
+      {
+        "building_name": "",
+        "client_id": "c1",
+        "district": "",
+        "enabled": 1,
+        "id": 1,
+        "keyword": "",
+        "min_daily_change": 0,
+        "name": "전체 급매 알림",
+        "property_type": "",
+        "trade_type": ""
+      },
+      {
+        "building_name": "",
+        "client_id": "c1",
+        "district": "강남구",
+        "enabled": 1,
+        "id": 2,
+        "keyword": "래미안",
+        "min_daily_change": 0,
+        "name": "래미안 · 강남구",
+        "property_type": "",
+        "trade_type": ""
+      },
+      {
+        "building_name": "",
+        "client_id": "c1",
+        "district": "",
+        "enabled": 1,
+        "id": 3,
+        "keyword": "",
+        "min_daily_change": 0,
+        "name": "내 알림",
+        "property_type": "아파트",
+        "trade_type": "매매"
+      },
+      {
+        "building_name": "래미안",
+        "client_id": "c1",
+        "district": "강남구",
+        "enabled": 1,
+        "id": 4,
+        "keyword": "",
+        "min_daily_change": 3,
+        "name": "래미안 하루 ±3건",
+        "property_type": "",
+        "trade_type": ""
+      },
+      {
+        "building_name": "래미안",
+        "client_id": "c2",
+        "district": "",
+        "enabled": 1,
+        "id": 5,
+        "keyword": "",
+        "min_daily_change": 0,
+        "name": "전체 급매 알림",
+        "property_type": "",
+        "trade_type": ""
+      },
+      {
+        "building_name": "",
+        "client_id": "c2",
+        "district": "",
+        "enabled": 1,
+        "id": 6,
+        "keyword": "",
+        "min_daily_change": 0,
+        "name": "전체 급매 알림",
+        "property_type": "",
+        "trade_type": ""
+      }
+    ],
+    "delete_again": false,
+    "delete_ok": true,
+    "delete_other_client": false,
+    "rule_missing": null,
+    "rules_c1": [
+      {
+        "building_name": "래미안",
+        "client_id": "c1",
+        "district": "강남구",
+        "enabled": 1,
+        "id": 4,
+        "keyword": "",
+        "min_daily_change": 3,
+        "name": "래미안 하루 ±3건",
+        "property_type": "",
+        "trade_type": ""
+      },
+      {
+        "building_name": "",
+        "client_id": "c1",
+        "district": "",
+        "enabled": 1,
+        "id": 3,
+        "keyword": "",
+        "min_daily_change": 0,
+        "name": "내 알림",
+        "property_type": "아파트",
+        "trade_type": "매매"
+      },
+      {
+        "building_name": "",
+        "client_id": "c1",
+        "district": "강남구",
+        "enabled": 1,
+        "id": 2,
+        "keyword": "래미안",
+        "min_daily_change": 0,
+        "name": "래미안 · 강남구",
+        "property_type": "",
+        "trade_type": ""
+      },
+      {
+        "building_name": "",
+        "client_id": "c1",
+        "district": "",
+        "enabled": 1,
+        "id": 1,
+        "keyword": "",
+        "min_daily_change": 0,
+        "name": "전체 급매 알림",
+        "property_type": "",
+        "trade_type": ""
+      }
+    ]
+  },
+  "daily_crawl_series": {
+    "0": [
+      {
+        "crawled_at_kst_hour": null,
+        "date": 6,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 5,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 4,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 3,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 12,
+        "date": 2,
+        "session_id": "d2",
+        "total_count": 20,
+        "urgent_count": 19
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 1,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 14,
+        "date": 0,
+        "session_id": "d0-late",
+        "total_count": 11,
+        "urgent_count": 10
+      }
+    ],
+    "1": [
+      {
+        "crawled_at_kst_hour": 14,
+        "date": 0,
+        "session_id": "d0-late",
+        "total_count": 11,
+        "urgent_count": 10
+      }
+    ],
+    "14": [
+      {
+        "crawled_at_kst_hour": null,
+        "date": 13,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 12,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 11,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 10,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 12,
+        "date": 9,
+        "session_id": "d9",
+        "total_count": 90,
+        "urgent_count": 89
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 8,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 7,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 6,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 5,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 4,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 3,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 12,
+        "date": 2,
+        "session_id": "d2",
+        "total_count": 20,
+        "urgent_count": 19
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 1,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 14,
+        "date": 0,
+        "session_id": "d0-late",
+        "total_count": 11,
+        "urgent_count": 10
+      }
+    ],
+    "3": [
+      {
+        "crawled_at_kst_hour": 12,
+        "date": 2,
+        "session_id": "d2",
+        "total_count": 20,
+        "urgent_count": 19
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 1,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 14,
+        "date": 0,
+        "session_id": "d0-late",
+        "total_count": 11,
+        "urgent_count": 10
+      }
+    ],
+    "30": [
+      {
+        "crawled_at_kst_hour": null,
+        "date": 13,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 12,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 11,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 10,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 12,
+        "date": 9,
+        "session_id": "d9",
+        "total_count": 90,
+        "urgent_count": 89
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 8,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 7,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 6,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 5,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 4,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 3,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 12,
+        "date": 2,
+        "session_id": "d2",
+        "total_count": 20,
+        "urgent_count": 19
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 1,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 14,
+        "date": 0,
+        "session_id": "d0-late",
+        "total_count": 11,
+        "urgent_count": 10
+      }
+    ],
+    "7": [
+      {
+        "crawled_at_kst_hour": null,
+        "date": 6,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 5,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 4,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 3,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 12,
+        "date": 2,
+        "session_id": "d2",
+        "total_count": 20,
+        "urgent_count": 19
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 1,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 14,
+        "date": 0,
+        "session_id": "d0-late",
+        "total_count": 11,
+        "urgent_count": 10
+      }
+    ],
+    "None": [
+      {
+        "crawled_at_kst_hour": null,
+        "date": 6,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 5,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 4,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 3,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 12,
+        "date": 2,
+        "session_id": "d2",
+        "total_count": 20,
+        "urgent_count": 19
+      },
+      {
+        "crawled_at_kst_hour": null,
+        "date": 1,
+        "session_id": null,
+        "total_count": null,
+        "urgent_count": null
+      },
+      {
+        "crawled_at_kst_hour": 14,
+        "date": 0,
+        "session_id": "d0-late",
+        "total_count": 11,
+        "urgent_count": 10
+      }
+    ]
+  },
+  "empty_db_queries": {
+    "listings": {
+      "listings": [],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 0,
+      "total": 0,
+      "total_pages": 1,
+      "type_counts": {},
+      "urgent": 0
+    },
+    "listings_filtered": {
+      "listings": [],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 0,
+      "total": 0,
+      "total_pages": 1,
+      "type_counts": {},
+      "urgent": 0
+    },
+    "map": [],
+    "region_stats": [],
+    "tags": []
+  },
+  "get_listings_matrix": [
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L3",
+          "building_name": "단지L3",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "성남시 분당구",
+          "floor": "10/20",
+          "id": 4,
+          "is_urgent": 1,
+          "latitude": 37.35,
+          "longitude": 127.11,
+          "naver_url": "https://example.com/L3",
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "property_type": "빌라/연립",
+          "region": "경기도",
+          "rent_sort_value": 50,
+          "tags": "[]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L2",
+          "building_name": "단지L2",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 3,
+          "is_urgent": 0,
+          "latitude": 37.48,
+          "longitude": 127.02,
+          "naver_url": "https://example.com/L2",
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "property_type": "오피스텔",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]",
+          "trade_type": "전세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 3,
+      "total": 7,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "빌라/연립": 1,
+        "상가/업무": 1,
+        "아파트": 3,
+        "오피스텔": 1
+      },
+      "urgent": 7
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L2",
+          "building_name": "단지L2",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 3,
+          "is_urgent": 0,
+          "latitude": 37.48,
+          "longitude": 127.02,
+          "naver_url": "https://example.com/L2",
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "property_type": "오피스텔",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]",
+          "trade_type": "전세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 2,
+      "total": 5,
+      "total_pages": 1,
+      "type_counts": {
+        "상가/업무": 1,
+        "아파트": 3,
+        "오피스텔": 1
+      },
+      "urgent": 5
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 1,
+      "total": 3,
+      "total_pages": 1,
+      "type_counts": {
+        "상가/업무": 1,
+        "아파트": 2
+      },
+      "urgent": 3
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 2,
+      "total": 3,
+      "total_pages": 1,
+      "type_counts": {
+        "아파트": 3
+      },
+      "urgent": 3
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 1,
+      "total": 2,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "상가/업무": 1
+      },
+      "urgent": 2
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L3",
+          "building_name": "단지L3",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "성남시 분당구",
+          "floor": "10/20",
+          "id": 4,
+          "is_urgent": 1,
+          "latitude": 37.35,
+          "longitude": 127.11,
+          "naver_url": "https://example.com/L3",
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "property_type": "빌라/연립",
+          "region": "경기도",
+          "rent_sort_value": 50,
+          "tags": "[]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 0,
+      "total": 2,
+      "total_pages": 1,
+      "type_counts": {
+        "빌라/연립": 1,
+        "상가/업무": 1
+      },
+      "urgent": 2
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L3",
+          "building_name": "단지L3",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "성남시 분당구",
+          "floor": "10/20",
+          "id": 4,
+          "is_urgent": 1,
+          "latitude": 37.35,
+          "longitude": 127.11,
+          "naver_url": "https://example.com/L3",
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "property_type": "빌라/연립",
+          "region": "경기도",
+          "rent_sort_value": 50,
+          "tags": "[]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 3,
+      "total": 5,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "빌라/연립": 1,
+        "아파트": 3
+      },
+      "urgent": 5
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 3,
+      "total": 3,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "아파트": 2
+      },
+      "urgent": 3
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L2",
+          "building_name": "단지L2",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 3,
+          "is_urgent": 0,
+          "latitude": 37.48,
+          "longitude": 127.02,
+          "naver_url": "https://example.com/L2",
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "property_type": "오피스텔",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]",
+          "trade_type": "전세"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 1,
+      "total": 3,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "아파트": 1,
+        "오피스텔": 1
+      },
+      "urgent": 3
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L3",
+          "building_name": "단지L3",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "성남시 분당구",
+          "floor": "10/20",
+          "id": 4,
+          "is_urgent": 1,
+          "latitude": 37.35,
+          "longitude": 127.11,
+          "naver_url": "https://example.com/L3",
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "property_type": "빌라/연립",
+          "region": "경기도",
+          "rent_sort_value": 50,
+          "tags": "[]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L2",
+          "building_name": "단지L2",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 3,
+          "is_urgent": 0,
+          "latitude": 37.48,
+          "longitude": 127.02,
+          "naver_url": "https://example.com/L2",
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "property_type": "오피스텔",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]",
+          "trade_type": "전세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 3,
+      "total": 7,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "빌라/연립": 1,
+        "상가/업무": 1,
+        "아파트": 3,
+        "오피스텔": 1
+      },
+      "urgent": 7
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 1,
+      "total": 2,
+      "total_pages": 1,
+      "type_counts": {
+        "아파트": 2
+      },
+      "urgent": 2
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 1,
+      "total": 1,
+      "total_pages": 1,
+      "type_counts": {
+        "아파트": 1
+      },
+      "urgent": 1
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L3",
+          "building_name": "단지L3",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "성남시 분당구",
+          "floor": "10/20",
+          "id": 4,
+          "is_urgent": 1,
+          "latitude": 37.35,
+          "longitude": 127.11,
+          "naver_url": "https://example.com/L3",
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "property_type": "빌라/연립",
+          "region": "경기도",
+          "rent_sort_value": 50,
+          "tags": "[]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L2",
+          "building_name": "단지L2",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 3,
+          "is_urgent": 0,
+          "latitude": 37.48,
+          "longitude": 127.02,
+          "naver_url": "https://example.com/L2",
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "property_type": "오피스텔",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]",
+          "trade_type": "전세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 3,
+      "total": 7,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "빌라/연립": 1,
+        "상가/업무": 1,
+        "아파트": 3,
+        "오피스텔": 1
+      },
+      "urgent": 7
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L2",
+          "building_name": "단지L2",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 3,
+          "is_urgent": 0,
+          "latitude": 37.48,
+          "longitude": 127.02,
+          "naver_url": "https://example.com/L2",
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "property_type": "오피스텔",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]",
+          "trade_type": "전세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L3",
+          "building_name": "단지L3",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "성남시 분당구",
+          "floor": "10/20",
+          "id": 4,
+          "is_urgent": 1,
+          "latitude": 37.35,
+          "longitude": 127.11,
+          "naver_url": "https://example.com/L3",
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "property_type": "빌라/연립",
+          "region": "경기도",
+          "rent_sort_value": 50,
+          "tags": "[]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 3,
+      "total": 7,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "빌라/연립": 1,
+        "상가/업무": 1,
+        "아파트": 3,
+        "오피스텔": 1
+      },
+      "urgent": 7
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L3",
+          "building_name": "단지L3",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "성남시 분당구",
+          "floor": "10/20",
+          "id": 4,
+          "is_urgent": 1,
+          "latitude": 37.35,
+          "longitude": 127.11,
+          "naver_url": "https://example.com/L3",
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "property_type": "빌라/연립",
+          "region": "경기도",
+          "rent_sort_value": 50,
+          "tags": "[]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L2",
+          "building_name": "단지L2",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 3,
+          "is_urgent": 0,
+          "latitude": 37.48,
+          "longitude": 127.02,
+          "naver_url": "https://example.com/L2",
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "property_type": "오피스텔",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]",
+          "trade_type": "전세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 3,
+      "total": 7,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "빌라/연립": 1,
+        "상가/업무": 1,
+        "아파트": 3,
+        "오피스텔": 1
+      },
+      "urgent": 7
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L2",
+          "building_name": "단지L2",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 3,
+          "is_urgent": 0,
+          "latitude": 37.48,
+          "longitude": 127.02,
+          "naver_url": "https://example.com/L2",
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "property_type": "오피스텔",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]",
+          "trade_type": "전세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L3",
+          "building_name": "단지L3",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "성남시 분당구",
+          "floor": "10/20",
+          "id": 4,
+          "is_urgent": 1,
+          "latitude": 37.35,
+          "longitude": 127.11,
+          "naver_url": "https://example.com/L3",
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "property_type": "빌라/연립",
+          "region": "경기도",
+          "rent_sort_value": 50,
+          "tags": "[]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 3,
+      "total": 7,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "빌라/연립": 1,
+        "상가/업무": 1,
+        "아파트": 3,
+        "오피스텔": 1
+      },
+      "urgent": 7
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L3",
+          "building_name": "단지L3",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "성남시 분당구",
+          "floor": "10/20",
+          "id": 4,
+          "is_urgent": 1,
+          "latitude": 37.35,
+          "longitude": 127.11,
+          "naver_url": "https://example.com/L3",
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "property_type": "빌라/연립",
+          "region": "경기도",
+          "rent_sort_value": 50,
+          "tags": "[]",
+          "trade_type": "월세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L6",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "역세권 대단지",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 7,
+          "is_urgent": 1,
+          "latitude": 37.51,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L6",
+          "price": "9억",
+          "price_sort_value": 90000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L2",
+          "building_name": "단지L2",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 3,
+          "is_urgent": 0,
+          "latitude": 37.48,
+          "longitude": 127.02,
+          "naver_url": "https://example.com/L2",
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "property_type": "오피스텔",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]",
+          "trade_type": "전세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L5",
+          "building_name": "단지L5",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 6,
+          "is_urgent": 0,
+          "latitude": 37.6,
+          "longitude": 127.05,
+          "naver_url": "https://example.com/L5",
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "property_type": "상가/업무",
+          "region": "서울특별시",
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]",
+          "trade_type": "월세"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 3,
+      "total": 7,
+      "total_pages": 1,
+      "type_counts": {
+        "단독/다가구": 1,
+        "빌라/연립": 1,
+        "상가/업무": 1,
+        "아파트": 3,
+        "오피스텔": 1
+      },
+      "urgent": 7
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L2",
+          "building_name": "단지L2",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 3,
+          "is_urgent": 0,
+          "latitude": 37.48,
+          "longitude": 127.02,
+          "naver_url": "https://example.com/L2",
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "property_type": "오피스텔",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]",
+          "trade_type": "전세"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L4",
+          "building_name": "단지L4",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "수원시",
+          "floor": "10/20",
+          "id": 5,
+          "is_urgent": 1,
+          "latitude": null,
+          "longitude": null,
+          "naver_url": "https://example.com/L4",
+          "price": "5억",
+          "price_sort_value": 50000,
+          "property_type": "단독/다가구",
+          "region": "경기도",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 2,
+      "per_page": 2,
+      "price_down_count": 3,
+      "total": 7,
+      "total_pages": 4,
+      "type_counts": {
+        "단독/다가구": 1,
+        "빌라/연립": 1,
+        "상가/업무": 1,
+        "아파트": 3,
+        "오피스텔": 1
+      },
+      "urgent": 7
+    },
+    {
+      "listings": [],
+      "page": 9,
+      "per_page": 3,
+      "price_down_count": 3,
+      "total": 7,
+      "total_pages": 3,
+      "type_counts": {
+        "단독/다가구": 1,
+        "빌라/연립": 1,
+        "상가/업무": 1,
+        "아파트": 3,
+        "오피스텔": 1
+      },
+      "urgent": 7
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        },
+        {
+          "area": "84㎡",
+          "article_no": "L7",
+          "building_name": "",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "설명",
+          "district": "서초구",
+          "floor": "10/20",
+          "id": 8,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L7",
+          "price": "",
+          "price_sort_value": null,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\"",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 2,
+      "total": 2,
+      "total_pages": 1,
+      "type_counts": {
+        "아파트": 2
+      },
+      "urgent": 2
+    },
+    {
+      "listings": [
+        {
+          "area": "84㎡",
+          "article_no": "L1",
+          "building_name": "래미안",
+          "confirmed_date": "20261020",
+          "crawl_session": "s1",
+          "description": "급매 남향",
+          "district": "강남구",
+          "floor": "10/20",
+          "id": 2,
+          "is_urgent": 1,
+          "latitude": 37.5,
+          "longitude": 127.0,
+          "naver_url": "https://example.com/L1",
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]",
+          "trade_type": "매매"
+        }
+      ],
+      "page": 1,
+      "per_page": 20,
+      "price_down_count": 1,
+      "total": 1,
+      "total_pages": 1,
+      "type_counts": {
+        "아파트": 1
+      },
+      "urgent": 1
+    }
+  ],
+  "get_map_listings_matrix": [
+    [
+      {
+        "article_no": "L1",
+        "building_name": "래미안",
+        "id": 2,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L1",
+        "price": "10억 5,000",
+        "property_type": "아파트",
+        "tags": "[\"가격인하\"]",
+        "trade_type": "매매"
+      },
+      {
+        "article_no": "L2",
+        "building_name": "단지L2",
+        "id": 3,
+        "latitude": 37.48,
+        "longitude": 127.02,
+        "naver_url": "https://example.com/L2",
+        "price": "3억 5,000",
+        "property_type": "오피스텔",
+        "tags": "[\"역세권\"]",
+        "trade_type": "전세"
+      },
+      {
+        "article_no": "L3",
+        "building_name": "단지L3",
+        "id": 4,
+        "latitude": 37.35,
+        "longitude": 127.11,
+        "naver_url": "https://example.com/L3",
+        "price": "1,000/50",
+        "property_type": "빌라/연립",
+        "tags": "[]",
+        "trade_type": "월세"
+      },
+      {
+        "article_no": "L5",
+        "building_name": "단지L5",
+        "id": 6,
+        "latitude": 37.6,
+        "longitude": 127.05,
+        "naver_url": "https://example.com/L5",
+        "price": "2억/300",
+        "property_type": "상가/업무",
+        "tags": "[\"대단지\"]",
+        "trade_type": "월세"
+      },
+      {
+        "article_no": "L6",
+        "building_name": "래미안",
+        "id": 7,
+        "latitude": 37.51,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L6",
+        "price": "9억",
+        "property_type": "아파트",
+        "tags": "[\"역세권\", \"신축\"]",
+        "trade_type": "매매"
+      },
+      {
+        "article_no": "L7",
+        "building_name": "",
+        "id": 8,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L7",
+        "price": "",
+        "property_type": "아파트",
+        "tags": "\"[\\\"가격인하\\\"]\"",
+        "trade_type": "매매"
+      }
+    ],
+    [
+      {
+        "article_no": "L1",
+        "building_name": "래미안",
+        "id": 2,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L1",
+        "price": "10억 5,000",
+        "property_type": "아파트",
+        "tags": "[\"가격인하\"]",
+        "trade_type": "매매"
+      },
+      {
+        "article_no": "L2",
+        "building_name": "단지L2",
+        "id": 3,
+        "latitude": 37.48,
+        "longitude": 127.02,
+        "naver_url": "https://example.com/L2",
+        "price": "3억 5,000",
+        "property_type": "오피스텔",
+        "tags": "[\"역세권\"]",
+        "trade_type": "전세"
+      },
+      {
+        "article_no": "L6",
+        "building_name": "래미안",
+        "id": 7,
+        "latitude": 37.51,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L6",
+        "price": "9억",
+        "property_type": "아파트",
+        "tags": "[\"역세권\", \"신축\"]",
+        "trade_type": "매매"
+      },
+      {
+        "article_no": "L7",
+        "building_name": "",
+        "id": 8,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L7",
+        "price": "",
+        "property_type": "아파트",
+        "tags": "\"[\\\"가격인하\\\"]\"",
+        "trade_type": "매매"
+      }
+    ],
+    [
+      {
+        "article_no": "L2",
+        "building_name": "단지L2",
+        "id": 3,
+        "latitude": 37.48,
+        "longitude": 127.02,
+        "naver_url": "https://example.com/L2",
+        "price": "3억 5,000",
+        "property_type": "오피스텔",
+        "tags": "[\"역세권\"]",
+        "trade_type": "전세"
+      },
+      {
+        "article_no": "L5",
+        "building_name": "단지L5",
+        "id": 6,
+        "latitude": 37.6,
+        "longitude": 127.05,
+        "naver_url": "https://example.com/L5",
+        "price": "2억/300",
+        "property_type": "상가/업무",
+        "tags": "[\"대단지\"]",
+        "trade_type": "월세"
+      }
+    ],
+    [
+      {
+        "article_no": "L1",
+        "building_name": "래미안",
+        "id": 2,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L1",
+        "price": "10억 5,000",
+        "property_type": "아파트",
+        "tags": "[\"가격인하\"]",
+        "trade_type": "매매"
+      },
+      {
+        "article_no": "L2",
+        "building_name": "단지L2",
+        "id": 3,
+        "latitude": 37.48,
+        "longitude": 127.02,
+        "naver_url": "https://example.com/L2",
+        "price": "3억 5,000",
+        "property_type": "오피스텔",
+        "tags": "[\"역세권\"]",
+        "trade_type": "전세"
+      }
+    ],
+    [
+      {
+        "article_no": "L3",
+        "building_name": "단지L3",
+        "id": 4,
+        "latitude": 37.35,
+        "longitude": 127.11,
+        "naver_url": "https://example.com/L3",
+        "price": "1,000/50",
+        "property_type": "빌라/연립",
+        "tags": "[]",
+        "trade_type": "월세"
+      }
+    ],
+    [
+      {
+        "article_no": "L2",
+        "building_name": "단지L2",
+        "id": 3,
+        "latitude": 37.48,
+        "longitude": 127.02,
+        "naver_url": "https://example.com/L2",
+        "price": "3억 5,000",
+        "property_type": "오피스텔",
+        "tags": "[\"역세권\"]",
+        "trade_type": "전세"
+      },
+      {
+        "article_no": "L7",
+        "building_name": "",
+        "id": 8,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L7",
+        "price": "",
+        "property_type": "아파트",
+        "tags": "\"[\\\"가격인하\\\"]\"",
+        "trade_type": "매매"
+      }
+    ],
+    [
+      {
+        "article_no": "L5",
+        "building_name": "단지L5",
+        "id": 6,
+        "latitude": 37.6,
+        "longitude": 127.05,
+        "naver_url": "https://example.com/L5",
+        "price": "2억/300",
+        "property_type": "상가/업무",
+        "tags": "[\"대단지\"]",
+        "trade_type": "월세"
+      }
+    ],
+    [
+      {
+        "article_no": "L2",
+        "building_name": "단지L2",
+        "id": 3,
+        "latitude": 37.48,
+        "longitude": 127.02,
+        "naver_url": "https://example.com/L2",
+        "price": "3억 5,000",
+        "property_type": "오피스텔",
+        "tags": "[\"역세권\"]",
+        "trade_type": "전세"
+      }
+    ],
+    [
+      {
+        "article_no": "L3",
+        "building_name": "단지L3",
+        "id": 4,
+        "latitude": 37.35,
+        "longitude": 127.11,
+        "naver_url": "https://example.com/L3",
+        "price": "1,000/50",
+        "property_type": "빌라/연립",
+        "tags": "[]",
+        "trade_type": "월세"
+      },
+      {
+        "article_no": "L5",
+        "building_name": "단지L5",
+        "id": 6,
+        "latitude": 37.6,
+        "longitude": 127.05,
+        "naver_url": "https://example.com/L5",
+        "price": "2억/300",
+        "property_type": "상가/업무",
+        "tags": "[\"대단지\"]",
+        "trade_type": "월세"
+      }
+    ],
+    [
+      {
+        "article_no": "L1",
+        "building_name": "래미안",
+        "id": 2,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L1",
+        "price": "10억 5,000",
+        "property_type": "아파트",
+        "tags": "[\"가격인하\"]",
+        "trade_type": "매매"
+      },
+      {
+        "article_no": "L7",
+        "building_name": "",
+        "id": 8,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L7",
+        "price": "",
+        "property_type": "아파트",
+        "tags": "\"[\\\"가격인하\\\"]\"",
+        "trade_type": "매매"
+      }
+    ],
+    [
+      {
+        "article_no": "L2",
+        "building_name": "단지L2",
+        "id": 3,
+        "latitude": 37.48,
+        "longitude": 127.02,
+        "naver_url": "https://example.com/L2",
+        "price": "3억 5,000",
+        "property_type": "오피스텔",
+        "tags": "[\"역세권\"]",
+        "trade_type": "전세"
+      },
+      {
+        "article_no": "L6",
+        "building_name": "래미안",
+        "id": 7,
+        "latitude": 37.51,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L6",
+        "price": "9억",
+        "property_type": "아파트",
+        "tags": "[\"역세권\", \"신축\"]",
+        "trade_type": "매매"
+      }
+    ],
+    [
+      {
+        "article_no": "L1",
+        "building_name": "래미안",
+        "id": 2,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L1",
+        "price": "10억 5,000",
+        "property_type": "아파트",
+        "tags": "[\"가격인하\"]",
+        "trade_type": "매매"
+      },
+      {
+        "article_no": "L6",
+        "building_name": "래미안",
+        "id": 7,
+        "latitude": 37.51,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L6",
+        "price": "9억",
+        "property_type": "아파트",
+        "tags": "[\"역세권\", \"신축\"]",
+        "trade_type": "매매"
+      }
+    ],
+    [
+      {
+        "article_no": "L5",
+        "building_name": "단지L5",
+        "id": 6,
+        "latitude": 37.6,
+        "longitude": 127.05,
+        "naver_url": "https://example.com/L5",
+        "price": "2억/300",
+        "property_type": "상가/업무",
+        "tags": "[\"대단지\"]",
+        "trade_type": "월세"
+      },
+      {
+        "article_no": "L6",
+        "building_name": "래미안",
+        "id": 7,
+        "latitude": 37.51,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L6",
+        "price": "9억",
+        "property_type": "아파트",
+        "tags": "[\"역세권\", \"신축\"]",
+        "trade_type": "매매"
+      }
+    ]
+  ],
+  "insert_listings_stats": {
+    "empty_session": {
+      "building": [
+        {
+          "building_name": "래미안",
+          "district": "강남구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 2
+        },
+        {
+          "building_name": "힐스",
+          "district": "수원시",
+          "price_down_count": 1,
+          "region": "",
+          "session_id": "s2",
+          "total_count": 2
+        }
+      ],
+      "region": [
+        {
+          "district": "강남구",
+          "price_down_count": 0,
+          "region": "서울특별시",
+          "session_id": "",
+          "total_count": 1
+        },
+        {
+          "district": "성남시 분당구",
+          "price_down_count": 0,
+          "region": "경기도",
+          "session_id": "s1",
+          "total_count": 1
+        },
+        {
+          "district": "수원시",
+          "price_down_count": 1,
+          "region": "경기도",
+          "session_id": "s1",
+          "total_count": 1
+        },
+        {
+          "district": "강남구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 3
+        },
+        {
+          "district": "서초구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 2
+        },
+        {
+          "district": "수원시",
+          "price_down_count": 0,
+          "region": "경기도",
+          "session_id": "s2",
+          "total_count": 4
+        },
+        {
+          "district": "강남구",
+          "price_down_count": 4,
+          "region": "서울특별시",
+          "session_id": "s2",
+          "total_count": 8
+        },
+        {
+          "district": "강남구",
+          "price_down_count": 0,
+          "region": "서울특별시",
+          "session_id": "s3",
+          "total_count": 1
+        }
+      ],
+      "sessions": [
+        {
+          "cnt": 1,
+          "crawl_session": ""
+        },
+        {
+          "cnt": 1,
+          "crawl_session": "s3"
+        }
+      ],
+      "sort_values": [
+        {
+          "article_no": "E1",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "T1",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        }
+      ]
+    },
+    "first": {
+      "building": [
+        {
+          "building_name": "래미안",
+          "district": "강남구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 2
+        }
+      ],
+      "region": [
+        {
+          "district": "성남시 분당구",
+          "price_down_count": 0,
+          "region": "경기도",
+          "session_id": "s1",
+          "total_count": 1
+        },
+        {
+          "district": "수원시",
+          "price_down_count": 1,
+          "region": "경기도",
+          "session_id": "s1",
+          "total_count": 1
+        },
+        {
+          "district": "강남구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 3
+        },
+        {
+          "district": "서초구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 2
+        }
+      ],
+      "sessions": [
+        {
+          "cnt": 7,
+          "crawl_session": "s1"
+        }
+      ],
+      "sort_values": [
+        {
+          "article_no": "L1",
+          "is_urgent": 1,
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]"
+        },
+        {
+          "article_no": "L2",
+          "is_urgent": 0,
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]"
+        },
+        {
+          "article_no": "L3",
+          "is_urgent": 1,
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "rent_sort_value": 50,
+          "tags": "[]"
+        },
+        {
+          "article_no": "L4",
+          "is_urgent": 1,
+          "price": "5억",
+          "price_sort_value": 50000,
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]"
+        },
+        {
+          "article_no": "L5",
+          "is_urgent": 0,
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]"
+        },
+        {
+          "article_no": "L6",
+          "is_urgent": 1,
+          "price": "9억",
+          "price_sort_value": 90000,
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]"
+        },
+        {
+          "article_no": "L7",
+          "is_urgent": 1,
+          "price": "",
+          "price_sort_value": null,
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\""
+        }
+      ]
+    },
+    "second": {
+      "building": [
+        {
+          "building_name": "래미안",
+          "district": "강남구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 2
+        },
+        {
+          "building_name": "힐스",
+          "district": "수원시",
+          "price_down_count": 1,
+          "region": "",
+          "session_id": "s2",
+          "total_count": 2
+        }
+      ],
+      "region": [
+        {
+          "district": "성남시 분당구",
+          "price_down_count": 0,
+          "region": "경기도",
+          "session_id": "s1",
+          "total_count": 1
+        },
+        {
+          "district": "수원시",
+          "price_down_count": 1,
+          "region": "경기도",
+          "session_id": "s1",
+          "total_count": 1
+        },
+        {
+          "district": "강남구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 3
+        },
+        {
+          "district": "서초구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 2
+        },
+        {
+          "district": "수원시",
+          "price_down_count": 0,
+          "region": "경기도",
+          "session_id": "s2",
+          "total_count": 4
+        },
+        {
+          "district": "강남구",
+          "price_down_count": 4,
+          "region": "서울특별시",
+          "session_id": "s2",
+          "total_count": 8
+        }
+      ],
+      "sessions": [
+        {
+          "cnt": 7,
+          "crawl_session": "s1"
+        },
+        {
+          "cnt": 13,
+          "crawl_session": "s2"
+        }
+      ],
+      "sort_values": [
+        {
+          "article_no": "L1",
+          "is_urgent": 1,
+          "price": "10억 5,000",
+          "price_sort_value": 105000,
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]"
+        },
+        {
+          "article_no": "L2",
+          "is_urgent": 0,
+          "price": "3억 5,000",
+          "price_sort_value": 35000,
+          "rent_sort_value": null,
+          "tags": "[\"역세권\"]"
+        },
+        {
+          "article_no": "L3",
+          "is_urgent": 1,
+          "price": "1,000/50",
+          "price_sort_value": 1000,
+          "rent_sort_value": 50,
+          "tags": "[]"
+        },
+        {
+          "article_no": "L4",
+          "is_urgent": 1,
+          "price": "5억",
+          "price_sort_value": 50000,
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\", \"신축\"]"
+        },
+        {
+          "article_no": "L5",
+          "is_urgent": 0,
+          "price": "2억/300",
+          "price_sort_value": 20000,
+          "rent_sort_value": 300,
+          "tags": "[\"대단지\"]"
+        },
+        {
+          "article_no": "L6",
+          "is_urgent": 1,
+          "price": "9억",
+          "price_sort_value": 90000,
+          "rent_sort_value": null,
+          "tags": "[\"역세권\", \"신축\"]"
+        },
+        {
+          "article_no": "L7",
+          "is_urgent": 1,
+          "price": "",
+          "price_sort_value": null,
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\"]\""
+        },
+        {
+          "article_no": "S1",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]"
+        },
+        {
+          "article_no": "S10",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "S11",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "S12",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "S13",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]"
+        },
+        {
+          "article_no": "S14",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "S15",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "S2",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\", \\\"역세권\\\"]\""
+        },
+        {
+          "article_no": "S3",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "\"가격인하\""
+        },
+        {
+          "article_no": "S4",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "\"\\\"가격인하됨\\\"\""
+        },
+        {
+          "article_no": "S5",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "\"not json\""
+        },
+        {
+          "article_no": "S6",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "null"
+        },
+        {
+          "article_no": "S7",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "\"{bad\""
+        }
+      ]
+    },
+    "third": {
+      "building": [
+        {
+          "building_name": "래미안",
+          "district": "강남구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 2
+        },
+        {
+          "building_name": "힐스",
+          "district": "수원시",
+          "price_down_count": 1,
+          "region": "",
+          "session_id": "s2",
+          "total_count": 2
+        }
+      ],
+      "region": [
+        {
+          "district": "성남시 분당구",
+          "price_down_count": 0,
+          "region": "경기도",
+          "session_id": "s1",
+          "total_count": 1
+        },
+        {
+          "district": "수원시",
+          "price_down_count": 1,
+          "region": "경기도",
+          "session_id": "s1",
+          "total_count": 1
+        },
+        {
+          "district": "강남구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 3
+        },
+        {
+          "district": "서초구",
+          "price_down_count": 1,
+          "region": "서울특별시",
+          "session_id": "s1",
+          "total_count": 2
+        },
+        {
+          "district": "수원시",
+          "price_down_count": 0,
+          "region": "경기도",
+          "session_id": "s2",
+          "total_count": 4
+        },
+        {
+          "district": "강남구",
+          "price_down_count": 4,
+          "region": "서울특별시",
+          "session_id": "s2",
+          "total_count": 8
+        },
+        {
+          "district": "강남구",
+          "price_down_count": 0,
+          "region": "서울특별시",
+          "session_id": "s3",
+          "total_count": 1
+        }
+      ],
+      "sessions": [
+        {
+          "cnt": 13,
+          "crawl_session": "s2"
+        },
+        {
+          "cnt": 1,
+          "crawl_session": "s3"
+        }
+      ],
+      "sort_values": [
+        {
+          "article_no": "S1",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]"
+        },
+        {
+          "article_no": "S10",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "S11",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "S12",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "S13",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[\"가격인하\"]"
+        },
+        {
+          "article_no": "S14",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "S15",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        },
+        {
+          "article_no": "S2",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "\"[\\\"가격인하\\\", \\\"역세권\\\"]\""
+        },
+        {
+          "article_no": "S3",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "\"가격인하\""
+        },
+        {
+          "article_no": "S4",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "\"\\\"가격인하됨\\\"\""
+        },
+        {
+          "article_no": "S5",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "\"not json\""
+        },
+        {
+          "article_no": "S6",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "null"
+        },
+        {
+          "article_no": "S7",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "\"{bad\""
+        },
+        {
+          "article_no": "T1",
+          "is_urgent": 1,
+          "price": "10억",
+          "price_sort_value": 100000,
+          "rent_sort_value": null,
+          "tags": "[]"
+        }
+      ]
+    }
+  },
+  "last_crawl_variants": {
+    "empty": {
+      "last": null,
+      "live": null,
+      "recent": [],
+      "visible": null
+    },
+    "filled": {
+      "last": {
+        "id": 4,
+        "session_id": "fail",
+        "source": "naver",
+        "status": "failed",
+        "total_count": 1,
+        "urgent_count": 1
+      },
+      "live": {
+        "id": 3,
+        "session_id": "nullsrc",
+        "source": null,
+        "status": "success",
+        "total_count": 1,
+        "urgent_count": 1
+      },
+      "recent": [
+        {
+          "id": 3,
+          "session_id": "nullsrc",
+          "source": null,
+          "status": "success",
+          "total_count": 1,
+          "urgent_count": 1
+        },
+        {
+          "id": 1,
+          "session_id": "ok-old",
+          "source": "naver",
+          "status": "success",
+          "total_count": 1,
+          "urgent_count": 1
+        }
+      ],
+      "recent_limit_0": [
+        {
+          "id": 3,
+          "session_id": "nullsrc",
+          "source": null,
+          "status": "success",
+          "total_count": 1,
+          "urgent_count": 1
+        },
+        {
+          "id": 1,
+          "session_id": "ok-old",
+          "source": "naver",
+          "status": "success",
+          "total_count": 1,
+          "urgent_count": 1
+        }
+      ],
+      "recent_limit_1": [
+        {
+          "id": 3,
+          "session_id": "nullsrc",
+          "source": null,
+          "status": "success",
+          "total_count": 1,
+          "urgent_count": 1
+        }
+      ],
+      "visible": {
+        "id": 3,
+        "session_id": "nullsrc",
+        "source": null,
+        "status": "success",
+        "total_count": 1,
+        "urgent_count": 1
+      }
+    },
+    "only_failed": {
+      "last": {
+        "id": 4,
+        "session_id": "fail",
+        "source": "naver",
+        "status": "failed",
+        "total_count": 1,
+        "urgent_count": 1
+      },
+      "live": null,
+      "visible": {
+        "id": 4,
+        "session_id": "fail",
+        "source": "naver",
+        "status": "failed",
+        "total_count": 1,
+        "urgent_count": 1
+      }
+    }
+  },
+  "listing_routes": {
+    "/api/listings": {
+      "json": {
+        "listings": [
+          {
+            "area": "84㎡",
+            "article_no": "L1",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "급매 남향",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 1,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L1",
+            "price": "10억 5,000",
+            "price_sort_value": 105000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L6",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "역세권 대단지",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 6,
+            "is_urgent": 1,
+            "latitude": 37.51,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L6",
+            "price": "9억",
+            "price_sort_value": 90000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L4",
+            "building_name": "단지L4",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "수원시",
+            "floor": "10/20",
+            "id": 4,
+            "is_urgent": 1,
+            "latitude": null,
+            "longitude": null,
+            "naver_url": "https://example.com/L4",
+            "price": "5억",
+            "price_sort_value": 50000,
+            "property_type": "단독/다가구",
+            "region": "경기도",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L2",
+            "building_name": "단지L2",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 2,
+            "is_urgent": 0,
+            "latitude": 37.48,
+            "longitude": 127.02,
+            "naver_url": "https://example.com/L2",
+            "price": "3억 5,000",
+            "price_sort_value": 35000,
+            "property_type": "오피스텔",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\"]",
+            "trade_type": "전세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L5",
+            "building_name": "단지L5",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 5,
+            "is_urgent": 0,
+            "latitude": 37.6,
+            "longitude": 127.05,
+            "naver_url": "https://example.com/L5",
+            "price": "2억/300",
+            "price_sort_value": 20000,
+            "property_type": "상가/업무",
+            "region": "서울특별시",
+            "rent_sort_value": 300,
+            "tags": "[\"대단지\"]",
+            "trade_type": "월세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L3",
+            "building_name": "단지L3",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "성남시 분당구",
+            "floor": "10/20",
+            "id": 3,
+            "is_urgent": 1,
+            "latitude": 37.35,
+            "longitude": 127.11,
+            "naver_url": "https://example.com/L3",
+            "price": "1,000/50",
+            "price_sort_value": 1000,
+            "property_type": "빌라/연립",
+            "region": "경기도",
+            "rent_sort_value": 50,
+            "tags": "[]",
+            "trade_type": "월세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L7",
+            "building_name": "",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 7,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L7",
+            "price": "",
+            "price_sort_value": null,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "\"[\\\"가격인하\\\"]\"",
+            "trade_type": "매매"
+          }
+        ],
+        "page": 1,
+        "per_page": 20,
+        "price_down_count": 3,
+        "total": 7,
+        "total_pages": 1,
+        "type_counts": {
+          "단독/다가구": 1,
+          "빌라/연립": 1,
+          "상가/업무": 1,
+          "아파트": 3,
+          "오피스텔": 1
+        },
+        "urgent": 7
+      },
+      "status": 200
+    },
+    "/api/listings?page=0&per_page=500": {
+      "json": {
+        "listings": [
+          {
+            "area": "84㎡",
+            "article_no": "L1",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "급매 남향",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 1,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L1",
+            "price": "10억 5,000",
+            "price_sort_value": 105000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L6",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "역세권 대단지",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 6,
+            "is_urgent": 1,
+            "latitude": 37.51,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L6",
+            "price": "9억",
+            "price_sort_value": 90000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L4",
+            "building_name": "단지L4",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "수원시",
+            "floor": "10/20",
+            "id": 4,
+            "is_urgent": 1,
+            "latitude": null,
+            "longitude": null,
+            "naver_url": "https://example.com/L4",
+            "price": "5억",
+            "price_sort_value": 50000,
+            "property_type": "단독/다가구",
+            "region": "경기도",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L2",
+            "building_name": "단지L2",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 2,
+            "is_urgent": 0,
+            "latitude": 37.48,
+            "longitude": 127.02,
+            "naver_url": "https://example.com/L2",
+            "price": "3억 5,000",
+            "price_sort_value": 35000,
+            "property_type": "오피스텔",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\"]",
+            "trade_type": "전세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L5",
+            "building_name": "단지L5",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 5,
+            "is_urgent": 0,
+            "latitude": 37.6,
+            "longitude": 127.05,
+            "naver_url": "https://example.com/L5",
+            "price": "2억/300",
+            "price_sort_value": 20000,
+            "property_type": "상가/업무",
+            "region": "서울특별시",
+            "rent_sort_value": 300,
+            "tags": "[\"대단지\"]",
+            "trade_type": "월세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L3",
+            "building_name": "단지L3",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "성남시 분당구",
+            "floor": "10/20",
+            "id": 3,
+            "is_urgent": 1,
+            "latitude": 37.35,
+            "longitude": 127.11,
+            "naver_url": "https://example.com/L3",
+            "price": "1,000/50",
+            "price_sort_value": 1000,
+            "property_type": "빌라/연립",
+            "region": "경기도",
+            "rent_sort_value": 50,
+            "tags": "[]",
+            "trade_type": "월세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L7",
+            "building_name": "",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 7,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L7",
+            "price": "",
+            "price_sort_value": null,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "\"[\\\"가격인하\\\"]\"",
+            "trade_type": "매매"
+          }
+        ],
+        "page": 1,
+        "per_page": 100,
+        "price_down_count": 3,
+        "total": 7,
+        "total_pages": 1,
+        "type_counts": {
+          "단독/다가구": 1,
+          "빌라/연립": 1,
+          "상가/업무": 1,
+          "아파트": 3,
+          "오피스텔": 1
+        },
+        "urgent": 7
+      },
+      "status": 200
+    },
+    "/api/listings?page=abc&per_page=5": {
+      "json": {
+        "listings": [
+          {
+            "area": "84㎡",
+            "article_no": "L1",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "급매 남향",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 1,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L1",
+            "price": "10억 5,000",
+            "price_sort_value": 105000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L6",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "역세권 대단지",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 6,
+            "is_urgent": 1,
+            "latitude": 37.51,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L6",
+            "price": "9억",
+            "price_sort_value": 90000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L4",
+            "building_name": "단지L4",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "수원시",
+            "floor": "10/20",
+            "id": 4,
+            "is_urgent": 1,
+            "latitude": null,
+            "longitude": null,
+            "naver_url": "https://example.com/L4",
+            "price": "5억",
+            "price_sort_value": 50000,
+            "property_type": "단독/다가구",
+            "region": "경기도",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L2",
+            "building_name": "단지L2",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 2,
+            "is_urgent": 0,
+            "latitude": 37.48,
+            "longitude": 127.02,
+            "naver_url": "https://example.com/L2",
+            "price": "3억 5,000",
+            "price_sort_value": 35000,
+            "property_type": "오피스텔",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\"]",
+            "trade_type": "전세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L5",
+            "building_name": "단지L5",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 5,
+            "is_urgent": 0,
+            "latitude": 37.6,
+            "longitude": 127.05,
+            "naver_url": "https://example.com/L5",
+            "price": "2억/300",
+            "price_sort_value": 20000,
+            "property_type": "상가/업무",
+            "region": "서울특별시",
+            "rent_sort_value": 300,
+            "tags": "[\"대단지\"]",
+            "trade_type": "월세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L3",
+            "building_name": "단지L3",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "성남시 분당구",
+            "floor": "10/20",
+            "id": 3,
+            "is_urgent": 1,
+            "latitude": 37.35,
+            "longitude": 127.11,
+            "naver_url": "https://example.com/L3",
+            "price": "1,000/50",
+            "price_sort_value": 1000,
+            "property_type": "빌라/연립",
+            "region": "경기도",
+            "rent_sort_value": 50,
+            "tags": "[]",
+            "trade_type": "월세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L7",
+            "building_name": "",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 7,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L7",
+            "price": "",
+            "price_sort_value": null,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "\"[\\\"가격인하\\\"]\"",
+            "trade_type": "매매"
+          }
+        ],
+        "page": 1,
+        "per_page": 20,
+        "price_down_count": 3,
+        "total": 7,
+        "total_pages": 1,
+        "type_counts": {
+          "단독/다가구": 1,
+          "빌라/연립": 1,
+          "상가/업무": 1,
+          "아파트": 3,
+          "오피스텔": 1
+        },
+        "urgent": 7
+      },
+      "status": 200
+    },
+    "/api/listings?per_page=-1": {
+      "json": {
+        "listings": [
+          {
+            "area": "84㎡",
+            "article_no": "L1",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "급매 남향",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 1,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L1",
+            "price": "10억 5,000",
+            "price_sort_value": 105000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          }
+        ],
+        "page": 1,
+        "per_page": 1,
+        "price_down_count": 3,
+        "total": 7,
+        "total_pages": 7,
+        "type_counts": {
+          "단독/다가구": 1,
+          "빌라/연립": 1,
+          "상가/업무": 1,
+          "아파트": 3,
+          "오피스텔": 1
+        },
+        "urgent": 7
+      },
+      "status": 200
+    },
+    "/api/listings?price_down_only=True&sort_by=price-asc": {
+      "json": {
+        "listings": [
+          {
+            "area": "84㎡",
+            "article_no": "L4",
+            "building_name": "단지L4",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "수원시",
+            "floor": "10/20",
+            "id": 4,
+            "is_urgent": 1,
+            "latitude": null,
+            "longitude": null,
+            "naver_url": "https://example.com/L4",
+            "price": "5억",
+            "price_sort_value": 50000,
+            "property_type": "단독/다가구",
+            "region": "경기도",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L1",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "급매 남향",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 1,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L1",
+            "price": "10억 5,000",
+            "price_sort_value": 105000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L7",
+            "building_name": "",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 7,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L7",
+            "price": "",
+            "price_sort_value": null,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "\"[\\\"가격인하\\\"]\"",
+            "trade_type": "매매"
+          }
+        ],
+        "page": 1,
+        "per_page": 20,
+        "price_down_count": 3,
+        "total": 3,
+        "total_pages": 1,
+        "type_counts": {
+          "단독/다가구": 1,
+          "아파트": 2
+        },
+        "urgent": 3
+      },
+      "status": 200
+    },
+    "/api/listings?property_type=__OTHER__&trade_type=%EC%9B%94%EC%84%B8": {
+      "json": {
+        "listings": [
+          {
+            "area": "84㎡",
+            "article_no": "L5",
+            "building_name": "단지L5",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 5,
+            "is_urgent": 0,
+            "latitude": 37.6,
+            "longitude": 127.05,
+            "naver_url": "https://example.com/L5",
+            "price": "2억/300",
+            "price_sort_value": 20000,
+            "property_type": "상가/업무",
+            "region": "서울특별시",
+            "rent_sort_value": 300,
+            "tags": "[\"대단지\"]",
+            "trade_type": "월세"
+          }
+        ],
+        "page": 1,
+        "per_page": 20,
+        "price_down_count": 0,
+        "total": 1,
+        "total_pages": 1,
+        "type_counts": {
+          "상가/업무": 1
+        },
+        "urgent": 1
+      },
+      "status": 200
+    },
+    "/api/listings?tags=%EC%97%AD%EC%84%B8%EA%B6%8C,,%20&region=%EC%84%9C%EC%9A%B8": {
+      "json": {
+        "listings": [
+          {
+            "area": "84㎡",
+            "article_no": "L6",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "역세권 대단지",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 6,
+            "is_urgent": 1,
+            "latitude": 37.51,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L6",
+            "price": "9억",
+            "price_sort_value": 90000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L2",
+            "building_name": "단지L2",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 2,
+            "is_urgent": 0,
+            "latitude": 37.48,
+            "longitude": 127.02,
+            "naver_url": "https://example.com/L2",
+            "price": "3억 5,000",
+            "price_sort_value": 35000,
+            "property_type": "오피스텔",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\"]",
+            "trade_type": "전세"
+          }
+        ],
+        "page": 1,
+        "per_page": 20,
+        "price_down_count": 0,
+        "total": 2,
+        "total_pages": 1,
+        "type_counts": {
+          "아파트": 1,
+          "오피스텔": 1
+        },
+        "urgent": 2
+      },
+      "status": 200
+    },
+    "/api/listings?urgent_only=1": {
+      "json": {
+        "listings": [
+          {
+            "area": "84㎡",
+            "article_no": "L1",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "급매 남향",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 1,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L1",
+            "price": "10억 5,000",
+            "price_sort_value": 105000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L6",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "역세권 대단지",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 6,
+            "is_urgent": 1,
+            "latitude": 37.51,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L6",
+            "price": "9억",
+            "price_sort_value": 90000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L4",
+            "building_name": "단지L4",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "수원시",
+            "floor": "10/20",
+            "id": 4,
+            "is_urgent": 1,
+            "latitude": null,
+            "longitude": null,
+            "naver_url": "https://example.com/L4",
+            "price": "5억",
+            "price_sort_value": 50000,
+            "property_type": "단독/다가구",
+            "region": "경기도",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L2",
+            "building_name": "단지L2",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 2,
+            "is_urgent": 0,
+            "latitude": 37.48,
+            "longitude": 127.02,
+            "naver_url": "https://example.com/L2",
+            "price": "3억 5,000",
+            "price_sort_value": 35000,
+            "property_type": "오피스텔",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\"]",
+            "trade_type": "전세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L5",
+            "building_name": "단지L5",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 5,
+            "is_urgent": 0,
+            "latitude": 37.6,
+            "longitude": 127.05,
+            "naver_url": "https://example.com/L5",
+            "price": "2억/300",
+            "price_sort_value": 20000,
+            "property_type": "상가/업무",
+            "region": "서울특별시",
+            "rent_sort_value": 300,
+            "tags": "[\"대단지\"]",
+            "trade_type": "월세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L3",
+            "building_name": "단지L3",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "성남시 분당구",
+            "floor": "10/20",
+            "id": 3,
+            "is_urgent": 1,
+            "latitude": 37.35,
+            "longitude": 127.11,
+            "naver_url": "https://example.com/L3",
+            "price": "1,000/50",
+            "price_sort_value": 1000,
+            "property_type": "빌라/연립",
+            "region": "경기도",
+            "rent_sort_value": 50,
+            "tags": "[]",
+            "trade_type": "월세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L7",
+            "building_name": "",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 7,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L7",
+            "price": "",
+            "price_sort_value": null,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "\"[\\\"가격인하\\\"]\"",
+            "trade_type": "매매"
+          }
+        ],
+        "page": 1,
+        "per_page": 20,
+        "price_down_count": 3,
+        "total": 7,
+        "total_pages": 1,
+        "type_counts": {
+          "단독/다가구": 1,
+          "빌라/연립": 1,
+          "상가/업무": 1,
+          "아파트": 3,
+          "오피스텔": 1
+        },
+        "urgent": 7
+      },
+      "status": 200
+    },
+    "/api/listings?urgent_only=TRUE": {
+      "json": {
+        "listings": [
+          {
+            "area": "84㎡",
+            "article_no": "L1",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "급매 남향",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 1,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L1",
+            "price": "10억 5,000",
+            "price_sort_value": 105000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L6",
+            "building_name": "래미안",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "역세권 대단지",
+            "district": "강남구",
+            "floor": "10/20",
+            "id": 6,
+            "is_urgent": 1,
+            "latitude": 37.51,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L6",
+            "price": "9억",
+            "price_sort_value": 90000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "[\"역세권\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L4",
+            "building_name": "단지L4",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "수원시",
+            "floor": "10/20",
+            "id": 4,
+            "is_urgent": 1,
+            "latitude": null,
+            "longitude": null,
+            "naver_url": "https://example.com/L4",
+            "price": "5억",
+            "price_sort_value": 50000,
+            "property_type": "단독/다가구",
+            "region": "경기도",
+            "rent_sort_value": null,
+            "tags": "[\"가격인하\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L3",
+            "building_name": "단지L3",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "성남시 분당구",
+            "floor": "10/20",
+            "id": 3,
+            "is_urgent": 1,
+            "latitude": 37.35,
+            "longitude": 127.11,
+            "naver_url": "https://example.com/L3",
+            "price": "1,000/50",
+            "price_sort_value": 1000,
+            "property_type": "빌라/연립",
+            "region": "경기도",
+            "rent_sort_value": 50,
+            "tags": "[]",
+            "trade_type": "월세"
+          },
+          {
+            "area": "84㎡",
+            "article_no": "L7",
+            "building_name": "",
+            "confirmed_date": "20261020",
+            "crawl_session": "app-s1",
+            "description": "설명",
+            "district": "서초구",
+            "floor": "10/20",
+            "id": 7,
+            "is_urgent": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L7",
+            "price": "",
+            "price_sort_value": null,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "rent_sort_value": null,
+            "tags": "\"[\\\"가격인하\\\"]\"",
+            "trade_type": "매매"
+          }
+        ],
+        "page": 1,
+        "per_page": 20,
+        "price_down_count": 3,
+        "total": 5,
+        "total_pages": 1,
+        "type_counts": {
+          "단독/다가구": 1,
+          "빌라/연립": 1,
+          "아파트": 3
+        },
+        "urgent": 5
+      },
+      "status": 200
+    },
+    "/api/map-listings": {
+      "json": {
+        "count": 6,
+        "listings": [
+          {
+            "article_no": "L1",
+            "building_name": "래미안",
+            "id": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L1",
+            "price": "10억 5,000",
+            "property_type": "아파트",
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          },
+          {
+            "article_no": "L2",
+            "building_name": "단지L2",
+            "id": 2,
+            "latitude": 37.48,
+            "longitude": 127.02,
+            "naver_url": "https://example.com/L2",
+            "price": "3억 5,000",
+            "property_type": "오피스텔",
+            "tags": "[\"역세권\"]",
+            "trade_type": "전세"
+          },
+          {
+            "article_no": "L3",
+            "building_name": "단지L3",
+            "id": 3,
+            "latitude": 37.35,
+            "longitude": 127.11,
+            "naver_url": "https://example.com/L3",
+            "price": "1,000/50",
+            "property_type": "빌라/연립",
+            "tags": "[]",
+            "trade_type": "월세"
+          },
+          {
+            "article_no": "L5",
+            "building_name": "단지L5",
+            "id": 5,
+            "latitude": 37.6,
+            "longitude": 127.05,
+            "naver_url": "https://example.com/L5",
+            "price": "2억/300",
+            "property_type": "상가/업무",
+            "tags": "[\"대단지\"]",
+            "trade_type": "월세"
+          },
+          {
+            "article_no": "L6",
+            "building_name": "래미안",
+            "id": 6,
+            "latitude": 37.51,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L6",
+            "price": "9억",
+            "property_type": "아파트",
+            "tags": "[\"역세권\", \"신축\"]",
+            "trade_type": "매매"
+          },
+          {
+            "article_no": "L7",
+            "building_name": "",
+            "id": 7,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L7",
+            "price": "",
+            "property_type": "아파트",
+            "tags": "\"[\\\"가격인하\\\"]\"",
+            "trade_type": "매매"
+          }
+        ]
+      },
+      "status": 200
+    },
+    "/api/map-listings?limit=0&search=%EB%9E%98%EB%AF%B8%EC%95%88": {
+      "json": {
+        "count": 1,
+        "listings": [
+          {
+            "article_no": "L1",
+            "building_name": "래미안",
+            "id": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L1",
+            "price": "10억 5,000",
+            "property_type": "아파트",
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          }
+        ]
+      },
+      "status": 200
+    },
+    "/api/map-listings?limit=9999&tags=%EC%8B%A0%EC%B6%95": {
+      "json": {
+        "count": 1,
+        "listings": [
+          {
+            "article_no": "L6",
+            "building_name": "래미안",
+            "id": 6,
+            "latitude": 37.51,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L6",
+            "price": "9억",
+            "property_type": "아파트",
+            "tags": "[\"역세권\", \"신축\"]",
+            "trade_type": "매매"
+          }
+        ]
+      },
+      "status": 200
+    },
+    "/api/map-listings?limit=abc&price_down_only=TRUE": {
+      "json": {
+        "count": 2,
+        "listings": [
+          {
+            "article_no": "L1",
+            "building_name": "래미안",
+            "id": 1,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L1",
+            "price": "10억 5,000",
+            "property_type": "아파트",
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          },
+          {
+            "article_no": "L7",
+            "building_name": "",
+            "id": 7,
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "naver_url": "https://example.com/L7",
+            "price": "",
+            "property_type": "아파트",
+            "tags": "\"[\\\"가격인하\\\"]\"",
+            "trade_type": "매매"
+          }
+        ]
+      },
+      "status": 200
+    },
+    "/api/map-listings?min_lat=abc&max_lat=&min_lng=127.01&limit=2": {
+      "json": {
+        "count": 2,
+        "listings": [
+          {
+            "article_no": "L2",
+            "building_name": "단지L2",
+            "id": 2,
+            "latitude": 37.48,
+            "longitude": 127.02,
+            "naver_url": "https://example.com/L2",
+            "price": "3억 5,000",
+            "property_type": "오피스텔",
+            "tags": "[\"역세권\"]",
+            "trade_type": "전세"
+          },
+          {
+            "article_no": "L3",
+            "building_name": "단지L3",
+            "id": 3,
+            "latitude": 37.35,
+            "longitude": 127.11,
+            "naver_url": "https://example.com/L3",
+            "price": "1,000/50",
+            "property_type": "빌라/연립",
+            "tags": "[]",
+            "trade_type": "월세"
+          }
+        ]
+      },
+      "status": 200
+    }
+  },
+  "push_subscriptions": {
+    "all": [
+      {
+        "client_id": "c2",
+        "endpoint": "https://push/2",
+        "id": 2,
+        "last_success_at": null,
+        "subscription": {
+          "endpoint": "https://push/2",
+          "keys": {
+            "auth": "a",
+            "p256dh": "p"
+          }
+        }
+      },
+      {
+        "client_id": "c1",
+        "endpoint": "https://push/1",
+        "id": 1,
+        "last_success_at": null,
+        "subscription": {
+          "endpoint": "https://push/1",
+          "keys": {
+            "auth": "a",
+            "p256dh": "p"
+          }
+        }
+      },
+      {
+        "client_id": "c3",
+        "endpoint": "https://push/3",
+        "id": 3,
+        "last_success_at": null,
+        "subscription": null
+      }
+    ],
+    "c1": [
+      {
+        "client_id": "c1",
+        "endpoint": "https://push/1",
+        "id": 1,
+        "last_success_at": null,
+        "subscription": {
+          "endpoint": "https://push/1",
+          "keys": {
+            "auth": "a",
+            "p256dh": "p"
+          }
+        }
+      }
+    ],
+    "empty_client_arg": [
+      {
+        "client_id": "c2",
+        "endpoint": "https://push/2",
+        "id": 2,
+        "last_success_at": null,
+        "subscription": {
+          "endpoint": "https://push/2",
+          "keys": {
+            "auth": "a",
+            "p256dh": "p"
+          }
+        }
+      },
+      {
+        "client_id": "c1",
+        "endpoint": "https://push/1",
+        "id": 1,
+        "last_success_at": null,
+        "subscription": {
+          "endpoint": "https://push/1",
+          "keys": {
+            "auth": "a",
+            "p256dh": "p"
+          }
+        }
+      },
+      {
+        "client_id": "c3",
+        "endpoint": "https://push/3",
+        "id": 3,
+        "last_success_at": null,
+        "subscription": null
+      }
+    ]
+  },
+  "region_stats_and_tags": {
+    "region_stats": [
+      {
+        "display_name": "서울특별시 강남구",
+        "district": "강남구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "total": 3
+      },
+      {
+        "display_name": "서울특별시 서초구",
+        "district": "서초구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "total": 2
+      },
+      {
+        "display_name": "경기도 성남시 분당구",
+        "district": "성남시 분당구",
+        "price_down_count": 0,
+        "region": "경기도",
+        "total": 1
+      },
+      {
+        "display_name": "경기도 수원시",
+        "district": "수원시",
+        "price_down_count": 1,
+        "region": "경기도",
+        "total": 1
+      }
+    ],
+    "tags": [
+      {
+        "count": 2,
+        "tag": "가격인하"
+      },
+      {
+        "count": 2,
+        "tag": "신축"
+      },
+      {
+        "count": 2,
+        "tag": "역세권"
+      },
+      {
+        "count": 1,
+        "tag": "대단지"
+      }
+    ]
+  },
+  "replace_rebuild_region_stats": {
+    "after_empty": [
+      {
+        "district": "성남시 분당구",
+        "price_down_count": 0,
+        "region": "경기도",
+        "session_id": "s1",
+        "total_count": 1
+      },
+      {
+        "district": "수원시",
+        "price_down_count": 1,
+        "region": "경기도",
+        "session_id": "s1",
+        "total_count": 1
+      },
+      {
+        "district": "강남구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "session_id": "s1",
+        "total_count": 3
+      },
+      {
+        "district": "서초구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "session_id": "s1",
+        "total_count": 2
+      }
+    ],
+    "after_rebuild": [
+      {
+        "district": "성남시 분당구",
+        "price_down_count": 0,
+        "region": "경기도",
+        "session_id": "s1",
+        "total_count": 1
+      },
+      {
+        "district": "수원시",
+        "price_down_count": 1,
+        "region": "경기도",
+        "session_id": "s1",
+        "total_count": 1
+      },
+      {
+        "district": "강남구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "session_id": "s1",
+        "total_count": 3
+      },
+      {
+        "district": "서초구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "session_id": "s1",
+        "total_count": 2
+      }
+    ],
+    "after_replace": [
+      {
+        "district": "d",
+        "price_down_count": 0,
+        "region": "r",
+        "session_id": "s1",
+        "total_count": 3
+      },
+      {
+        "district": "d2",
+        "price_down_count": 2,
+        "region": "r2",
+        "session_id": "s1",
+        "total_count": 4
+      }
+    ],
+    "rebuild_empty_session": false,
+    "rebuilt_ok": true,
+    "rebuilt_with_mismatch": false,
+    "rebuilt_without_history": false
+  },
+  "replace_region_stats_partial_commit": [],
+  "replace_region_stats_tx": {
+    "rolled_back": [
+      {
+        "district": "성남시 분당구",
+        "price_down_count": 0,
+        "region": "경기도",
+        "session_id": "s1",
+        "total_count": 1
+      },
+      {
+        "district": "수원시",
+        "price_down_count": 1,
+        "region": "경기도",
+        "session_id": "s1",
+        "total_count": 1
+      },
+      {
+        "district": "강남구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "session_id": "s1",
+        "total_count": 3
+      },
+      {
+        "district": "서초구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "session_id": "s1",
+        "total_count": 2
+      }
+    ]
+  },
+  "stats_rows": {
+    "edge:_build_building_stats_rows": {
+      "raised": "TypeError"
+    },
+    "edge:_build_region_stats_rows": {
+      "raised": "TypeError"
+    },
+    "empty:_build_building_stats_rows": [],
+    "empty:_build_region_stats_rows": [],
+    "main:_build_building_stats_rows": [
+      {
+        "building_name": "래미안",
+        "district": "강남구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "session_id": "sess",
+        "total_count": 2
+      }
+    ],
+    "main:_build_region_stats_rows": [
+      {
+        "district": "강남구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "session_id": "sess",
+        "total_count": 3
+      },
+      {
+        "district": "서초구",
+        "price_down_count": 1,
+        "region": "서울특별시",
+        "session_id": "sess",
+        "total_count": 2
+      },
+      {
+        "district": "성남시 분당구",
+        "price_down_count": 0,
+        "region": "경기도",
+        "session_id": "sess",
+        "total_count": 1
+      },
+      {
+        "district": "수원시",
+        "price_down_count": 1,
+        "region": "경기도",
+        "session_id": "sess",
+        "total_count": 1
+      }
+    ]
+  },
+  "trigger_crawl_variants": {
+    "None": {
+      "json": {
+        "message": "✅ 급매 3개 수집 (success)",
+        "push": {
+          "clients": 1,
+          "matches": 1,
+          "sent": 1
+        },
+        "source": "naver",
+        "status": "success",
+        "total": 3,
+        "urgent": 2
+      },
+      "status": 200
+    },
+    "degraded": {
+      "json": {
+        "message": "⚠️ 급매 3개 수집 (degraded)",
+        "push": {
+          "clients": 0,
+          "matches": 0,
+          "sent": 0
+        },
+        "source": "naver",
+        "status": "degraded",
+        "total": 3,
+        "urgent": 2
+      },
+      "status": 200
+    },
+    "failed": {
+      "json": {
+        "message": "❌ 급매 3개 수집 (failed)",
+        "push": {
+          "clients": 0,
+          "matches": 0,
+          "sent": 0
+        },
+        "source": "naver",
+        "status": "failed",
+        "total": 3,
+        "urgent": 2
+      },
+      "status": 200
+    },
+    "success": {
+      "json": {
+        "message": "✅ 급매 3개 수집 (success)",
+        "push": {
+          "clients": 1,
+          "matches": 1,
+          "sent": 1
+        },
+        "source": "naver",
+        "status": "success",
+        "total": 3,
+        "urgent": 2
+      },
+      "status": 200
+    }
+  }
+}
