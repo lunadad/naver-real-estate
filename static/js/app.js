@@ -126,6 +126,12 @@ function bargainBadge(listing) {
   return `<span class="badge badge-bargain" title="${escHtml(title)}">💎 단지 중앙값 −${Math.round(d * 100)}%</span>`;
 }
 
+function priceCutBadge(listing) {
+  const n = Number(listing.price_cut_count);
+  if (!(n >= 1)) return '';
+  return `<span class="badge badge-price-cut" title="처음 발견한 뒤 가격을 내린 횟수">인하 ${n}회</span>`;
+}
+
 function buildCurrentFilterLabel() {
   const parts = [];
   if (state.filters.search) parts.push(`검색 ${state.filters.search}`);
@@ -1057,6 +1063,7 @@ function renderListings(data) {
           <span class="badge ${tradeBadgeClass(l.trade_type)}">${escHtml(l.trade_type)}</span>
           <span class="badge badge-type">${escHtml(l.property_type)}</span>
           ${bargainBadge(l)}
+          ${priceCutBadge(l)}
           ${l.building_change_badge ? `<span class="badge badge-building-change badge-building-change-${escHtml(l.building_change_badge.kind)}" title="직전 일별 스냅샷 대비">${escHtml(l.building_change_badge.label)}</span>` : ''}
         </div>
         <div class="card-date-chip">확인 ${formatDate(l.confirmed_date) || '—'}</div>
@@ -1071,6 +1078,7 @@ function renderListings(data) {
       <div class="card-name-row">
         <div class="card-name" title="${escHtml(l.building_name)}">${l.district && l.building_name ? `<a class="card-name-link" href="${complexPageUrl(l.district, l.building_name)}">${escHtml(l.building_name)}</a>` : escHtml(l.building_name)}</div>
         ${l.district && l.building_name ? `<button type="button" class="card-trend-btn" data-district="${escHtml(l.district)}" data-building-name="${escHtml(l.building_name)}" title="일별 매물수 추이" aria-label="일별 매물수 추이 보기">📈</button>` : ''}
+        ${l.article_no ? `<button type="button" class="card-history-btn" data-article-no="${escHtml(l.article_no)}" aria-haspopup="dialog">가격 이력</button>` : ''}
       </div>
       <div class="card-location-line">${escHtml(compactRegion)}</div>
       <div class="card-meta">
@@ -1997,6 +2005,12 @@ function wireEvents() {
       return;
     }
     if (e.target.closest('.card-name-link')) return; // 단지 페이지 링크는 카드의 네이버 열기를 막고 그대로 이동
+    const historyBtn = e.target.closest('.card-history-btn');
+    if (historyBtn) {
+      e.stopPropagation();
+      if (window.openPriceHistory) window.openPriceHistory(historyBtn.dataset.articleNo, historyBtn);
+      return;
+    }
     const card = e.target.closest('.listing-card');
     if (!card) return;
     const url = card.dataset.naverUrl;

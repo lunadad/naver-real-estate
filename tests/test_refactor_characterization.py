@@ -21,7 +21,7 @@ from database import Database  # noqa: E402
 
 GOLDEN_PATH = Path(__file__).resolve().parent / "golden" / "refactor_characterization.json"
 UPDATE_GOLDEN = os.getenv("UPDATE_GOLDEN") == "1"
-VOLATILE_KEYS = {"crawled_at", "created_at", "delivered_at", "updated_at"}
+VOLATILE_KEYS = {"crawled_at", "created_at", "delivered_at", "updated_at", "first_seen_at"}
 
 
 def _load_golden():

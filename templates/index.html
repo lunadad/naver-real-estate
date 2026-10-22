@@ -13,6 +13,7 @@
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_map_app_key }}&autoload=false&libraries=clusterer" defer></script>
   {% endif %}
   <script src="{{ asset_url('js/app.js') }}" defer></script>
+  <script src="{{ asset_url('js/price-history.js') }}" defer></script>
   <link rel="manifest" href="/manifest.json" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -61,6 +62,7 @@
   </div>
 
   <div class="header-right">
+    <a class="tr-nav-link" href="/disappeared">사라진 매물</a>
     <div class="divider-v"></div>
     <button id="theme-btn" title="다크/라이트 전환">
       <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -90,6 +92,7 @@
       <span>지역 트렌드</span>
       <button id="sidebar-toggle" title="사이드바 접기">◀</button>
     </div>
+    <a class="tr-sidebar-link" href="/disappeared">사라진 매물 보기 →</a>
 
     <div class="sidebar-section alert-section">
       <div class="section-title alert-title" id="alert-section-title">
