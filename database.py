@@ -21,7 +21,7 @@ except ImportError:  # pragma: no cover - optional for sqlite-only use
 
 logger = logging.getLogger(__name__)
 
-from bargain import BARGAIN_MAX, BARGAIN_MIN, GENERIC_BUILDING_NAMES, compute_bargain_scores
+from bargain import BARGAIN_MAX, BARGAIN_MIN, GENERIC_BUILDING_NAMES, compute_bargain_scores, is_bargain
 
 
 def ensure_postgres_sslmode(database_url: str) -> str:
@@ -2032,6 +2032,132 @@ class Database:
                 (start.isoformat(), end.isoformat()),
             ).fetchone()
         return row is not None
+
+    @staticmethod
+    def _as_datetime(value) -> datetime:
+        if isinstance(value, datetime):
+            return value
+        return datetime.fromisoformat(str(value))
+
+    def get_weekly_report_data(self, now: datetime) -> Optional[Dict]:
+        """주간 텔레그램 리포트에 쓸 데이터를 모은다. 라이브 성공 크롤이 없으면 None.
+
+        previous = 최신 세션보다 7일(-12시간 허용) 이전인 가장 최근 라이브 성공,
+        없으면 최신과 다른 가장 오래된 라이브 성공, 그것도 없으면 None.
+        risers/fallers가 None이면 비교할 단지 통계가 없다는 뜻(빈 리스트와 구분).
+        진짜 급매는 listings(최신 2개 세션만 보관)의 최신 세션 저장 점수를 쓴다.
+        """
+        live = "status = 'success' AND COALESCE(source, 'naver') <> 'demo'"
+        cols = "session_id, crawled_at, total_count"
+
+        def session_dict(row):
+            return {
+                "session_id": row["session_id"],
+                "crawled_at": self._as_datetime(row["crawled_at"]),
+                "total_count": row["total_count"] or 0,
+            }
+
+        with self.get_connection() as conn:
+            row = conn.execute(
+                f"SELECT {cols} FROM crawl_history WHERE {live} AND crawled_at <= ? "
+                "ORDER BY crawled_at DESC LIMIT 1",
+                (now.isoformat(),),
+            ).fetchone()
+            if row is None:
+                return None
+            latest = session_dict(row)
+
+            cutoff = latest["crawled_at"] - timedelta(days=7) + timedelta(hours=12)
+            row = conn.execute(
+                f"SELECT {cols} FROM crawl_history WHERE {live} AND session_id <> ? AND crawled_at <= ? "
+                "ORDER BY crawled_at DESC LIMIT 1",
+                (latest["session_id"], cutoff.isoformat()),
+            ).fetchone()
+            if row is None:
+                row = conn.execute(
+                    f"SELECT {cols} FROM crawl_history WHERE {live} AND session_id <> ? "
+                    "ORDER BY crawled_at ASC LIMIT 1",
+                    (latest["session_id"],),
+                ).fetchone()
+            previous = session_dict(row) if row is not None else None
+
+            def price_down_ratio(session_id):
+                stat = conn.execute(
+                    "SELECT SUM(total_count) AS total, SUM(price_down_count) AS down "
+                    "FROM crawl_region_stats WHERE session_id = ?",
+                    (session_id,),
+                ).fetchone()
+                if not stat or not stat["total"]:
+                    return None
+                return (stat["down"] or 0) / stat["total"] * 100
+
+            ratio_now = price_down_ratio(latest["session_id"])
+            ratio_prev = price_down_ratio(previous["session_id"]) if previous else None
+
+            risers = fallers = None
+            if previous:
+                def building_counts(session_id):
+                    rows = conn.execute(
+                        "SELECT district, building_name, total_count FROM crawl_building_stats WHERE session_id = ?",
+                        (session_id,),
+                    ).fetchall()
+                    return {(r["district"], r["building_name"]): r["total_count"] or 0 for r in rows}
+
+                cur_counts = building_counts(latest["session_id"])
+                prev_counts = building_counts(previous["session_id"])
+                if cur_counts and prev_counts:
+                    movers = [
+                        (district, building, prev_counts.get((district, building), 0),
+                         cur_counts.get((district, building), 0),
+                         cur_counts.get((district, building), 0) - prev_counts.get((district, building), 0))
+                        for district, building in set(cur_counts) | set(prev_counts)
+                    ]
+                    risers = sorted((m for m in movers if m[4] > 0), key=lambda m: (-m[4], m[0], m[1]))[:5]
+                    fallers = sorted((m for m in movers if m[4] < 0), key=lambda m: (m[4], m[0], m[1]))[:5]
+
+            listing_rows = conn.execute(
+                """
+                SELECT article_no, district, building_name, area, floor, price, naver_url,
+                       bargain_discount, bargain_basis
+                FROM listings
+                WHERE crawl_session = ? AND bargain_discount IS NOT NULL
+                """,
+                (latest["session_id"],),
+            ).fetchall()
+
+        bargains = []
+        anomaly_count = 0
+        for r in listing_rows:
+            discount = r["bargain_discount"]
+            if is_bargain(discount):
+                bargains.append(
+                    {
+                        "article_no": r["article_no"],
+                        "district": r["district"],
+                        "building_name": r["building_name"],
+                        "area": r["area"],
+                        "floor": r["floor"],
+                        "price": r["price"],
+                        "naver_url": r["naver_url"],
+                        "discount": discount,
+                        "basis": r["bargain_basis"],
+                    }
+                )
+            elif discount > BARGAIN_MAX:
+                anomaly_count += 1
+        bargains.sort(key=lambda b: (-b["discount"], b["article_no"] or ""))
+
+        return {
+            "latest": latest,
+            "previous": previous,
+            "ratio_now": ratio_now,
+            "ratio_prev": ratio_prev,
+            "risers": risers,
+            "fallers": fallers,
+            "bargains": bargains[:5],
+            "bargain_total": len(bargains),
+            "anomaly_count": anomaly_count,
+        }
 
     def log_crawl(self, session_id, total_count, urgent_count, status, source):
         with self.get_connection() as conn:
