@@ -701,6 +701,17 @@ class Database:
             parts.append(trade_type)
         return " · ".join(parts) if parts else "전체 급매 알림"
 
+    @staticmethod
+    def _has_price_down_tag(listing: Dict) -> bool:
+        """크롤링 직후 매물 dict의 tags(리스트 또는 JSON 문자열)에 가격인하가 있는지 본다."""
+        tags = listing.get("tags") or []
+        if isinstance(tags, str):
+            try:
+                tags = json.loads(tags)
+            except Exception:
+                tags = [tags]
+        return "가격인하" in tags
+
     def _build_region_stats_rows(self, session_id: str, listings: List[Dict], created_at: str):
         grouped = {}
         for listing in listings:
@@ -721,13 +732,7 @@ class Database:
                 },
             )
             entry["total_count"] += 1
-            tags = listing.get("tags") or []
-            if isinstance(tags, str):
-                try:
-                    tags = json.loads(tags)
-                except Exception:
-                    tags = [tags]
-            if "가격인하" in tags:
+            if self._has_price_down_tag(listing):
                 entry["price_down_count"] += 1
         return list(grouped.values())
 
@@ -755,13 +760,7 @@ class Database:
                 },
             )
             entry["total_count"] += 1
-            tags = listing.get("tags") or []
-            if isinstance(tags, str):
-                try:
-                    tags = json.loads(tags)
-                except Exception:
-                    tags = [tags]
-            if "가격인하" in tags:
+            if self._has_price_down_tag(listing):
                 entry["price_down_count"] += 1
         return [row for row in grouped.values() if row["total_count"] >= 2]
 
