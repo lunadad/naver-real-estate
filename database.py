@@ -21,30 +21,7 @@ except ImportError:  # pragma: no cover - optional for sqlite-only use
 
 logger = logging.getLogger(__name__)
 
-# 물리적으로 다른 주택이 같은 이름으로 합쳐지는 것을 막기 위해,
-# 고유 건물명이 아닌 매물 유형명은 건물별 스냅샷 집계에서 제외한다.
-GENERIC_BUILDING_NAMES = frozenset(
-    {
-        "아파트",
-        "오피스텔",
-        "빌라/연립",
-        "빌라",
-        "연립",
-        "연립주택",
-        "다세대",
-        "다세대주택",
-        "단독/다가구",
-        "단독주택",
-        "다가구",
-        "다가구주택",
-        "주택",
-        "상가/업무",
-        "상가",
-        "상가주택",
-        "근린상가",
-        "원룸",
-    }
-)
+from bargain import BARGAIN_MAX, BARGAIN_MIN, GENERIC_BUILDING_NAMES, compute_bargain_scores
 
 
 def ensure_postgres_sslmode(database_url: str) -> str:
@@ -273,6 +250,11 @@ class Database:
                 conn.execute("ALTER TABLE listings ADD COLUMN price_sort_value BIGINT")
             if "rent_sort_value" not in cols:
                 conn.execute("ALTER TABLE listings ADD COLUMN rent_sort_value BIGINT")
+            if "bargain_discount" not in cols:
+                discount_type = "DOUBLE PRECISION" if self.driver == "postgres" else "REAL"
+                conn.execute(f"ALTER TABLE listings ADD COLUMN bargain_discount {discount_type}")
+            if "bargain_basis" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN bargain_basis TEXT")
 
             alert_cols = self._get_table_columns(conn, "alert_rules")
             if "building_name" not in alert_cols:
@@ -320,7 +302,9 @@ class Database:
                 longitude REAL,
                 naver_url TEXT,
                 price_sort_value INTEGER,
-                rent_sort_value INTEGER
+                rent_sort_value INTEGER,
+                bargain_discount REAL,
+                bargain_basis TEXT
             );
 
             CREATE TABLE IF NOT EXISTS _migrations (
@@ -440,7 +424,9 @@ class Database:
                 longitude DOUBLE PRECISION,
                 naver_url TEXT,
                 price_sort_value BIGINT,
-                rent_sort_value BIGINT
+                rent_sort_value BIGINT,
+                bargain_discount DOUBLE PRECISION,
+                bargain_basis TEXT
             )
             """,
             """
@@ -1323,8 +1309,8 @@ class Database:
             (article_no, region, district, property_type, trade_type, price,
              area, floor, building_name, description, is_urgent, tags,
              confirmed_date, crawled_at, crawl_session, latitude, longitude, naver_url,
-             price_sort_value, rent_sort_value)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             price_sort_value, rent_sort_value, bargain_discount, bargain_basis)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(article_no) DO UPDATE SET
                 region = excluded.region,
                 district = excluded.district,
@@ -1344,7 +1330,9 @@ class Database:
                 longitude = excluded.longitude,
                 naver_url = excluded.naver_url,
                 price_sort_value = excluded.price_sort_value,
-                rent_sort_value = excluded.rent_sort_value
+                rent_sort_value = excluded.rent_sort_value,
+                bargain_discount = excluded.bargain_discount,
+                bargain_basis = excluded.bargain_basis
         """
 
         with self.get_connection() as conn:
@@ -1364,10 +1352,18 @@ class Database:
 
             now = datetime.now().isoformat()
             region_stats_rows = self._build_region_stats_rows(session_id, listings, now)
+            price_values = [
+                self._parse_price_sort_values(listing.get("price"), listing.get("trade_type"))
+                for listing in listings
+            ]
+            bargain_scores = compute_bargain_scores(
+                {**listing, "price_sort_value": price_value}
+                for listing, (price_value, _) in zip(listings, price_values)
+            )
             rows = []
-            for listing in listings:
-                price_value, rent_value = self._parse_price_sort_values(
-                    listing.get("price"), listing.get("trade_type")
+            for listing, (price_value, rent_value) in zip(listings, price_values):
+                bargain_discount, bargain_basis = bargain_scores.get(
+                    str(listing.get("article_no")), (None, None)
                 )
                 rows.append(
                     (
@@ -1391,6 +1387,8 @@ class Database:
                         listing.get("naver_url"),
                         price_value,
                         rent_value,
+                        bargain_discount,
+                        bargain_basis,
                     )
                 )
 
@@ -1449,6 +1447,34 @@ class Database:
                 (building_stats_cutoff,),
             )
 
+    def backfill_bargain_scores(self, session_id: Optional[str] = None) -> int:
+        """세션 매물의 진짜 급매 점수를 다시 계산해 저장하고 갱신한 행 수를 반환한다."""
+        with self.get_connection() as conn:
+            session_id = session_id or self._get_latest_visible_session_id(conn)
+            if not session_id:
+                return 0
+            rows = [
+                dict(row)
+                for row in conn.execute(
+                    """
+                    SELECT id, article_no, district, building_name, property_type,
+                           trade_type, area, price_sort_value
+                    FROM listings
+                    WHERE crawl_session = ?
+                    """,
+                    (session_id,),
+                ).fetchall()
+            ]
+            scores = compute_bargain_scores(rows)
+            conn.executemany(
+                "UPDATE listings SET bargain_discount = ?, bargain_basis = ? WHERE id = ?",
+                [
+                    (*scores.get(str(row["article_no"]), (None, None)), row["id"])
+                    for row in rows
+                ],
+            )
+        return len(rows)
+
     @staticmethod
     def _parse_tags(raw) -> List[str]:
         """tags 컬럼(JSON 문자열 또는 리스트)을 태그 문자열 리스트로 파싱한다."""
@@ -1502,6 +1528,7 @@ class Database:
         price_down_only=False,
         tags=None,
         search="",
+        bargain_only=False,
     ):
         """목록/지도 조회가 공유하는 매물 필터 조건을 conditions/params에 덧붙인다."""
         if region:
@@ -1531,6 +1558,9 @@ class Database:
                 "(region LIKE ? OR district LIKE ? OR building_name LIKE ? OR description LIKE ?)"
             )
             params.extend([f"%{search}%"] * 4)
+        if bargain_only:
+            conditions.append("bargain_discount >= ? AND bargain_discount <= ?")
+            params.extend([BARGAIN_MIN, BARGAIN_MAX])
 
     def get_listings(
         self,
@@ -1545,6 +1575,7 @@ class Database:
         sort_by="urgent",
         price_down_only=False,
         tags=None,
+        bargain_only=False,
     ):
         conditions = []
         params = []
@@ -1559,6 +1590,7 @@ class Database:
             price_down_only=price_down_only,
             tags=tags,
             search=search,
+            bargain_only=bargain_only,
         )
 
         order_map = {
@@ -1594,6 +1626,13 @@ class Database:
             ).fetchone()
             price_down = price_down_row["count"] if price_down_row else 0
 
+            bargain_row = conn.execute(
+                f"SELECT COUNT(*) AS count FROM listings {scoped_where} "
+                f"{'AND' if scoped_where else 'WHERE'} bargain_discount >= ? AND bargain_discount <= ?",
+                scoped_params + [BARGAIN_MIN, BARGAIN_MAX],
+            ).fetchone()
+            bargain_count = bargain_row["count"] if bargain_row else 0
+
             offset = (page - 1) * per_page
             rows = conn.execute(
                 f"SELECT * FROM listings {scoped_where} ORDER BY {order} LIMIT ? OFFSET ?",
@@ -1611,6 +1650,7 @@ class Database:
             "total": total,
             "urgent": total,
             "price_down_count": price_down,
+            "bargain_count": bargain_count,
             "type_counts": type_counts,
             "page": page,
             "per_page": per_page,
@@ -1632,6 +1672,7 @@ class Database:
         price_down_only=False,
         tags=None,
         limit=500,
+        bargain_only=False,
     ):
         """지도 화면 영역(bounds) 안의 좌표 보유 매물을 가벼운 필드로 반환한다."""
         conditions = [
@@ -1662,6 +1703,7 @@ class Database:
             price_down_only=price_down_only,
             tags=tags,
             search=search,
+            bargain_only=bargain_only,
         )
 
         with self.get_connection() as conn:
@@ -1673,7 +1715,7 @@ class Database:
             rows = conn.execute(
                 f"""
                 SELECT id, article_no, building_name, price, latitude, longitude,
-                       property_type, trade_type, tags, naver_url
+                       property_type, trade_type, tags, naver_url, bargain_discount
                 FROM listings
                 WHERE {" AND ".join(conditions)}
                 ORDER BY crawled_at DESC

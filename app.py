@@ -207,6 +207,7 @@ def listing_filter_args():
         "search": request.args.get("search", ""),
         "price_down_only": request_flag("price_down_only"),
         "tags": parse_tag_args(request.args.get("tags", "")),
+        "bargain_only": request_flag("bargain_only"),
     }
 
 db = Database(db_path=DB_PATH, database_url=DATABASE_URL)

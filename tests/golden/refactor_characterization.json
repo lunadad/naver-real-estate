@@ -732,6 +732,7 @@
   },
   "empty_db_queries": {
     "listings": {
+      "bargain_count": 0,
       "listings": [],
       "page": 1,
       "per_page": 20,
@@ -742,6 +743,7 @@
       "urgent": 0
     },
     "listings_filtered": {
+      "bargain_count": 0,
       "listings": [],
       "page": 1,
       "per_page": 20,
@@ -757,10 +759,13 @@
   },
   "get_listings_matrix": [
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -783,6 +788,8 @@
         {
           "area": "84㎡",
           "article_no": "L3",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L3",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -805,6 +812,8 @@
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -827,6 +836,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -849,6 +860,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -871,6 +884,8 @@
         {
           "area": "84㎡",
           "article_no": "L2",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L2",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -893,6 +908,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -928,10 +945,13 @@
       "urgent": 7
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -954,6 +974,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -976,6 +998,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -998,6 +1022,8 @@
         {
           "area": "84㎡",
           "article_no": "L2",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L2",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1020,6 +1046,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1053,10 +1081,13 @@
       "urgent": 5
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1079,6 +1110,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1101,6 +1134,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1133,10 +1168,13 @@
       "urgent": 3
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1159,6 +1197,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1181,6 +1221,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1212,10 +1254,13 @@
       "urgent": 3
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1238,6 +1283,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1270,10 +1317,13 @@
       "urgent": 2
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L3",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L3",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1296,6 +1346,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1328,10 +1380,13 @@
       "urgent": 2
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1354,6 +1409,8 @@
         {
           "area": "84㎡",
           "article_no": "L3",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L3",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1376,6 +1433,8 @@
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1398,6 +1457,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1420,6 +1481,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1453,10 +1516,13 @@
       "urgent": 5
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1479,6 +1545,8 @@
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1501,6 +1569,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1533,10 +1603,13 @@
       "urgent": 3
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1559,6 +1632,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1581,6 +1656,8 @@
         {
           "area": "84㎡",
           "article_no": "L2",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L2",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1614,10 +1691,13 @@
       "urgent": 3
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1640,6 +1720,8 @@
         {
           "area": "84㎡",
           "article_no": "L3",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L3",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1662,6 +1744,8 @@
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1684,6 +1768,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1706,6 +1792,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1728,6 +1816,8 @@
         {
           "area": "84㎡",
           "article_no": "L2",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L2",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1750,6 +1840,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1785,10 +1877,13 @@
       "urgent": 7
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1811,6 +1906,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1842,10 +1939,13 @@
       "urgent": 2
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1877,10 +1977,13 @@
       "urgent": 1
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1903,6 +2006,8 @@
         {
           "area": "84㎡",
           "article_no": "L3",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L3",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1925,6 +2030,8 @@
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1947,6 +2054,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1969,6 +2078,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -1991,6 +2102,8 @@
         {
           "area": "84㎡",
           "article_no": "L2",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L2",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2013,6 +2126,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2048,10 +2163,13 @@
       "urgent": 7
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2074,6 +2192,8 @@
         {
           "area": "84㎡",
           "article_no": "L2",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L2",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2096,6 +2216,8 @@
         {
           "area": "84㎡",
           "article_no": "L3",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L3",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2118,6 +2240,8 @@
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2140,6 +2264,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2162,6 +2288,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2184,6 +2312,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2219,10 +2349,13 @@
       "urgent": 7
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L3",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L3",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2245,6 +2378,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2267,6 +2402,8 @@
         {
           "area": "84㎡",
           "article_no": "L2",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L2",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2289,6 +2426,8 @@
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2311,6 +2450,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2333,6 +2474,8 @@
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2355,6 +2498,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2390,10 +2535,13 @@
       "urgent": 7
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2416,6 +2564,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2438,6 +2588,8 @@
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2460,6 +2612,8 @@
         {
           "area": "84㎡",
           "article_no": "L2",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L2",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2482,6 +2636,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2504,6 +2660,8 @@
         {
           "area": "84㎡",
           "article_no": "L3",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L3",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2526,6 +2684,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2561,10 +2721,13 @@
       "urgent": 7
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2587,6 +2750,8 @@
         {
           "area": "84㎡",
           "article_no": "L3",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L3",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2609,6 +2774,8 @@
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2631,6 +2798,8 @@
         {
           "area": "84㎡",
           "article_no": "L6",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2653,6 +2822,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2675,6 +2846,8 @@
         {
           "area": "84㎡",
           "article_no": "L2",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L2",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2697,6 +2870,8 @@
         {
           "area": "84㎡",
           "article_no": "L5",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L5",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2732,10 +2907,13 @@
       "urgent": 7
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L2",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L2",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2758,6 +2936,8 @@
         {
           "area": "84㎡",
           "article_no": "L4",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "단지L4",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2793,6 +2973,7 @@
       "urgent": 7
     },
     {
+      "bargain_count": 0,
       "listings": [],
       "page": 9,
       "per_page": 3,
@@ -2809,10 +2990,13 @@
       "urgent": 7
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2835,6 +3019,8 @@
         {
           "area": "84㎡",
           "article_no": "L7",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2866,10 +3052,13 @@
       "urgent": 2
     },
     {
+      "bargain_count": 0,
       "listings": [
         {
           "area": "84㎡",
           "article_no": "L1",
+          "bargain_basis": null,
+          "bargain_discount": null,
           "building_name": "래미안",
           "confirmed_date": "20261020",
           "crawl_session": "s1",
@@ -2905,6 +3094,7 @@
     [
       {
         "article_no": "L1",
+        "bargain_discount": null,
         "building_name": "래미안",
         "id": 2,
         "latitude": 37.5,
@@ -2917,6 +3107,7 @@
       },
       {
         "article_no": "L2",
+        "bargain_discount": null,
         "building_name": "단지L2",
         "id": 3,
         "latitude": 37.48,
@@ -2929,6 +3120,7 @@
       },
       {
         "article_no": "L3",
+        "bargain_discount": null,
         "building_name": "단지L3",
         "id": 4,
         "latitude": 37.35,
@@ -2941,6 +3133,7 @@
       },
       {
         "article_no": "L5",
+        "bargain_discount": null,
         "building_name": "단지L5",
         "id": 6,
         "latitude": 37.6,
@@ -2953,6 +3146,7 @@
       },
       {
         "article_no": "L6",
+        "bargain_discount": null,
         "building_name": "래미안",
         "id": 7,
         "latitude": 37.51,
@@ -2965,6 +3159,7 @@
       },
       {
         "article_no": "L7",
+        "bargain_discount": null,
         "building_name": "",
         "id": 8,
         "latitude": 37.5,
@@ -2979,6 +3174,7 @@
     [
       {
         "article_no": "L1",
+        "bargain_discount": null,
         "building_name": "래미안",
         "id": 2,
         "latitude": 37.5,
@@ -2991,6 +3187,7 @@
       },
       {
         "article_no": "L2",
+        "bargain_discount": null,
         "building_name": "단지L2",
         "id": 3,
         "latitude": 37.48,
@@ -3003,6 +3200,7 @@
       },
       {
         "article_no": "L6",
+        "bargain_discount": null,
         "building_name": "래미안",
         "id": 7,
         "latitude": 37.51,
@@ -3015,6 +3213,7 @@
       },
       {
         "article_no": "L7",
+        "bargain_discount": null,
         "building_name": "",
         "id": 8,
         "latitude": 37.5,
@@ -3029,6 +3228,7 @@
     [
       {
         "article_no": "L2",
+        "bargain_discount": null,
         "building_name": "단지L2",
         "id": 3,
         "latitude": 37.48,
@@ -3041,6 +3241,7 @@
       },
       {
         "article_no": "L5",
+        "bargain_discount": null,
         "building_name": "단지L5",
         "id": 6,
         "latitude": 37.6,
@@ -3055,6 +3256,7 @@
     [
       {
         "article_no": "L1",
+        "bargain_discount": null,
         "building_name": "래미안",
         "id": 2,
         "latitude": 37.5,
@@ -3067,74 +3269,7 @@
       },
       {
         "article_no": "L2",
-        "building_name": "단지L2",
-        "id": 3,
-        "latitude": 37.48,
-        "longitude": 127.02,
-        "naver_url": "https://example.com/L2",
-        "price": "3억 5,000",
-        "property_type": "오피스텔",
-        "tags": "[\"역세권\"]",
-        "trade_type": "전세"
-      }
-    ],
-    [
-      {
-        "article_no": "L3",
-        "building_name": "단지L3",
-        "id": 4,
-        "latitude": 37.35,
-        "longitude": 127.11,
-        "naver_url": "https://example.com/L3",
-        "price": "1,000/50",
-        "property_type": "빌라/연립",
-        "tags": "[]",
-        "trade_type": "월세"
-      }
-    ],
-    [
-      {
-        "article_no": "L2",
-        "building_name": "단지L2",
-        "id": 3,
-        "latitude": 37.48,
-        "longitude": 127.02,
-        "naver_url": "https://example.com/L2",
-        "price": "3억 5,000",
-        "property_type": "오피스텔",
-        "tags": "[\"역세권\"]",
-        "trade_type": "전세"
-      },
-      {
-        "article_no": "L7",
-        "building_name": "",
-        "id": 8,
-        "latitude": 37.5,
-        "longitude": 127.0,
-        "naver_url": "https://example.com/L7",
-        "price": "",
-        "property_type": "아파트",
-        "tags": "\"[\\\"가격인하\\\"]\"",
-        "trade_type": "매매"
-      }
-    ],
-    [
-      {
-        "article_no": "L5",
-        "building_name": "단지L5",
-        "id": 6,
-        "latitude": 37.6,
-        "longitude": 127.05,
-        "naver_url": "https://example.com/L5",
-        "price": "2억/300",
-        "property_type": "상가/업무",
-        "tags": "[\"대단지\"]",
-        "trade_type": "월세"
-      }
-    ],
-    [
-      {
-        "article_no": "L2",
+        "bargain_discount": null,
         "building_name": "단지L2",
         "id": 3,
         "latitude": 37.48,
@@ -3149,6 +3284,80 @@
     [
       {
         "article_no": "L3",
+        "bargain_discount": null,
+        "building_name": "단지L3",
+        "id": 4,
+        "latitude": 37.35,
+        "longitude": 127.11,
+        "naver_url": "https://example.com/L3",
+        "price": "1,000/50",
+        "property_type": "빌라/연립",
+        "tags": "[]",
+        "trade_type": "월세"
+      }
+    ],
+    [
+      {
+        "article_no": "L2",
+        "bargain_discount": null,
+        "building_name": "단지L2",
+        "id": 3,
+        "latitude": 37.48,
+        "longitude": 127.02,
+        "naver_url": "https://example.com/L2",
+        "price": "3억 5,000",
+        "property_type": "오피스텔",
+        "tags": "[\"역세권\"]",
+        "trade_type": "전세"
+      },
+      {
+        "article_no": "L7",
+        "bargain_discount": null,
+        "building_name": "",
+        "id": 8,
+        "latitude": 37.5,
+        "longitude": 127.0,
+        "naver_url": "https://example.com/L7",
+        "price": "",
+        "property_type": "아파트",
+        "tags": "\"[\\\"가격인하\\\"]\"",
+        "trade_type": "매매"
+      }
+    ],
+    [
+      {
+        "article_no": "L5",
+        "bargain_discount": null,
+        "building_name": "단지L5",
+        "id": 6,
+        "latitude": 37.6,
+        "longitude": 127.05,
+        "naver_url": "https://example.com/L5",
+        "price": "2억/300",
+        "property_type": "상가/업무",
+        "tags": "[\"대단지\"]",
+        "trade_type": "월세"
+      }
+    ],
+    [
+      {
+        "article_no": "L2",
+        "bargain_discount": null,
+        "building_name": "단지L2",
+        "id": 3,
+        "latitude": 37.48,
+        "longitude": 127.02,
+        "naver_url": "https://example.com/L2",
+        "price": "3억 5,000",
+        "property_type": "오피스텔",
+        "tags": "[\"역세권\"]",
+        "trade_type": "전세"
+      }
+    ],
+    [
+      {
+        "article_no": "L3",
+        "bargain_discount": null,
         "building_name": "단지L3",
         "id": 4,
         "latitude": 37.35,
@@ -3161,6 +3370,7 @@
       },
       {
         "article_no": "L5",
+        "bargain_discount": null,
         "building_name": "단지L5",
         "id": 6,
         "latitude": 37.6,
@@ -3175,6 +3385,7 @@
     [
       {
         "article_no": "L1",
+        "bargain_discount": null,
         "building_name": "래미안",
         "id": 2,
         "latitude": 37.5,
@@ -3187,6 +3398,7 @@
       },
       {
         "article_no": "L7",
+        "bargain_discount": null,
         "building_name": "",
         "id": 8,
         "latitude": 37.5,
@@ -3201,6 +3413,7 @@
     [
       {
         "article_no": "L2",
+        "bargain_discount": null,
         "building_name": "단지L2",
         "id": 3,
         "latitude": 37.48,
@@ -3213,6 +3426,7 @@
       },
       {
         "article_no": "L6",
+        "bargain_discount": null,
         "building_name": "래미안",
         "id": 7,
         "latitude": 37.51,
@@ -3227,6 +3441,7 @@
     [
       {
         "article_no": "L1",
+        "bargain_discount": null,
         "building_name": "래미안",
         "id": 2,
         "latitude": 37.5,
@@ -3239,6 +3454,7 @@
       },
       {
         "article_no": "L6",
+        "bargain_discount": null,
         "building_name": "래미안",
         "id": 7,
         "latitude": 37.51,
@@ -3253,6 +3469,7 @@
     [
       {
         "article_no": "L5",
+        "bargain_discount": null,
         "building_name": "단지L5",
         "id": 6,
         "latitude": 37.6,
@@ -3265,6 +3482,7 @@
       },
       {
         "article_no": "L6",
+        "bargain_discount": null,
         "building_name": "래미안",
         "id": 7,
         "latitude": 37.51,
@@ -4024,10 +4242,13 @@
   "listing_routes": {
     "/api/listings": {
       "json": {
+        "bargain_count": 0,
         "listings": [
           {
             "area": "84㎡",
             "article_no": "L1",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4050,6 +4271,8 @@
           {
             "area": "84㎡",
             "article_no": "L6",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4072,6 +4295,8 @@
           {
             "area": "84㎡",
             "article_no": "L4",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L4",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4094,6 +4319,8 @@
           {
             "area": "84㎡",
             "article_no": "L2",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L2",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4116,6 +4343,8 @@
           {
             "area": "84㎡",
             "article_no": "L5",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L5",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4138,6 +4367,8 @@
           {
             "area": "84㎡",
             "article_no": "L3",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L3",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4160,6 +4391,8 @@
           {
             "area": "84㎡",
             "article_no": "L7",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4198,10 +4431,13 @@
     },
     "/api/listings?page=0&per_page=500": {
       "json": {
+        "bargain_count": 0,
         "listings": [
           {
             "area": "84㎡",
             "article_no": "L1",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4224,6 +4460,8 @@
           {
             "area": "84㎡",
             "article_no": "L6",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4246,6 +4484,8 @@
           {
             "area": "84㎡",
             "article_no": "L4",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L4",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4268,6 +4508,8 @@
           {
             "area": "84㎡",
             "article_no": "L2",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L2",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4290,6 +4532,8 @@
           {
             "area": "84㎡",
             "article_no": "L5",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L5",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4312,6 +4556,8 @@
           {
             "area": "84㎡",
             "article_no": "L3",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L3",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4334,6 +4580,8 @@
           {
             "area": "84㎡",
             "article_no": "L7",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4372,10 +4620,13 @@
     },
     "/api/listings?page=abc&per_page=5": {
       "json": {
+        "bargain_count": 0,
         "listings": [
           {
             "area": "84㎡",
             "article_no": "L1",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4398,6 +4649,8 @@
           {
             "area": "84㎡",
             "article_no": "L6",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4420,6 +4673,8 @@
           {
             "area": "84㎡",
             "article_no": "L4",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L4",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4442,6 +4697,8 @@
           {
             "area": "84㎡",
             "article_no": "L2",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L2",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4464,6 +4721,8 @@
           {
             "area": "84㎡",
             "article_no": "L5",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L5",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4486,6 +4745,8 @@
           {
             "area": "84㎡",
             "article_no": "L3",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L3",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4508,6 +4769,8 @@
           {
             "area": "84㎡",
             "article_no": "L7",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4546,10 +4809,13 @@
     },
     "/api/listings?per_page=-1": {
       "json": {
+        "bargain_count": 0,
         "listings": [
           {
             "area": "84㎡",
             "article_no": "L1",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4588,10 +4854,13 @@
     },
     "/api/listings?price_down_only=True&sort_by=price-asc": {
       "json": {
+        "bargain_count": 0,
         "listings": [
           {
             "area": "84㎡",
             "article_no": "L4",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L4",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4614,6 +4883,8 @@
           {
             "area": "84㎡",
             "article_no": "L1",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4636,6 +4907,8 @@
           {
             "area": "84㎡",
             "article_no": "L7",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4671,10 +4944,13 @@
     },
     "/api/listings?property_type=__OTHER__&trade_type=%EC%9B%94%EC%84%B8": {
       "json": {
+        "bargain_count": 0,
         "listings": [
           {
             "area": "84㎡",
             "article_no": "L5",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L5",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4709,10 +4985,13 @@
     },
     "/api/listings?tags=%EC%97%AD%EC%84%B8%EA%B6%8C,,%20&region=%EC%84%9C%EC%9A%B8": {
       "json": {
+        "bargain_count": 0,
         "listings": [
           {
             "area": "84㎡",
             "article_no": "L6",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4735,6 +5014,8 @@
           {
             "area": "84㎡",
             "article_no": "L2",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L2",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4770,10 +5051,13 @@
     },
     "/api/listings?urgent_only=1": {
       "json": {
+        "bargain_count": 0,
         "listings": [
           {
             "area": "84㎡",
             "article_no": "L1",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4796,6 +5080,8 @@
           {
             "area": "84㎡",
             "article_no": "L6",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4818,6 +5104,8 @@
           {
             "area": "84㎡",
             "article_no": "L4",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L4",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4840,6 +5128,8 @@
           {
             "area": "84㎡",
             "article_no": "L2",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L2",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4862,6 +5152,8 @@
           {
             "area": "84㎡",
             "article_no": "L5",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L5",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4884,6 +5176,8 @@
           {
             "area": "84㎡",
             "article_no": "L3",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L3",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4906,6 +5200,8 @@
           {
             "area": "84㎡",
             "article_no": "L7",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4944,10 +5240,13 @@
     },
     "/api/listings?urgent_only=TRUE": {
       "json": {
+        "bargain_count": 0,
         "listings": [
           {
             "area": "84㎡",
             "article_no": "L1",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4970,6 +5269,8 @@
           {
             "area": "84㎡",
             "article_no": "L6",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "래미안",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -4992,6 +5293,8 @@
           {
             "area": "84㎡",
             "article_no": "L4",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L4",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -5014,6 +5317,8 @@
           {
             "area": "84㎡",
             "article_no": "L3",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "단지L3",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -5036,6 +5341,8 @@
           {
             "area": "84㎡",
             "article_no": "L7",
+            "bargain_basis": null,
+            "bargain_discount": null,
             "building_name": "",
             "confirmed_date": "20261020",
             "crawl_session": "app-s1",
@@ -5076,6 +5383,7 @@
         "listings": [
           {
             "article_no": "L1",
+            "bargain_discount": null,
             "building_name": "래미안",
             "id": 1,
             "latitude": 37.5,
@@ -5088,6 +5396,7 @@
           },
           {
             "article_no": "L2",
+            "bargain_discount": null,
             "building_name": "단지L2",
             "id": 2,
             "latitude": 37.48,
@@ -5100,6 +5409,7 @@
           },
           {
             "article_no": "L3",
+            "bargain_discount": null,
             "building_name": "단지L3",
             "id": 3,
             "latitude": 37.35,
@@ -5112,6 +5422,7 @@
           },
           {
             "article_no": "L5",
+            "bargain_discount": null,
             "building_name": "단지L5",
             "id": 5,
             "latitude": 37.6,
@@ -5124,6 +5435,7 @@
           },
           {
             "article_no": "L6",
+            "bargain_discount": null,
             "building_name": "래미안",
             "id": 6,
             "latitude": 37.51,
@@ -5136,6 +5448,7 @@
           },
           {
             "article_no": "L7",
+            "bargain_discount": null,
             "building_name": "",
             "id": 7,
             "latitude": 37.5,
@@ -5156,6 +5469,7 @@
         "listings": [
           {
             "article_no": "L1",
+            "bargain_discount": null,
             "building_name": "래미안",
             "id": 1,
             "latitude": 37.5,
@@ -5176,6 +5490,7 @@
         "listings": [
           {
             "article_no": "L6",
+            "bargain_discount": null,
             "building_name": "래미안",
             "id": 6,
             "latitude": 37.51,
@@ -5196,6 +5511,7 @@
         "listings": [
           {
             "article_no": "L1",
+            "bargain_discount": null,
             "building_name": "래미안",
             "id": 1,
             "latitude": 37.5,
@@ -5208,6 +5524,7 @@
           },
           {
             "article_no": "L7",
+            "bargain_discount": null,
             "building_name": "",
             "id": 7,
             "latitude": 37.5,
@@ -5228,6 +5545,7 @@
         "listings": [
           {
             "article_no": "L2",
+            "bargain_discount": null,
             "building_name": "단지L2",
             "id": 2,
             "latitude": 37.48,
@@ -5240,6 +5558,7 @@
           },
           {
             "article_no": "L3",
+            "bargain_discount": null,
             "building_name": "단지L3",
             "id": 3,
             "latitude": 37.35,
