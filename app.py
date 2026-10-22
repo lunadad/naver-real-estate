@@ -926,7 +926,7 @@ def get_weekly_report():
     if not data:
         return error_response("no live crawl yet", 404)
     response = app.response_class(
-        format_weekly_report(data, SITE_URL), mimetype="text/plain; charset=utf-8"
+        format_weekly_report(data, SITE_URL), mimetype="text/plain"
     )
     response.headers["Cache-Control"] = "public, max-age=300"
     return response
