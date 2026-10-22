@@ -654,6 +654,12 @@ def dispatch_push_alerts(limit: int = 5):
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
+from views.tracking import bp as tracking_bp  # noqa: E402
+
+app.config["GET_DB"] = lambda: db  # 블루프린트가 (테스트에서 교체되는) 현재 db를 읽는다
+app.register_blueprint(tracking_bp)
+
+
 @app.route("/")
 def index():
     return render_template("index.html", kakao_map_app_key=KAKAO_MAP_APP_KEY)

@@ -27,6 +27,11 @@ TWO_DISTRICTS = {
 COMBOS_PER_DISTRICT = 9  # 3 매물유형 × 3 거래유형
 
 
+def _counts(crawler):
+    stats = crawler.last_crawl_stats
+    return {"failed_combos": stats["failed_combos"], "total_combos": stats["total_combos"]}
+
+
 def ok(articles, more=False):
     return {"ok": True, "data": {"articleList": articles, "isMoreData": more}}
 
@@ -54,7 +59,7 @@ class CrawlerRetryTest(unittest.TestCase):
         )
         self.assertEqual([l["article_no"] for l in listings], ["1"])
         self.assertEqual(delays, [30])
-        self.assertEqual(crawler.last_crawl_stats, {"failed_combos": 0, "total_combos": COMBOS_PER_DISTRICT})
+        self.assertEqual(_counts(crawler), {"failed_combos": 0, "total_combos": COMBOS_PER_DISTRICT})
 
     def test_5xx_exhausts_retries_and_marks_combo_failed(self):
         crawler, listings, delays, page = self._crawl(
@@ -97,7 +102,7 @@ class CrawlerRetryTest(unittest.TestCase):
                     responses.setdefault((code, ptype, ttype, 1), fail(401))
         crawler, listings, delays, _ = self._crawl(responses, regions=TWO_DISTRICTS)
         total = 2 * COMBOS_PER_DISTRICT
-        self.assertEqual(crawler.last_crawl_stats, {"failed_combos": total - 1, "total_combos": total})
+        self.assertEqual(_counts(crawler), {"failed_combos": total - 1, "total_combos": total})
         self.assertEqual(delays, [])
         self.assertEqual(len(listings), 1)
 
@@ -110,7 +115,7 @@ class CrawlerRetryTest(unittest.TestCase):
         total = 2 * COMBOS_PER_DISTRICT
         # 18 × 0.2 = 3.6 → 4번째 실패에서 중단, 나머지는 시도하지 않음
         self.assertEqual(len(page.evaluate_calls), 4)
-        self.assertEqual(crawler.last_crawl_stats, {"failed_combos": total, "total_combos": total})
+        self.assertEqual(_counts(crawler), {"failed_combos": total, "total_combos": total})
 
     def test_unattempted_combos_count_as_failed_when_crawl_crashes(self):
         real_info = crawler_module.logger.info
@@ -127,7 +132,7 @@ class CrawlerRetryTest(unittest.TestCase):
         total = 2 * COMBOS_PER_DISTRICT
         self.assertEqual(len(listings), 1)
         self.assertEqual(
-            crawler.last_crawl_stats,
+            _counts(crawler),
             {"failed_combos": COMBOS_PER_DISTRICT, "total_combos": total},
         )
 
@@ -140,7 +145,7 @@ class CrawlerRetryTest(unittest.TestCase):
                                   return_value=_FakePlaywright(page)), \
                 mock.patch.object(type(crawler), "TOKEN_BOOTSTRAP_URLS", ["https://x"]):
             self.assertEqual(crawler._crawl_with_playwright(), [])
-        self.assertEqual(crawler.last_crawl_stats, {"failed_combos": 0, "total_combos": 0})
+        self.assertEqual(_counts(crawler), {"failed_combos": 0, "total_combos": 0})
 
 
 class CrawlAllFailedRatioTest(unittest.TestCase):

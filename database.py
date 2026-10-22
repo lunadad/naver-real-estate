@@ -21,6 +21,7 @@ except ImportError:  # pragma: no cover - optional for sqlite-only use
 
 logger = logging.getLogger(__name__)
 
+from insights import tracking as tracking_store
 from bargain import BARGAIN_MAX, BARGAIN_MIN, GENERIC_BUILDING_NAMES, compute_bargain_scores, is_bargain
 
 
@@ -255,6 +256,12 @@ class Database:
                 conn.execute(f"ALTER TABLE listings ADD COLUMN bargain_discount {discount_type}")
             if "bargain_basis" not in cols:
                 conn.execute("ALTER TABLE listings ADD COLUMN bargain_basis TEXT")
+            if "first_seen_at" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN first_seen_at TEXT")
+            if "price_cut_count" not in cols:
+                conn.execute("ALTER TABLE listings ADD COLUMN price_cut_count INTEGER DEFAULT 0")
+            for statement in tracking_store.TRACKING_INDEXES:
+                conn.execute(statement)
 
             alert_cols = self._get_table_columns(conn, "alert_rules")
             if "building_name" not in alert_cols:
@@ -399,6 +406,7 @@ class Database:
             CREATE INDEX IF NOT EXISTS idx_push_subscriptions_client_id ON push_subscriptions(client_id);
             """
         )
+        conn.executescript(tracking_store.TRACKING_TABLES_SQLITE)
 
     def _init_postgres(self, conn: ConnectionWrapper):
         statements = [
@@ -528,7 +536,7 @@ class Database:
             "CREATE INDEX IF NOT EXISTS idx_building_alert_deliveries_alert_id ON building_alert_deliveries(alert_id)",
             "CREATE INDEX IF NOT EXISTS idx_push_subscriptions_client_id ON push_subscriptions(client_id)",
         ]
-        for statement in statements:
+        for statement in statements + tracking_store.TRACKING_TABLES_POSTGRES:
             conn.execute(statement)
 
     def _get_table_columns(self, conn: ConnectionWrapper, table_name: str):
@@ -1303,14 +1311,22 @@ class Database:
                 (now, now, endpoint),
             )
 
-    def insert_listings(self, listings: List[Dict], session_id: str):
+    def insert_listings(
+        self,
+        listings: List[Dict],
+        session_id: str,
+        incomplete_scopes: Optional[Sequence[Sequence[str]]] = None,
+    ):
+        """세션을 저장한다. incomplete_scopes는 크롤러가 실패한 (구, 매물유형, 거래유형) 목록으로,
+        이 범위의 매물은 사라진 매물로 기록하지 않는다."""
         insert_sql = """
             INSERT INTO listings
             (article_no, region, district, property_type, trade_type, price,
              area, floor, building_name, description, is_urgent, tags,
              confirmed_date, crawled_at, crawl_session, latitude, longitude, naver_url,
-             price_sort_value, rent_sort_value, bargain_discount, bargain_basis)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             price_sort_value, rent_sort_value, bargain_discount, bargain_basis,
+             first_seen_at, price_cut_count)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(article_no) DO UPDATE SET
                 region = excluded.region,
                 district = excluded.district,
@@ -1332,7 +1348,9 @@ class Database:
                 price_sort_value = excluded.price_sort_value,
                 rent_sort_value = excluded.rent_sort_value,
                 bargain_discount = excluded.bargain_discount,
-                bargain_basis = excluded.bargain_basis
+                bargain_basis = excluded.bargain_basis,
+                first_seen_at = excluded.first_seen_at,
+                price_cut_count = excluded.price_cut_count
         """
 
         with self.get_connection() as conn:
@@ -1360,8 +1378,12 @@ class Database:
                 {**listing, "price_sort_value": price_value}
                 for listing, (price_value, _) in zip(listings, price_values)
             )
+            tracked = tracking_store.record_price_events(
+                conn, listings, price_values, session_id, now
+            )
             rows = []
             for listing, (price_value, rent_value) in zip(listings, price_values):
+                first_seen_at, price_cut_count = tracked[str(listing.get("article_no"))]
                 bargain_discount, bargain_basis = bargain_scores.get(
                     str(listing.get("article_no")), (None, None)
                 )
@@ -1389,6 +1411,8 @@ class Database:
                         rent_value,
                         bargain_discount,
                         bargain_basis,
+                        first_seen_at,
+                        price_cut_count,
                     )
                 )
 
@@ -1399,6 +1423,12 @@ class Database:
             else:
                 for row in rows:
                     conn.execute(insert_sql, row)
+
+            tracking_store.mark_reappeared(
+                conn, (listing.get("article_no") for listing in listings), session_id, now
+            )
+            tracking_store.record_disappearances(conn, session_id, now, incomplete_scopes)
+            tracking_store.prune(conn, datetime.fromisoformat(now))
 
             conn.execute("DELETE FROM crawl_region_stats WHERE session_id = ?", (session_id,))
             region_payload = [

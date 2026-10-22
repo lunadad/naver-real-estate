@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>사라진 매물 · 부동산 급매 알리미</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="{{ asset_url('css/style.css') }}" />
+  <script>
+    try { document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light'); } catch (e) {}
+  </script>
+  <script src="{{ asset_url('js/disappeared.js') }}" defer></script>
+  <meta name="theme-color" content="#f6f7fb" />
+</head>
+<body>
+<div class="tr-shell">
+  <header class="tr-header">
+    <a class="tr-back" href="/">← 급매 목록</a>
+    <h1 class="tr-title">사라진 매물</h1>
+    <div class="tr-periods" role="group" aria-label="기간 선택" id="dis-periods">
+      <button type="button" class="tr-period" data-days="1" aria-pressed="false">오늘</button>
+      <button type="button" class="tr-period" data-days="7" aria-pressed="true">7일</button>
+      <button type="button" class="tr-period" data-days="30" aria-pressed="false">30일</button>
+    </div>
+  </header>
+
+  <main class="tr-main">
+    <section class="tr-col-main" aria-labelledby="dis-list-title">
+      <h2 id="dis-list-title" class="tr-h2">최근 사라진 급매 <span id="dis-summary" class="tr-muted"></span></h2>
+      <div id="dis-list" class="tr-list" aria-live="polite">
+        <div class="tr-muted">불러오는 중…</div>
+      </div>
+    </section>
+
+    <aside class="tr-col-side">
+      <section class="tr-panel" aria-labelledby="dis-fast-title">
+        <h2 id="dis-fast-title" class="tr-h2">7일간 급매가 빨리 소진된 단지</h2>
+        <div id="dis-fast" class="tr-fast"><div class="tr-muted">불러오는 중…</div></div>
+      </section>
+      <section class="tr-caveat" role="note">
+        <strong>해석 주의</strong>
+        <p>사라진 매물이 모두 거래된 것은 아닙니다. 집주인이 철회했거나 중개사가 내린 경우도 포함됩니다.
+        크롤링에 일부 실패한 지역·유형은 사라진 것으로 기록하지 않습니다. 기록은 배포일부터 쌓입니다.</p>
+      </section>
+    </aside>
+  </main>
+</div>
+</body>
+</html>

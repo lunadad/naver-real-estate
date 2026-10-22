@@ -306,7 +306,7 @@ class NaverRealEstateCrawler:
 
     def __init__(self, db):
         self.db = db
-        self.last_crawl_stats = {"failed_combos": 0, "total_combos": 0}
+        self.last_crawl_stats = {"failed_combos": 0, "total_combos": 0, "failed_scopes": []}
         self._auth_token = None
         self._token_lock = threading.Lock()
         self.session = requests.Session()
@@ -430,6 +430,14 @@ class NaverRealEstateCrawler:
 
         return all_articles, False
 
+    def _scope_names(self, district_name, ptype_code, ttype_code) -> List[str]:
+        """listings에 저장되는 (구, 매물유형, 거래유형) 한글 이름 — 실패 범위 식별용."""
+        return [
+            district_name,
+            self.PROPERTY_TYPE_MAP.get(ptype_code, ptype_code),
+            self.TRADE_TYPE_MAP.get(ttype_code, ttype_code),
+        ]
+
     def _to_listing(self, art, region_name, district_name, d_info, ptype_code, ttype_code) -> Dict:
         """_fetch_combo_all_pages()가 반환한 매물을 DB 저장용 dict로 변환한다.
 
@@ -470,12 +478,13 @@ class NaverRealEstateCrawler:
         각 지역×유형×거래 조합별로 전 페이지를 5페이지 배치로 순회하며
         급매/가격인하 매물만 수집.
         """
-        self.last_crawl_stats = {"failed_combos": 0, "total_combos": 0}
+        self.last_crawl_stats = {"failed_combos": 0, "total_combos": 0, "failed_scopes": []}
         if not PLAYWRIGHT_AVAILABLE:
             return []
 
         listings = []
         planned_combos = 0
+        attempted_scopes = set()
         seen_articles = set()
         prop_codes = ["APT", "OPST", "VL"]
         trade_codes = ["A1", "B1", "B2"]
@@ -557,6 +566,8 @@ class NaverRealEstateCrawler:
                         for ptype_code in prop_codes:
                             for ttype_code in trade_codes:
                                 self.last_crawl_stats["total_combos"] += 1
+                                scope = self._scope_names(district_name, ptype_code, ttype_code)
+                                attempted_scopes.add(tuple(scope))
                                 combo_failed = False
                                 try:
                                     articles, combo_failed = self._fetch_combo_all_pages(
@@ -582,6 +593,7 @@ class NaverRealEstateCrawler:
                                     logger.warning(f"API 오류 ({district_name}/{ptype_code}/{ttype_code}): {e}")
                                 if combo_failed:
                                     self.last_crawl_stats["failed_combos"] += 1
+                                    self.last_crawl_stats["failed_scopes"].append(scope)
                                     if self.last_crawl_stats["failed_combos"] > max_failed:
                                         raise _TooManyFailedCombos()
 
@@ -607,6 +619,14 @@ class NaverRealEstateCrawler:
                 attempted = self.last_crawl_stats["total_combos"]
                 self.last_crawl_stats["failed_combos"] += max(0, planned_combos - attempted)
                 self.last_crawl_stats["total_combos"] = planned_combos
+                # 시도하지 못한 조합도 미완료 범위로 넘겨, 가짜 소멸 기록을 막는다.
+                for region_info in self.REGIONS.values():
+                    for district_name in region_info["districts"]:
+                        for ptype_code in prop_codes:
+                            for ttype_code in trade_codes:
+                                scope = self._scope_names(district_name, ptype_code, ttype_code)
+                                if tuple(scope) not in attempted_scopes:
+                                    self.last_crawl_stats["failed_scopes"].append(scope)
 
         logger.info(f"급매 크롤링 완료: {len(listings)}개 급매 수집")
         return listings
@@ -817,7 +837,11 @@ class NaverRealEstateCrawler:
                 return {"total": len(all_listings), "urgent": len(all_listings), "source": source, "status": "failed"}
 
             urgent_count = len(all_listings)
-            self.db.insert_listings(all_listings, session_id)
+            self.db.insert_listings(
+                all_listings,
+                session_id,
+                incomplete_scopes=self.last_crawl_stats.get("failed_scopes") or None,
+            )
             self.db.log_crawl(session_id, len(all_listings), urgent_count, "success", "naver")
             return {"total": len(all_listings), "urgent": urgent_count, "source": source, "status": "success"}
 
