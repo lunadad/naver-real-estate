@@ -183,9 +183,31 @@ def cacheable_json(payload, max_age: int):
     return response
 
 
+def error_response(message, status_code):
+    return jsonify({"status": "error", "message": message}), status_code
+
+
 def parse_tag_args(raw: str):
     """콤마로 구분된 tags 쿼리 파라미터를 태그 리스트로 변환한다."""
     return [tag.strip() for tag in (raw or "").split(",") if tag.strip()]
+
+
+def request_flag(name: str) -> bool:
+    """쿼리 파라미터가 대소문자 무관 "true"일 때만 True."""
+    return request.args.get(name, "false").lower() == "true"
+
+
+def listing_filter_args():
+    """목록/지도 API가 공유하는 매물 필터 쿼리 파라미터."""
+    return {
+        "region": request.args.get("region", ""),
+        "district": request.args.get("district", ""),
+        "property_type": request.args.get("property_type", ""),
+        "trade_type": request.args.get("trade_type", ""),
+        "search": request.args.get("search", ""),
+        "price_down_only": request_flag("price_down_only"),
+        "tags": parse_tag_args(request.args.get("tags", "")),
+    }
 
 db = Database(db_path=DB_PATH, database_url=DATABASE_URL)
 atexit.register(db.close)
@@ -667,17 +689,11 @@ def get_listings():
         page, per_page = 1, 20
 
     result = db.get_listings(
-        region=request.args.get("region", ""),
-        district=request.args.get("district", ""),
-        property_type=request.args.get("property_type", ""),
-        trade_type=request.args.get("trade_type", ""),
-        urgent_only=request.args.get("urgent_only", "false").lower() == "true",
-        search=request.args.get("search", ""),
+        **listing_filter_args(),
+        urgent_only=request_flag("urgent_only"),
         page=page,
         per_page=per_page,
         sort_by=request.args.get("sort_by", "price-desc"),
-        price_down_only=request.args.get("price_down_only", "false").lower() == "true",
-        tags=parse_tag_args(request.args.get("tags", "")),
     )
     add_building_change_badges(result)
     return jsonify(serialize_api_value(result))
@@ -704,13 +720,7 @@ def get_map_listings():
         max_lat=opt_coord("max_lat"),
         min_lng=opt_coord("min_lng"),
         max_lng=opt_coord("max_lng"),
-        region=request.args.get("region", ""),
-        district=request.args.get("district", ""),
-        property_type=request.args.get("property_type", ""),
-        trade_type=request.args.get("trade_type", ""),
-        search=request.args.get("search", ""),
-        price_down_only=request.args.get("price_down_only", "false").lower() == "true",
-        tags=parse_tag_args(request.args.get("tags", "")),
+        **listing_filter_args(),
         limit=limit,
     )
     return jsonify(serialize_api_value({"listings": listings, "count": len(listings)}))
@@ -720,7 +730,7 @@ def get_map_listings():
 def get_alert_rules():
     client_id = (request.args.get("client_id") or "").strip()
     if not client_id:
-        return jsonify({"status": "error", "message": "client_id required"}), 400
+        return error_response("client_id required", 400)
     return jsonify(serialize_api_value({"rules": db.get_alert_rules(client_id)}))
 
 
@@ -729,13 +739,13 @@ def create_alert_rule():
     data = request.get_json() or {}
     client_id = (data.get("client_id") or "").strip()
     if not client_id:
-        return jsonify({"status": "error", "message": "client_id required"}), 400
+        return error_response("client_id required", 400)
 
     building_name = (data.get("building_name") or "").strip()
     try:
         min_daily_change = int(data.get("min_daily_change") or 0)
     except (TypeError, ValueError):
-        return jsonify({"status": "error", "message": "min_daily_change must be an integer"}), 400
+        return error_response("min_daily_change must be an integer", 400)
 
     is_building_change = bool(building_name or min_daily_change)
     if is_building_change and (
@@ -743,12 +753,9 @@ def create_alert_rule():
         or not building_name
         or min_daily_change < 1
     ):
-        return jsonify(
-            {
-                "status": "error",
-                "message": "district, building_name and positive min_daily_change required",
-            }
-        ), 400
+        return error_response(
+            "district, building_name and positive min_daily_change required", 400
+        )
 
     if not is_building_change and not any(
         [
@@ -758,7 +765,7 @@ def create_alert_rule():
             (data.get("trade_type") or "").strip(),
         ]
     ):
-        return jsonify({"status": "error", "message": "at least one filter required"}), 400
+        return error_response("at least one filter required", 400)
 
     rule = db.create_alert_rule(
         client_id=client_id,
@@ -777,11 +784,11 @@ def create_alert_rule():
 def delete_alert_rule(alert_id: int):
     client_id = (request.args.get("client_id") or "").strip()
     if not client_id:
-        return jsonify({"status": "error", "message": "client_id required"}), 400
+        return error_response("client_id required", 400)
 
     deleted = db.delete_alert_rule(client_id, alert_id)
     if not deleted:
-        return jsonify({"status": "error", "message": "alert not found"}), 404
+        return error_response("alert not found", 404)
 
     return jsonify({"status": "success"})
 
@@ -790,7 +797,7 @@ def delete_alert_rule(alert_id: int):
 def check_alerts():
     client_id = (request.args.get("client_id") or "").strip()
     if not client_id:
-        return jsonify({"status": "error", "message": "client_id required"}), 400
+        return error_response("client_id required", 400)
 
     matches = db.get_new_alert_matches(client_id)
     return jsonify(serialize_api_value({"status": "success", "matches": matches}))
@@ -813,14 +820,14 @@ def subscribe_push():
     subscription = data.get("subscription") or {}
 
     if not client_id:
-        return jsonify({"status": "error", "message": "client_id required"}), 400
+        return error_response("client_id required", 400)
     if not push_configured():
-        return jsonify({"status": "error", "message": "push not configured"}), 400
+        return error_response("push not configured", 400)
 
     try:
         db.save_push_subscription(client_id, subscription)
     except ValueError as exc:
-        return jsonify({"status": "error", "message": str(exc)}), 400
+        return error_response(str(exc), 400)
 
     return jsonify({"status": "success"})
 
@@ -832,7 +839,7 @@ def unsubscribe_push():
     endpoint = (data.get("endpoint") or request.args.get("endpoint") or "").strip()
 
     if not client_id:
-        return jsonify({"status": "error", "message": "client_id required"}), 400
+        return error_response("client_id required", 400)
 
     deleted = db.delete_push_subscription(client_id, endpoint)
     return jsonify({"status": "success", "deleted": deleted})
@@ -882,7 +889,7 @@ def get_building_history():
     district = (request.args.get("district") or "").strip()
     building_name = (request.args.get("building_name") or "").strip()
     if not district or not building_name:
-        return jsonify({"status": "error", "message": "district and building_name required"}), 400
+        return error_response("district and building_name required", 400)
     days = request.args.get("days", default=14, type=int)
     series = build_building_history_series(district, building_name, days)
     return cacheable_json(
@@ -921,7 +928,7 @@ def get_regions():
 @app.route("/api/crawl", methods=["POST"])
 def trigger_crawl():
     if not ENABLE_CRAWL_ENDPOINT:
-        return jsonify({"status": "error", "message": "crawl endpoint disabled"}), 403
+        return error_response("crawl endpoint disabled", 403)
 
     try:
         result = get_crawler().crawl_all()
@@ -945,7 +952,7 @@ def trigger_crawl():
         )
     except Exception as e:
         logger.error(f"Crawl error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return error_response(str(e), 500)
 
 
 @app.route("/api/crawl-status")
@@ -986,7 +993,7 @@ def crawl_status():
 def update_schedule():
     global SCHEDULED_HOUR
     if not ENABLE_SCHEDULER:
-        return jsonify({"status": "error", "message": "scheduler disabled"}), 400
+        return error_response("scheduler disabled", 400)
 
     data = request.get_json() or {}
     hour = int(data.get("hour", SCHEDULED_HOUR))
