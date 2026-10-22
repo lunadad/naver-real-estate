@@ -24,6 +24,7 @@ except ImportError:  # pragma: no cover - optional until dependency is installed
     webpush = None
 
 from database import Database
+from deal_query import MAX_PRICE_LIMIT
 from weekly_report import format_weekly_report
 
 logging.basicConfig(
@@ -212,9 +213,6 @@ def listing_filter_args():
         "bargain_only": request_flag("bargain_only"),
         "max_price": optional_positive_int(request.args.get("max_price")),
     }
-
-
-MAX_PRICE_LIMIT = 10_000_000  # 만원 (= 1,000억)
 
 
 def optional_positive_int(value):

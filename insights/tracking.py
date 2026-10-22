@@ -279,6 +279,13 @@ def record_disappearances(conn, session_id: str, now: str, incomplete_scopes=Non
         return 0
 
     latest_other = max(rows, key=lambda r: str(_iso(r["crawled_at"]) or ""))["crawl_session"]
+    # 직전 세션이 데모 데이터면 실제로 사라진 매물이 아니므로 기록하지 않는다
+    demo = conn.execute(
+        "SELECT 1 FROM crawl_history WHERE session_id = ? AND source = 'demo' LIMIT 1",
+        (latest_other,),
+    ).fetchone()
+    if demo:
+        return 0
     skip = _normalize_scopes(incomplete_scopes)
     payload = []
     for row in rows:

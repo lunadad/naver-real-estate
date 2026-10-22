@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 REGIONS_PATH = Path(__file__).resolve().parent / "data" / "regions.json"
+MAX_PRICE_LIMIT = 10_000_000  # 만원 (= 1,000억). 이보다 크면 입력 오류로 본다.
 
 
 def parse_price(text: Optional[str]) -> Optional[int]:
@@ -83,7 +84,7 @@ def match_district(text: str, districts: List[Dict[str, str]],
 def parse_deal_args(raw: str, districts: List[Dict[str, str]]) -> Dict:
     """"/deals 송파구 20억 15%" 인자 → {district, region, max_price, min_discount, unknown}."""
     result = {"district": None, "region": None, "max_price": None, "min_discount": None,
-              "unknown": [], "ambiguous": []}
+              "unknown": [], "ambiguous": [], "too_large": []}
     place_tokens = []
     for token in (raw or "").split():
         if token.endswith("%") and parse_discount(token) is not None:
@@ -95,7 +96,10 @@ def parse_deal_args(raw: str, districts: List[Dict[str, str]]) -> Dict:
             continue
         price = parse_price(token) if re.search(r"\d", token) else None
         if price is not None:
-            result["max_price"] = price
+            if price > MAX_PRICE_LIMIT:
+                result["too_large"].append(token)
+            else:
+                result["max_price"] = price
             continue
         place_tokens.append(token)
 

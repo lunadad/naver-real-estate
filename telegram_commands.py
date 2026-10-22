@@ -53,6 +53,8 @@ def describe_rule(rule: Dict) -> str:
 
 
 def _ambiguous_reply(parsed: Dict) -> Optional[str]:
+    if parsed.get("too_large"):
+        return f"가격 상한 '{parsed['too_large'][0]}'이(가) 너무 큽니다. 예) 20억, 15억5천"
     if not parsed.get("ambiguous"):
         return None
     token = parsed["ambiguous"][0]
@@ -73,8 +75,9 @@ def handle_deals(raw: str, *, fetch: Callable = fetch_site,
     if not (raw or "").strip():
         return DEALS_USAGE
     parsed = parse_deal_args(raw, districts if districts is not None else load_districts())
-    if _ambiguous_reply(parsed):
-        return _ambiguous_reply(parsed)
+    problem = _ambiguous_reply(parsed)
+    if problem:
+        return problem
     if not parsed["district"]:
         return _unknown_region_reply(parsed)
     params = {
@@ -149,8 +152,9 @@ def handle_dealalert(raw: str, *, store: Optional[TelegramRuleStore] = None,
     action, _, rest = (raw or "").strip().partition(" ")
     if action == "add":
         parsed = parse_deal_args(rest, districts if districts is not None else load_districts())
-        if _ambiguous_reply(parsed):
-            return _ambiguous_reply(parsed)
+        problem = _ambiguous_reply(parsed)
+        if problem:
+            return problem
         if not parsed["district"]:
             return _unknown_region_reply(parsed)
         rule = store.add(district=parsed["district"], region=parsed["region"] or "",

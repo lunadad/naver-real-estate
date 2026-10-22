@@ -110,6 +110,42 @@ class AmbiguousNumberTest(unittest.TestCase):
         store.add.assert_not_called()
 
 
+class TelegramPriceCapTest(unittest.TestCase):
+    def test_oversized_price_is_rejected_by_bot(self):
+        parsed = parse_deal_args("송파 9999999999억", DISTRICTS)
+        self.assertIsNone(parsed["max_price"])
+        self.assertEqual(parsed["too_large"], ["9999999999억"])
+        store = mock.Mock()
+        reply = cmds.handle_dealalert("add 송파 9999999999억", store=store, districts=DISTRICTS)
+        self.assertIn("너무 큽니다", reply)
+        store.add.assert_not_called()
+        self.assertIn("너무 큽니다", cmds.handle_deals("송파 9999999999억", fetch=lambda *a, **k: {}, districts=DISTRICTS))
+
+    def test_one_failing_rule_does_not_block_others(self):
+        from datetime import datetime
+        from telegram_alerts import TelegramRuleStore, dispatch_telegram_deal_alerts
+
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        store = TelegramRuleStore(Path(tmp.name) / "r.json")
+        store.add(district="송파구", max_price=10 ** 30)
+        store.add(district="강남구")
+        db = mock.Mock()
+
+        def get_listings(**kwargs):
+            if kwargs.get("max_price"):
+                raise OverflowError("too large")
+            return {"listings": [{"article_no": "1", "district": "강남구", "building_name": "A",
+                                  "price": "1억", "bargain_discount": 0.2, "naver_url": ""}]}
+
+        db.get_listings.side_effect = get_listings
+        sent = []
+        with self.assertLogs("telegram_alerts", level="WARNING"):
+            dispatch_telegram_deal_alerts(db, store, lambda t: sent.append(t) or True, now=datetime(2026, 10, 23))
+        self.assertEqual(len(sent), 1)
+        self.assertIn("강남구", sent[0])
+
+
 class DemoInsertSkipsTrackingTest(unittest.TestCase):
     def test_record_tracking_false_writes_no_tracking_rows(self):
         tmp = tempfile.TemporaryDirectory()
@@ -123,6 +159,19 @@ class DemoInsertSkipsTrackingTest(unittest.TestCase):
             tracked = [r["article_no"] for r in conn.execute("SELECT article_no FROM listing_tracking").fetchall()]
         self.assertEqual(disappeared, 0)
         self.assertEqual(tracked, ["R1"])
+
+    def test_demo_session_is_not_treated_as_previous_crawl(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        db = Database(db_path=os.path.join(tmp.name, "dr.db"), skip_price_backfill=True)
+        self.addCleanup(db.close)
+        db.insert_listings([listing_row("D1", 50000, "5억"), listing_row("D2", 50000, "5억")], "demo",
+                           record_tracking=False)
+        db.log_crawl("demo", 2, 2, "degraded", "demo")
+        db.insert_listings([listing_row("R1", 50000, "5억")], "real")
+        with db.get_connection() as conn:
+            gone = conn.execute("SELECT COUNT(*) AS n FROM listing_disappearances").fetchone()["n"]
+        self.assertEqual(gone, 0)
 
     def test_crawler_degraded_path_passes_record_tracking_false(self):
         import crawler as crawler_module

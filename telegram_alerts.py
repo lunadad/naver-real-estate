@@ -136,15 +136,20 @@ def dispatch_telegram_deal_alerts(db, store: TelegramRuleStore, send: Callable[[
     now = now or datetime.now()
     unsent = []
     for rule in store.list():
-        result = db.get_listings(
-            region=rule.get("region") or "",
-            district=rule.get("district") or "",
-            trade_type="매매",
-            bargain_only=True,
-            max_price=rule.get("max_price"),
-            sort_by="recent",
-            per_page=100,
-        )
+        try:
+            result = db.get_listings(
+                region=rule.get("region") or "",
+                district=rule.get("district") or "",
+                trade_type="매매",
+                bargain_only=True,
+                max_price=rule.get("max_price"),
+                sort_by="recent",
+                per_page=100,
+            )
+        except Exception as exc:
+            # 규칙 하나가 잘못돼도 나머지 규칙 알림은 보낸다
+            logger.warning("텔레그램 알림 규칙 #%s 조회 실패: %s", rule.get("id"), exc)
+            continue
         already = store.recently_sent(rule, now)
         fresh = [r for r in select_bargains(result.get("listings") or [], rule.get("min_discount"))
                  if str(r.get("article_no")) not in already]
