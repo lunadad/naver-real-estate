@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>급매 히트맵 · 부동산 급매 알리미</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="{{ asset_url('css/style.css') }}" />
+  <script src="{{ asset_url('js/heatmap.js') }}" defer></script>
+  <meta name="theme-color" content="#f6f7fb" />
+</head>
+<body class="cx-body">
+<main class="cx-page" id="heatmap-root">
+  <a class="cx-back" href="/">← 급매 목록</a>
+  <h1 class="cx-title" id="heatmap-title">급매 히트맵</h1>
+  <div id="heatmap-content" aria-live="polite">
+    <p class="cx-empty">불러오는 중…</p>
+  </div>
+</main>
+</body>
+</html>

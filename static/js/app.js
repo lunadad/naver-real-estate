@@ -298,6 +298,10 @@ function computeMomentumText(dailySeries) {
   return ` 최근 7일 평균 대비 오늘 ${sign}${fmtNum(diff)}건${pct != null ? `(${sign}${pct}%)` : ''}입니다.${streakTag}`;
 }
 
+function complexPageUrl(district, buildingName) {
+  return `/complex?district=${encodeURIComponent(district || '')}&name=${encodeURIComponent(buildingName || '')}`;
+}
+
 function renderHeroMovers(movers) {
   const el = document.getElementById('hero-insight-movers');
   if (!el) return;
@@ -308,10 +312,11 @@ function renderHeroMovers(movers) {
   }
   el.classList.remove('hidden');
   el.innerHTML = movers.map(mover => `
-    <span class="hero-mover-chip hero-mover-chip-${escHtml(mover.kind)}"
-          title="${escHtml(mover.district)} ${escHtml(mover.building_name)}">
+    <a class="hero-mover-chip hero-mover-chip-${escHtml(mover.kind)}"
+       href="${complexPageUrl(mover.district, mover.building_name)}"
+       title="${escHtml(mover.district)} ${escHtml(mover.building_name)}">
       ${escHtml(mover.label)} · ${escHtml(mover.building_name)}
-    </span>
+    </a>
   `).join('');
 }
 
@@ -1064,7 +1069,7 @@ function renderListings(data) {
         <span class="naver-link-icon" title="네이버 부동산">네이버 보기</span>
       </div>
       <div class="card-name-row">
-        <div class="card-name" title="${escHtml(l.building_name)}">${escHtml(l.building_name)}</div>
+        <div class="card-name" title="${escHtml(l.building_name)}">${l.district && l.building_name ? `<a class="card-name-link" href="${complexPageUrl(l.district, l.building_name)}">${escHtml(l.building_name)}</a>` : escHtml(l.building_name)}</div>
         ${l.district && l.building_name ? `<button type="button" class="card-trend-btn" data-district="${escHtml(l.district)}" data-building-name="${escHtml(l.building_name)}" title="일별 매물수 추이" aria-label="일별 매물수 추이 보기">📈</button>` : ''}
       </div>
       <div class="card-location-line">${escHtml(compactRegion)}</div>
@@ -1991,6 +1996,7 @@ function wireEvents() {
       openBuildingTrendModal(trendBtn.dataset.district, trendBtn.dataset.buildingName, trendBtn);
       return;
     }
+    if (e.target.closest('.card-name-link')) return; // 단지 페이지 링크는 카드의 네이버 열기를 막고 그대로 이동
     const card = e.target.closest('.listing-card');
     if (!card) return;
     const url = card.dataset.naverUrl;
@@ -2131,6 +2137,37 @@ function wireEvents() {
   });
 }
 
+// ── 히트맵/단지 페이지 연결 ────────────────────────────────────────────────────
+function presetDistrictFromQuery() {
+  const district = (new URLSearchParams(location.search).get('district') || '').trim();
+  if (!district) return;
+  state.filters.district = district;
+  const badge = document.getElementById('region-badge');
+  const badgeName = document.getElementById('region-badge-name');
+  if (badge && badgeName) {
+    badgeName.textContent = district;
+    badge.classList.remove('hidden');
+  }
+}
+
+function addHeatmapLinks() {
+  const make = () => {
+    const a = document.createElement('a');
+    a.className = 'heatmap-nav-link';
+    a.href = '/heatmap';
+    a.textContent = '지역 히트맵';
+    return a;
+  };
+  const headerRight = document.querySelector('.header-right');
+  if (headerRight) headerRight.insertBefore(make(), headerRight.firstChild);
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    const link = make();
+    link.style.margin = '10px 12px 0';
+    sidebar.insertBefore(link, sidebar.firstChild);
+  }
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   state.clientId = getClientId();
@@ -2144,6 +2181,8 @@ async function init() {
   }
 
   wireEvents();
+  presetDistrictFromQuery();
+  addHeatmapLinks();
   initMap();
   applyMapVisibility();
   refreshAlertDraftSummary();

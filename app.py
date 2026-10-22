@@ -1060,6 +1060,16 @@ def update_schedule():
     )
 
 
+# ── Insight pages (views/) ───────────────────────────────────────────────────
+import sys as _sys  # noqa: E402
+
+from views import complex as complex_view  # noqa: E402
+from views import heatmap as heatmap_view  # noqa: E402
+
+complex_view.register(app, _sys.modules[__name__])
+heatmap_view.register(app, _sys.modules[__name__])
+
+
 # ── Startup ──────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5101"))
