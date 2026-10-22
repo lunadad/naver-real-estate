@@ -20,6 +20,7 @@ if str(ROOT_DIR) not in sys.path:
 from crawler import NaverRealEstateCrawler
 from database import Database
 from notifier import AlertState, send_telegram
+from telegram_alerts import DEFAULT_RULES_PATH, TelegramRuleStore, dispatch_telegram_deal_alerts
 
 logger = logging.getLogger("run_remote_crawl")
 
@@ -146,7 +147,12 @@ def _send_or_keep(state: AlertState, send, messages: List[str]):
             state.add_pending(text)
 
 
-def run(args, *, now_fn=datetime.now, db_factory=None, crawler_factory=None, send=send_telegram) -> int:
+def _default_deal_alerts(db, send):
+    return dispatch_telegram_deal_alerts(db, TelegramRuleStore(DEFAULT_RULES_PATH), send)
+
+
+def run(args, *, now_fn=datetime.now, db_factory=None, crawler_factory=None, send=send_telegram,
+        deal_alerts=_default_deal_alerts) -> int:
     """크롤링 1회와 알림 처리. 반환값은 프로세스 종료 코드."""
     db_factory = db_factory or _connect_with_retry
     crawler_factory = crawler_factory or NaverRealEstateCrawler
@@ -167,6 +173,12 @@ def run(args, *, now_fn=datetime.now, db_factory=None, crawler_factory=None, sen
             logger.info("오늘(%s) 크롤링이 이미 성공해 이번 슬롯은 건너뜀", today.isoformat())
             return 0
         result = crawler_factory(db).crawl_all()
+        if result.get("status", "success") == "success":
+            try:
+                for text in deal_alerts(db, send):
+                    state.add_pending(text)
+            except Exception:
+                logger.exception("텔레그램 진짜 급매 알림 발송 실패 (크롤링 결과에는 영향 없음)")
     except Exception as exc:
         error = redact_secrets(f"{type(exc).__name__}: {exc}")
         logger.exception("Local remote crawl crashed")

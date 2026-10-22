@@ -123,7 +123,7 @@ class RunTest(unittest.TestCase):
         values.update(overrides)
         return SimpleNamespace(**values)
 
-    def _run(self, now=AT_10, db_factory=None, send_ok=True, **arg_overrides):
+    def _run(self, now=AT_10, db_factory=None, send_ok=True, deal_alerts=None, **arg_overrides):
         def send(text):
             self.sent.append(text)
             return send_ok
@@ -134,6 +134,7 @@ class RunTest(unittest.TestCase):
             db_factory=db_factory or (lambda url: self.db),
             crawler_factory=lambda db: self.crawler,
             send=send,
+            deal_alerts=deal_alerts or (lambda db, send: []),
         )
 
     def test_run_skips_when_already_succeeded_today(self):
@@ -226,6 +227,29 @@ class RunTest(unittest.TestCase):
 
         self.assertEqual(self._run(now=AT_15, db_factory=broken), 1)
         self.assertEqual(len(self.sent), 1)
+
+    def test_deal_alerts_dispatched_after_successful_crawl(self):
+        calls = []
+
+        def deal_alerts(db, send):
+            calls.append(db)
+            return ["unsent deal message"]
+
+        self.assertEqual(self._run(deal_alerts=deal_alerts), 0)
+        self.assertEqual(calls, [self.db])
+        self.assertEqual(AlertState(self.state_path)._data["pending"], ["unsent deal message"])
+
+    def test_deal_alerts_skipped_when_crawl_failed(self):
+        self.crawler.crawl_all.return_value = {"status": "failed", "failed_combos": 0, "total_combos": 0}
+        calls = []
+        self._run(deal_alerts=lambda db, send: calls.append(db) or [])
+        self.assertEqual(calls, [])
+
+    def test_deal_alert_crash_does_not_fail_crawl(self):
+        def boom(db, send):
+            raise RuntimeError("bad rules file")
+
+        self.assertEqual(self._run(deal_alerts=boom), 0)
 
     def test_pending_that_fails_again_stays_pending_once(self):
         AlertState(self.state_path).add_pending("old")

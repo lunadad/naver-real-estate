@@ -1,0 +1,7 @@
+name: real-estate
+version: 1.0.0
+description: "부동산 급매 알리미: /deals, /complex, /weekly, /dealalert 텔레그램 명령 (공개 사이트 API만 사용)"
+author: naver-real-estate
+kind: standalone
+platforms:
+  - macos
