@@ -4,6 +4,7 @@ import logging
 import sqlite3
 import re
 from collections import Counter
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Optional, Sequence, Tuple
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -764,6 +765,41 @@ class Database:
                 entry["price_down_count"] += 1
         return [row for row in grouped.values() if row["total_count"] >= 2]
 
+    @contextmanager
+    def _borrow_connection(self, conn: Optional[ConnectionWrapper] = None):
+        """호출자가 넘긴 커넥션을 그대로 쓰고, 없으면 새로 열어 끝날 때 닫는다.
+
+        새로 연 커넥션은 본문에서 예외가 나도 __exit__(None, None, None)으로 닫으므로
+        그때까지의 작업이 커밋된다.
+        """
+        if conn is not None:
+            yield conn
+            return
+
+        conn = self.get_connection()
+        conn.__enter__()
+        try:
+            yield conn
+        finally:
+            conn.__exit__(None, None, None)
+
+    @staticmethod
+    def _insert_region_stats(conn: ConnectionWrapper, payload):
+        if not payload:
+            return
+        conn.executemany(
+            """
+            INSERT INTO crawl_region_stats
+            (session_id, region, district, total_count, price_down_count, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(session_id, region, district) DO UPDATE SET
+                total_count = excluded.total_count,
+                price_down_count = excluded.price_down_count,
+                created_at = excluded.created_at
+            """,
+            payload,
+        )
+
     def replace_crawl_region_stats(
         self,
         session_id: str,
@@ -773,21 +809,7 @@ class Database:
         if not session_id:
             return
 
-        insert_sql = """
-            INSERT INTO crawl_region_stats
-            (session_id, region, district, total_count, price_down_count, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(session_id, region, district) DO UPDATE SET
-                total_count = excluded.total_count,
-                price_down_count = excluded.price_down_count,
-                created_at = excluded.created_at
-        """
-
-        owns_connection = conn is None
-        conn = conn or self.get_connection()
-        if owns_connection:
-            conn.__enter__()
-        try:
+        with self._borrow_connection(conn) as conn:
             conn.execute(
                 "DELETE FROM crawl_region_stats WHERE session_id = ?",
                 (session_id,),
@@ -803,11 +825,7 @@ class Database:
                 )
                 for row in rows
             ]
-            if payload:
-                conn.executemany(insert_sql, payload)
-        finally:
-            if owns_connection:
-                conn.__exit__(None, None, None)
+            self._insert_region_stats(conn, payload)
 
     def rebuild_crawl_region_stats_from_listings(
         self, session_id: str, conn: Optional[ConnectionWrapper] = None
@@ -815,11 +833,7 @@ class Database:
         if not session_id:
             return False
 
-        owns_connection = conn is None
-        conn = conn or self.get_connection()
-        if owns_connection:
-            conn.__enter__()
-        try:
+        with self._borrow_connection(conn) as conn:
             history = conn.execute(
                 """
                 SELECT total_count
@@ -866,9 +880,6 @@ class Database:
             ]
             self.replace_crawl_region_stats(session_id, payload, conn)
             return True
-        finally:
-            if owns_connection:
-                conn.__exit__(None, None, None)
 
     def create_alert_rule(
         self,
@@ -1423,19 +1434,7 @@ class Database:
                 )
                 for row in region_stats_rows
             ]
-            if region_payload:
-                conn.executemany(
-                    """
-                    INSERT INTO crawl_region_stats
-                    (session_id, region, district, total_count, price_down_count, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(session_id, region, district) DO UPDATE SET
-                        total_count = excluded.total_count,
-                        price_down_count = excluded.price_down_count,
-                        created_at = excluded.created_at
-                    """,
-                    region_payload,
-                )
+            self._insert_region_stats(conn, region_payload)
 
             building_stats_rows = self._build_building_stats_rows(session_id, listings, now)
             building_payload = [
