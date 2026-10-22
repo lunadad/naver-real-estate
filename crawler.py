@@ -9,7 +9,7 @@ import re
 import threading
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 
 try:
     from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, sync_playwright
@@ -38,15 +38,23 @@ async (args) => {
             headers: {"Authorization": args.token, "Accept": "application/json"},
             signal: controller.signal
         });
-        if (!r.ok) return null;
-        return await r.json();
+        if (!r.ok) return {ok: false, status: r.status};
+        return {ok: true, data: await r.json()};
     } catch (e) {
-        return null;
+        return {ok: false, status: 0};
     } finally {
         clearTimeout(timeoutId);
     }
 }
 """
+
+
+class PageFetchError(Exception):
+    """재시도 후에도 페이지 요청이 실패함. status 0은 네트워크/타임아웃/평가 오류."""
+
+    def __init__(self, status: int):
+        super().__init__(f"page fetch failed (status={status})")
+        self.status = status
 
 
 class NaverRealEstateCrawler:
@@ -276,6 +284,9 @@ class NaverRealEstateCrawler:
         REGIONS = json.loads(REGIONS_FILE.read_text(encoding="utf-8"))
 
     URGENT_KEYWORDS = ["급매", "급처", "급급매", "급처분", "긴급매물", "시세이하", "손해보고", "급하게"]
+    PAGE_RETRY_DELAYS = (2, 5, 15)
+    RATE_LIMIT_RETRY_DELAYS = (30, 60, 120)
+    MAX_FAILED_COMBO_RATIO = 0.2
     MIN_LIVE_CRAWL_RATIO = float((os.getenv("MIN_LIVE_CRAWL_RATIO") or "0.5").strip())
     TOKEN_BOOTSTRAP_URLS = [
         "https://new.land.naver.com/complexes/867?ms=37.5209277,126.9710095,17&a=APT:PRE:ABYG:JGC&e=RETAIL&y=FASTSELL&ad=true",
@@ -290,6 +301,7 @@ class NaverRealEstateCrawler:
 
     def __init__(self, db):
         self.db = db
+        self.last_crawl_stats = {"failed_combos": 0, "total_combos": 0}
         self._auth_token = None
         self._token_lock = threading.Lock()
         self.session = requests.Session()
@@ -454,13 +466,40 @@ class NaverRealEstateCrawler:
             )
         )
 
-    def _fetch_combo_all_pages(self, page, token, cortarNo, ptype, ttype, max_pages=100):
-        """한 조합(지역+유형+거래)의 전 페이지를 순회, FASTSELL 태그 매물만 반환."""
+    def _fetch_page(self, page, args: Dict) -> Optional[Dict]:
+        """페이지 하나를 요청한다. 429·5xx·네트워크 오류는 대기 후 재시도한다."""
+        attempt = 0
+        while True:
+            try:
+                response = page.evaluate(JS_FETCH_PAGE, args)
+            except Exception:
+                response = {"ok": False, "status": 0}
+
+            if response and response.get("ok"):
+                return response.get("data")
+
+            status = int((response or {}).get("status") or 0)
+            if status == 429:
+                delays = self.RATE_LIMIT_RETRY_DELAYS
+            elif status == 0 or status >= 500:
+                delays = self.PAGE_RETRY_DELAYS
+            else:
+                raise PageFetchError(status)
+
+            if attempt >= len(delays):
+                raise PageFetchError(status)
+            time.sleep(delays[attempt])
+            attempt += 1
+
+    def _fetch_combo_all_pages(
+        self, page, token, cortarNo, ptype, ttype, max_pages=100
+    ) -> Tuple[List[Dict], bool]:
+        """한 조합(지역+유형+거래)의 전 페이지를 순회, FASTSELL 태그 매물과 실패 여부를 반환."""
         all_articles = []
 
         for pg in range(1, max_pages + 1):
             try:
-                data = page.evaluate(JS_FETCH_PAGE, {
+                data = self._fetch_page(page, {
                     "cortarNo": cortarNo,
                     "token": token,
                     "ptype": ptype,
@@ -469,8 +508,12 @@ class NaverRealEstateCrawler:
                     "tag": self.FASTSELL_TAG,
                     "timeoutMs": 8000,
                 })
-            except Exception:
-                break
+            except PageFetchError as exc:
+                logger.warning(
+                    "페이지 요청 실패로 조합 수집 중단 (%s/%s/%s page=%s status=%s)",
+                    cortarNo, ptype, ttype, pg, exc.status,
+                )
+                return all_articles, True
 
             if not data or not data.get("articleList"):
                 break
@@ -530,7 +573,7 @@ class NaverRealEstateCrawler:
 
             time.sleep(0.1)
 
-        return all_articles
+        return all_articles, False
 
     def _crawl_with_playwright(self) -> List[Dict]:
         """
@@ -538,6 +581,7 @@ class NaverRealEstateCrawler:
         각 지역×유형×거래 조합별로 전 페이지를 5페이지 배치로 순회하며
         급매/가격인하 매물만 수집.
         """
+        self.last_crawl_stats = {"failed_combos": 0, "total_combos": 0}
         if not PLAYWRIGHT_AVAILABLE:
             return []
 
@@ -620,8 +664,10 @@ class NaverRealEstateCrawler:
 
                         for ptype_code in prop_codes:
                             for ttype_code in trade_codes:
+                                self.last_crawl_stats["total_combos"] += 1
+                                combo_failed = False
                                 try:
-                                    articles = self._fetch_combo_all_pages(
+                                    articles, combo_failed = self._fetch_combo_all_pages(
                                         page, token,
                                         d_info["code"], ptype_code, ttype_code,
                                         max_pages=20,
@@ -678,7 +724,10 @@ class NaverRealEstateCrawler:
                                         district_count += 1
 
                                 except Exception as e:
+                                    combo_failed = True
                                     logger.warning(f"API 오류 ({district_name}/{ptype_code}/{ttype_code}): {e}")
+                                if combo_failed:
+                                    self.last_crawl_stats["failed_combos"] += 1
 
                         logger.info(
                             f"[{done}/{total_districts}] {region_name} {district_name}: "
@@ -825,6 +874,17 @@ class NaverRealEstateCrawler:
         return listings
 
     def crawl_all(self) -> Dict:
+        """크롤링 후 결과 dict를 반환한다. 항상 failed_combos/total_combos를 포함한다."""
+        result = dict(self._crawl_and_persist())
+        result.update(self.last_crawl_stats)
+        return result
+
+    def _too_many_failed_combos(self) -> bool:
+        stats = self.last_crawl_stats
+        total = stats.get("total_combos") or 0
+        return bool(total) and stats.get("failed_combos", 0) / total > self.MAX_FAILED_COMBO_RATIO
+
+    def _crawl_and_persist(self) -> Dict:
         session_id = str(uuid.uuid4())[:8]
         all_listings = []
         source = "naver"
@@ -857,6 +917,16 @@ class NaverRealEstateCrawler:
             return self._with_db_reconnect("failed crawl logging", persist_failed_crawl)
 
         def persist_live_crawl():
+            if self._too_many_failed_combos():
+                logger.error(
+                    "실패한 조합이 너무 많아 이번 크롤링을 실패 처리: failed=%s total=%s (허용 %.0f%%)",
+                    self.last_crawl_stats["failed_combos"],
+                    self.last_crawl_stats["total_combos"],
+                    self.MAX_FAILED_COMBO_RATIO * 100,
+                )
+                self.db.log_crawl(session_id, len(all_listings), len(all_listings), "failed", source)
+                return {"total": len(all_listings), "urgent": len(all_listings), "source": source, "status": "failed"}
+
             previous_live = self.db.get_last_successful_live_crawl()
             previous_total = int((previous_live or {}).get("total_count") or 0)
             previous_session_id = (previous_live or {}).get("session_id")
