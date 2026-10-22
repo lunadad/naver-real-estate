@@ -383,6 +383,40 @@ class NaverRealEstateCrawler:
 
         return all_articles
 
+    def _to_listing(self, art, region_name, district_name, d_info, ptype_code, ttype_code) -> Dict:
+        """_fetch_combo_all_pages()가 반환한 매물을 DB 저장용 dict로 변환한다.
+
+        가격인하 태그는 _fetch_combo_all_pages()에서 이미 tagList에 붙어 있다.
+        좌표가 없는 매물은 구/시 중심 좌표로 대체한다.
+        """
+        ano = art["articleNo"]
+        art_lat = art.get("lat") or d_info["lat"]
+        art_lng = art.get("lng") or d_info["lng"]
+        naver_url = (
+            f"https://new.land.naver.com/complexes"
+            f"?ms={art_lat},{art_lng},16"
+            f"&a={ptype_code}&b={ttype_code}"
+            f"&articleNo={ano}"
+        )
+        return {
+            "article_no": ano,
+            "region": region_name,
+            "district": district_name,
+            "property_type": self.PROPERTY_TYPE_MAP.get(ptype_code, ptype_code),
+            "trade_type": self.TRADE_TYPE_MAP.get(ttype_code, ttype_code),
+            "price": art.get("price", ""),
+            "area": art.get("area", ""),
+            "floor": art.get("floor", ""),
+            "building_name": art.get("articleName", ""),
+            "description": art.get("desc", ""),
+            "is_urgent": True,
+            "tags": art.get("tagList", []),
+            "confirmed_date": art.get("date", ""),
+            "latitude": art_lat,
+            "longitude": art_lng,
+            "naver_url": naver_url,
+        }
+
     def _crawl_with_playwright(self) -> List[Dict]:
         """
         Playwright 기반 급매 전용 크롤링.
@@ -484,39 +518,10 @@ class NaverRealEstateCrawler:
                                             continue
                                         seen_articles.add(ano)
 
-                                        tags = art.get("tagList", [])
-                                        desc = art.get("desc", "")
-
-                                        if art.get("priceDown") and "가격인하" not in tags:
-                                            tags = list(tags) + ["가격인하"]
-
-                                        art_lat = art.get("lat") or d_info["lat"]
-                                        art_lng = art.get("lng") or d_info["lng"]
-                                        naver_url = (
-                                            f"https://new.land.naver.com/complexes"
-                                            f"?ms={art_lat},{art_lng},16"
-                                            f"&a={ptype_code}&b={ttype_code}"
-                                            f"&articleNo={ano}"
-                                        )
-
-                                        listings.append({
-                                            "article_no": ano,
-                                            "region": region_name,
-                                            "district": district_name,
-                                            "property_type": self.PROPERTY_TYPE_MAP.get(ptype_code, ptype_code),
-                                            "trade_type": self.TRADE_TYPE_MAP.get(ttype_code, ttype_code),
-                                            "price": art.get("price", ""),
-                                            "area": art.get("area", ""),
-                                            "floor": art.get("floor", ""),
-                                            "building_name": art.get("articleName", ""),
-                                            "description": desc,
-                                            "is_urgent": True,
-                                            "tags": tags,
-                                            "confirmed_date": art.get("date", ""),
-                                            "latitude": art_lat,
-                                            "longitude": art_lng,
-                                            "naver_url": naver_url,
-                                        })
+                                        listings.append(self._to_listing(
+                                            art, region_name, district_name, d_info,
+                                            ptype_code, ttype_code,
+                                        ))
                                         district_count += 1
 
                                 except Exception as e:
