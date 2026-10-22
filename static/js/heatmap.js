@@ -48,7 +48,12 @@ function buildScale(districts, key) {
   return v => Math.min(4, Math.floor(((v - lo) / (hi - lo)) * 5));
 }
 
-function tileHref(d) { return `/?district=${encodeURIComponent(d.district)}`; }
+function tileHref(d) {
+  // 중구·서구처럼 여러 시에 같은 이름이 있어 시/도도 함께 넘긴다
+  const q = new URLSearchParams({ district: d.district });
+  if (view.region) q.set('region', view.region);
+  return `/?${q.toString()}`;
+}
 
 function tileHtml(d, key, scale, placed) {
   const v = metricValue(d, key);

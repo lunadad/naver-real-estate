@@ -15,6 +15,7 @@ const state = {
     property_type: '',
     search: '',
     district: '',
+    region: '',
     sort_by: 'price-desc',
     price_down_only: false,
     bargain_only: false,
@@ -805,7 +806,7 @@ async function refreshMapListings() {
     min_lng: sw.getLng(),
     max_lng: ne.getLng(),
   });
-  ['trade_type', 'property_type', 'search', 'district'].forEach(key => {
+  ['trade_type', 'property_type', 'search', 'district', 'region'].forEach(key => {
     if (state.filters[key]) q.set(key, state.filters[key]);
   });
   if (state.filters.price_down_only) q.set('price_down_only', 'true');
@@ -960,6 +961,7 @@ function renderMapMarkers(regionStats) {
 }
 
 function selectDistrict(district) {
+  state.filters.region = ''; // 히트맵에서 넘어온 시/도 고정은 직접 지역을 고르면 해제
   state.filters.district = district === state.filters.district ? '' : district;
   state.page = 1;
 
@@ -2153,13 +2155,16 @@ function wireEvents() {
 
 // ── 히트맵/단지 페이지 연결 ────────────────────────────────────────────────────
 function presetDistrictFromQuery() {
-  const district = (new URLSearchParams(location.search).get('district') || '').trim();
+  const params = new URLSearchParams(location.search);
+  const district = (params.get('district') || '').trim();
   if (!district) return;
   state.filters.district = district;
+  // 히트맵에서 온 경우 시/도도 함께 고정한다 (중구·서구 등 동명 구 구분)
+  state.filters.region = (params.get('region') || '').trim();
   const badge = document.getElementById('region-badge');
   const badgeName = document.getElementById('region-badge-name');
   if (badge && badgeName) {
-    badgeName.textContent = district;
+    badgeName.textContent = state.filters.region ? `${state.filters.region} ${district}` : district;
     badge.classList.remove('hidden');
   }
 }

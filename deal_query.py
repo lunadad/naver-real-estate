@@ -53,11 +53,26 @@ def load_districts(path: Path = REGIONS_PATH) -> List[Dict[str, str]]:
     ]
 
 
-def match_district(text: str, districts: List[Dict[str, str]]) -> Optional[Dict[str, str]]:
-    """"송파구", "송파", "분당" 같은 입력을 구/시 하나로 맞춘다. 모호하면 첫 정확 일치 우선."""
+def match_region(text: str, districts: List[Dict[str, str]]) -> Optional[str]:
+    """"부산", "부산광역시", "경기" 같은 입력을 시/도 이름으로 맞춘다 (2글자 이상)."""
+    needle = (text or "").strip()
+    if len(needle) < 2:
+        return None
+    for region in dict.fromkeys(d["region"] for d in districts):
+        if region == needle or region.startswith(needle):
+            return region
+    return None
+
+
+def match_district(text: str, districts: List[Dict[str, str]],
+                   region: Optional[str] = None) -> Optional[Dict[str, str]]:
+    """"송파구", "송파", "분당" 같은 입력을 구/시 하나로 맞춘다. region이 있으면 그 안에서만 찾고,
+    같은 이름(중구 등)이 여러 시에 있으면 첫 정확 일치를 고른다."""
     needle = (text or "").strip()
     if not needle:
         return None
+    if region:
+        districts = [d for d in districts if d["region"] == region]
     exact = [d for d in districts if d["district"] == needle]
     if exact:
         return exact[0]
@@ -68,6 +83,7 @@ def match_district(text: str, districts: List[Dict[str, str]]) -> Optional[Dict[
 def parse_deal_args(raw: str, districts: List[Dict[str, str]]) -> Dict:
     """"/deals 송파구 20억 15%" 인자 → {district, region, max_price, min_discount, unknown}."""
     result = {"district": None, "region": None, "max_price": None, "min_discount": None, "unknown": []}
+    place_tokens = []
     for token in (raw or "").split():
         if token.endswith("%") and parse_discount(token) is not None:
             result["min_discount"] = parse_discount(token)
@@ -76,7 +92,20 @@ def parse_deal_args(raw: str, districts: List[Dict[str, str]]) -> Dict:
         if price is not None:
             result["max_price"] = price
             continue
-        found = match_district(token, districts) if result["district"] is None else None
+        place_tokens.append(token)
+
+    # 시/도 이름은 어디에 있든 먼저 골라 같은 이름의 구(중구·서구 등)를 가르는 데 쓴다.
+    region_hint = None
+    rest = []
+    for token in place_tokens:
+        region = match_region(token, districts) if region_hint is None else None
+        is_district = any(d["district"] == token for d in districts)
+        if region and not is_district:
+            region_hint = region
+        else:
+            rest.append(token)
+    for token in rest:
+        found = match_district(token, districts, region_hint) if result["district"] is None else None
         if found:
             result.update(found)
         else:

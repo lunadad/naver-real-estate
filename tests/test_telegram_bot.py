@@ -101,12 +101,13 @@ class DispatchTest(unittest.TestCase):
         dispatch_telegram_deal_alerts(self.db, self.store, lambda t: sent.append(t) or True, now=NOW)
         self.assertEqual(sent, [])
 
-    def test_failed_send_is_returned_and_not_marked_sent(self):
+    def test_failed_send_is_returned_for_pending_queue_and_not_resent(self):
+        # 못 보낸 메시지는 pending 큐가 재전송하므로, 다음 발송에서 "새 급매"로 중복되면 안 된다
         unsent = dispatch_telegram_deal_alerts(self.db, self.store, lambda t: False, now=NOW)
         self.assertEqual(len(unsent), 1)
         sent = []
         dispatch_telegram_deal_alerts(self.db, self.store, lambda t: sent.append(t) or True, now=NOW)
-        self.assertEqual(len(sent), 1)
+        self.assertEqual(sent, [])
 
     def test_sent_records_expire_after_30_days(self):
         dispatch_telegram_deal_alerts(self.db, self.store, lambda t: True, now=NOW)
@@ -141,7 +142,7 @@ class CommandsTest(unittest.TestCase):
             return {"listings": [deal("1", 0.30, 180000), deal("2", 0.12, 150000), deal("4", 0.18, 170000)]}
         if path == "/api/complex":
             return {"district": "송파구", "building_name": "헬리오시티",
-                    "stats": {"current_count": 41, "week_ago_count": 35, "bargain_count": 5, "price_down_ratio": 9.8}}
+                    "stats": {"current_count": 41, "week_ago_count": 35, "bargain_count": 5, "price_down_ratio": 0.098}}
         if path == "/api/weekly-report":
             return "📊 주간 급매 리포트\n..."
         raise AssertionError(path)

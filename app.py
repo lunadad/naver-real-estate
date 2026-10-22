@@ -919,10 +919,20 @@ def get_hero_insight():
     )
 
 
+def db_naive_now():
+    """DB의 naive 시각과 같은 기준의 현재 시각. Postgres(맥미니 크롤러)는 KST 벽시계로 쓴다.
+
+    Vercel 서버 시계는 UTC라 datetime.now()를 쓰면 오늘 세션이 9시간 동안 빠진다.
+    """
+    if DATABASE_URL:
+        return datetime.now(KST).replace(tzinfo=None)
+    return datetime.now()
+
+
 @app.route("/api/weekly-report")
 def get_weekly_report():
     """주간 리포트 텍스트 (텔레그램 /weekly 명령이 사용)."""
-    data = db.get_weekly_report_data(datetime.now())
+    data = db.get_weekly_report_data(db_naive_now())
     if not data:
         return error_response("no live crawl yet", 404)
     response = app.response_class(

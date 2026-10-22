@@ -49,6 +49,10 @@ def select_bargains(rows: List[Dict], min_discount: Optional[float]) -> List[Dic
 class TelegramRuleStore:
     def __init__(self, path: Path = DEFAULT_RULES_PATH):
         self.path = Path(path)
+        self._load()
+
+    def _load(self):
+        """파일을 다시 읽는다. Hermes(/dealalert)와 크롤러가 같은 파일을 쓰므로 쓰기 직전마다 호출한다."""
         self._data = {"next_id": 1, "rules": []}
         if self.path.exists():
             try:
@@ -72,6 +76,7 @@ class TelegramRuleStore:
 
     def add(self, *, district: str, region: str = "", max_price: Optional[int] = None,
             min_discount: Optional[float] = None, now: Optional[datetime] = None) -> Dict:
+        self._load()
         rule = {
             "id": self._data["next_id"],
             "district": district,
@@ -87,6 +92,7 @@ class TelegramRuleStore:
         return dict(rule)
 
     def remove(self, rule_id: int) -> bool:
+        self._load()
         before = len(self._data["rules"])
         self._data["rules"] = [r for r in self._data["rules"] if r.get("id") != rule_id]
         if len(self._data["rules"]) == before:
@@ -95,6 +101,7 @@ class TelegramRuleStore:
         return True
 
     def mark_sent(self, rule_id: int, article_nos: List[str], now: datetime):
+        self._load()
         cutoff = now - timedelta(days=SENT_RETENTION_DAYS)
         for rule in self._data["rules"]:
             if rule.get("id") != rule_id:
@@ -130,6 +137,7 @@ def dispatch_telegram_deal_alerts(db, store: TelegramRuleStore, send: Callable[[
     unsent = []
     for rule in store.list():
         result = db.get_listings(
+            region=rule.get("region") or "",
             district=rule.get("district") or "",
             trade_type="매매",
             bargain_only=True,
@@ -148,8 +156,9 @@ def dispatch_telegram_deal_alerts(db, store: TelegramRuleStore, send: Callable[[
         if len(fresh) > MAX_ITEMS_PER_MESSAGE:
             lines.append(f"외 {len(fresh) - MAX_ITEMS_PER_MESSAGE}건 · {SITE_URL}")
         text = "\n".join(lines)
-        if send(text):
-            store.mark_sent(rule["id"], [str(r.get("article_no")) for r in fresh], now)
-        else:
+        # 못 보낸 메시지는 호출자가 pending 큐로 재전송하므로 보냈다고 표시한다
+        # (그러지 않으면 다음 실행에서 같은 매물이 "새 급매"로 한 번 더 간다).
+        store.mark_sent(rule["id"], [str(r.get("article_no")) for r in fresh], now)
+        if not send(text):
             unsent.append(text)
     return unsent

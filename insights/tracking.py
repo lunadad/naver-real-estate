@@ -368,6 +368,9 @@ def list_disappeared(conn, since: str, limit: int) -> List[Dict]:
     return [dict(r) for r in rows]
 
 
+FAST_COMPLEX_MIN_PREV = 3
+
+
 def fast_complexes(conn, days: int, limit: int = 5) -> Dict:
     """crawl_building_stats로 days일 전 대비 매물 감소율 상위 단지.
 
@@ -411,7 +414,8 @@ def fast_complexes(conn, days: int, limit: int = 5) -> Dict:
     if cur and prev:
         for key, prev_count in prev.items():
             count = cur.get(key, 0)
-            if prev_count > 0 and count < prev_count:
+            # 2→0 같은 작은 단지가 100%로 상위를 채우지 않도록 직전 3건 이상만 본다
+            if prev_count >= FAST_COMPLEX_MIN_PREV and count < prev_count:
                 drop = prev_count - count
                 items.append(
                     {

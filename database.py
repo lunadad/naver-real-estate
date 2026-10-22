@@ -1046,7 +1046,9 @@ class Database:
                 params.append(rule["trade_type"])
             if rule["bargain_only"]:
                 conditions.append("bargain_discount >= ? AND bargain_discount <= ?")
-                params.extend([max(float(rule["min_discount"] or 0), BARGAIN_MIN), BARGAIN_MAX])
+                # Postgres REAL(float4)는 0.15를 0.15000000596으로 돌려주므로 반올림 후 미세 여유를 둔다
+                threshold = max(round(float(rule["min_discount"] or 0), 4), BARGAIN_MIN)
+                params.extend([threshold - 1e-9, BARGAIN_MAX])
             if rule["max_price"]:
                 conditions.append("price_sort_value <= ?")
                 params.append(int(rule["max_price"]))

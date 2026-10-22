@@ -23,9 +23,9 @@ ERROR_REPLY = "명령 처리 중 오류가 났습니다. 잠시 후 다시 시�
 
 def _wrap(handler_name: str):
     async def handler(raw_args: str = ""):
-        import telegram_commands
-
         try:
+            import telegram_commands
+
             return await asyncio.to_thread(getattr(telegram_commands, handler_name), raw_args or "")
         except Exception:
             logger.exception("real-estate /%s 처리 실패", handler_name)

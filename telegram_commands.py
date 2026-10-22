@@ -63,8 +63,8 @@ def handle_deals(raw: str, *, fetch: Callable = fetch_site,
     if not parsed["district"]:
         return _unknown_region_reply(parsed)
     params = {
-        "district": parsed["district"], "trade_type": "매매", "bargain_only": "true",
-        "sort_by": "recent", "per_page": 100,
+        "region": parsed["region"], "district": parsed["district"], "trade_type": "매매",
+        "bargain_only": "true", "sort_by": "recent", "per_page": 100,
     }
     if parsed["max_price"]:
         params["max_price"] = parsed["max_price"]
@@ -106,7 +106,8 @@ def handle_complex(raw: str, *, fetch: Callable = fetch_site) -> str:
     current, week_ago = stats.get("current_count"), stats.get("week_ago_count")
     trend = f"지난주 대비 {current - week_ago:+d}" if current is not None and week_ago is not None else "지난주 데이터 없음"
     ratio = stats.get("price_down_ratio")
-    ratio_text = f"{ratio:.1f}%" if isinstance(ratio, (int, float)) else "—"
+    # /api/complex는 0~1 비율을 준다
+    ratio_text = f"{ratio * 100:.1f}%" if isinstance(ratio, (int, float)) else "—"
     link = f"{SITE_URL}/complex?" + urllib.parse.urlencode({"district": district, "name": building})
     return "\n".join([
         f"{building} ({district})",
