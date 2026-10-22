@@ -1969,6 +1969,28 @@ class Database:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def has_successful_live_crawl_on(self, day: date) -> bool:
+        """해당 날짜(로컬 시각)에 라이브 크롤링이 성공했는지 본다.
+
+        DATE() 대신 [day 00:00, 다음날 00:00) 범위로 비교해 SQLite(ISO 문자열)와
+        Postgres(TIMESTAMP) 모두 같은 날짜 경계를 쓴다.
+        """
+        start = datetime.combine(day, datetime.min.time())
+        end = start + timedelta(days=1)
+        with self.get_connection() as conn:
+            row = conn.execute(
+                """
+                SELECT 1
+                FROM crawl_history
+                WHERE status = 'success'
+                  AND COALESCE(source, 'naver') <> 'demo'
+                  AND crawled_at >= ? AND crawled_at < ?
+                LIMIT 1
+                """,
+                (start.isoformat(), end.isoformat()),
+            ).fetchone()
+        return row is not None
+
     def log_crawl(self, session_id, total_count, urgent_count, status, source):
         with self.get_connection() as conn:
             conn.execute(

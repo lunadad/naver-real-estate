@@ -22,10 +22,11 @@ ts() { date '+%Y-%m-%d %H:%M:%S%z'; }
 
 echo "[$(ts)] launchd wrapper starting (pid=$$)"
 
-# Wait for network connectivity after wake-from-sleep.
+# Wait for network connectivity after wake-from-sleep or a home-network outage.
 # launchd may fire at exactly 09:00 while the NIC is still initialising.
+# Up to ~15 minutes (180 × 5s); later retry slots cover longer outages.
 _wait_for_network() {
-  local max=12 i=1
+  local max=180 i=1
   while [[ $i -le $max ]]; do
     if ping -c 1 -W 2 1.1.1.1 >/dev/null 2>&1; then
       echo "[$(ts)] network ready (attempt ${i}/${max})"
@@ -96,7 +97,7 @@ _wait_for_database_dns() {
     return 0
   fi
 
-  max=12
+  max=90  # ~15 minutes (90 × 10s)
   i=1
   while [[ $i -le $max ]]; do
     if "${PYTHON}" - "${host}" <<'PY' >/dev/null 2>&1

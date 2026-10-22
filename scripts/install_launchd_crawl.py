@@ -64,6 +64,22 @@ def build_parser():
         help="Minute in local time (0-59)",
     )
     parser.add_argument(
+        "--retry-hours",
+        default="",
+        help="Comma-separated extra hours (e.g. 12,15) that retry only if today's crawl has not succeeded.",
+    )
+    parser.add_argument(
+        "--final-hour",
+        type=int,
+        default=None,
+        help="Hour of the last slot; failures from then on send a Telegram alert (default: last slot).",
+    )
+    parser.add_argument(
+        "--label-text",
+        default="주거용",
+        help="Prefix for Telegram alerts (passed to run_remote_crawl.py --label).",
+    )
+    parser.add_argument(
         "--label",
         default=DEFAULT_LABEL,
         help="launchd label",
@@ -105,6 +121,16 @@ def build_parser():
     return parser
 
 
+def schedule_hours(args):
+    hours = [max(0, min(23, args.hour))]
+    for raw in (args.retry_hours or "").split(","):
+        if raw.strip():
+            hour = max(0, min(23, int(raw)))
+            if hour not in hours:
+                hours.append(hour)
+    return hours
+
+
 def make_plist(args):
     run_at_load = args.run_at_load
     if run_at_load is None:
@@ -118,6 +144,8 @@ def make_plist(args):
 
     logs_dir.mkdir(parents=True, exist_ok=True)
 
+    hours = schedule_hours(args)
+    final_hour = args.final_hour if args.final_hour is not None else max(hours)
     plist = {
         "Label": args.label,
         "ProgramArguments": [
@@ -125,6 +153,11 @@ def make_plist(args):
             str(WRAPPER_PATH),
             "--database-url",
             database_url,
+            "--skip-if-succeeded-today",
+            "--final-hour",
+            str(final_hour),
+            "--label",
+            args.label_text,
         ],
         "WorkingDirectory": str(ROOT_DIR),
         "EnvironmentVariables": {
@@ -135,10 +168,9 @@ def make_plist(args):
             "PYTHONUNBUFFERED": "1",
             "CRAWL_PYTHON_BIN": args.python,
         },
-        "StartCalendarInterval": {
-            "Hour": max(0, min(23, args.hour)),
-            "Minute": max(0, min(59, args.minute)),
-        },
+        "StartCalendarInterval": [
+            {"Hour": hour, "Minute": max(0, min(59, args.minute))} for hour in hours
+        ],
         "StandardOutPath": str(logs_dir / "launchd-crawl.out.log"),
         "StandardErrorPath": str(logs_dir / "launchd-crawl.err.log"),
         "RunAtLoad": run_at_load,

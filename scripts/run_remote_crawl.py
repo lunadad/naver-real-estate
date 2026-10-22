@@ -3,18 +3,22 @@ import logging
 import os
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from typing import List, Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 LOGS_DIR = ROOT_DIR / "logs"
 DEFAULT_LOG_PATH = LOGS_DIR / "run_remote_crawl.log"
+DEFAULT_ALERT_STATE_PATH = LOGS_DIR / "crawl_alert_state.json"
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from crawler import NaverRealEstateCrawler
 from database import Database
+from notifier import AlertState, send_telegram
 
 logger = logging.getLogger("run_remote_crawl")
 
@@ -72,7 +76,114 @@ def build_parser():
         default=os.getenv("LOCAL_CRAWL_LOG_PATH", str(DEFAULT_LOG_PATH)),
         help="Local file path for crawl execution logs.",
     )
+    parser.add_argument(
+        "--skip-if-succeeded-today",
+        action="store_true",
+        help="Exit without crawling when today's live crawl already succeeded (retry slots).",
+    )
+    parser.add_argument(
+        "--final-hour",
+        type=int,
+        default=15,
+        help="Hour of the last daily slot; a failure at or after it sends a Telegram alert.",
+    )
+    parser.add_argument("--label", default="주거용", help="Prefix for Telegram alerts.")
+    parser.add_argument(
+        "--alert-state",
+        default=str(DEFAULT_ALERT_STATE_PATH),
+        help="Local JSON file remembering today's failures and unsent alerts.",
+    )
     return parser
+
+
+def decide_alerts(
+    *,
+    label: str,
+    success: bool,
+    now: datetime,
+    final_hour: int,
+    had_earlier_failure: bool,
+    failed_combos: int,
+    total_combos: int,
+    error: Optional[str],
+) -> List[str]:
+    """이번 실행 결과로 보낼 텔레그램 메시지 목록을 정한다. 정상 성공이면 빈 목록."""
+    clock = now.strftime("%H:%M")
+    if not success:
+        if now.hour < final_hour:
+            return []
+        cause = error or "status=failed"
+        if not error and failed_combos:
+            cause += f" (실패 조합 {failed_combos}/{total_combos})"
+        return [
+            f"[{label}] ❌ 오늘 크롤링 최종 실패 ({clock})\n원인: {cause}\n"
+            "이전 정상 데이터가 계속 표시됩니다."
+        ]
+
+    lines = []
+    if had_earlier_failure:
+        lines.append(f"[{label}] ✅ 크롤링 복구 ({clock}) — 앞선 시도 실패 후 성공")
+    if failed_combos:
+        lines.append(f"[{label}] ⚠️ 일부 조합 수집 실패 {failed_combos}/{total_combos} — 저장은 완료")
+    return ["\n".join(lines)] if lines else []
+
+
+def _send_or_keep(state: AlertState, send, messages: List[str]):
+    for text in messages:
+        if not send(text):
+            state.add_pending(text)
+
+
+def run(args, *, now_fn=datetime.now, db_factory=None, crawler_factory=None, send=send_telegram) -> int:
+    """크롤링 1회와 알림 처리. 반환값은 프로세스 종료 코드."""
+    db_factory = db_factory or _connect_with_retry
+    crawler_factory = crawler_factory or NaverRealEstateCrawler
+    state = AlertState(Path(args.alert_state))
+    _send_or_keep(state, send, state.take_pending())
+
+    today = now_fn().date()
+    db = None
+    result = {}
+    error = None
+    try:
+        db = db_factory(args.database_url)
+        if args.skip_if_succeeded_today and db.has_successful_live_crawl_on(today):
+            logger.info("오늘(%s) 크롤링이 이미 성공해 이번 슬롯은 건너뜀", today.isoformat())
+            return 0
+        result = crawler_factory(db).crawl_all()
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
+        logger.exception("Local remote crawl crashed")
+    finally:
+        if db is not None:
+            db.close()
+
+    status = "error" if error else result.get("status", "success")
+    logger.info(
+        "Local remote crawl finished: status=%s source=%s total=%s urgent=%s failed_combos=%s/%s",
+        status,
+        result.get("source"),
+        result.get("total"),
+        result.get("urgent"),
+        result.get("failed_combos", 0),
+        result.get("total_combos", 0),
+    )
+
+    success = status == "success"
+    had_earlier_failure = state.had_failure(today)
+    state.record_attempt(today, success)
+    messages = decide_alerts(
+        label=args.label,
+        success=success,
+        now=now_fn(),
+        final_hour=args.final_hour,
+        had_earlier_failure=had_earlier_failure,
+        failed_combos=int(result.get("failed_combos") or 0),
+        total_combos=int(result.get("total_combos") or 0),
+        error=error,
+    )
+    _send_or_keep(state, send, messages)
+    return 0 if success else 1
 
 
 def _connect_with_retry(database_url: str, max_attempts: int = 5, delay: int = 30) -> "Database":
@@ -112,24 +223,10 @@ def main():
     logger.info("Local remote crawl starting (pid=%s)", os.getpid())
     logger.info("Local crawl log file: %s", Path(args.log_path).expanduser())
 
-    db = _connect_with_retry(database_url)
-    try:
-        crawler = NaverRealEstateCrawler(db)
-        result = crawler.crawl_all()
-    finally:
-        db.close()
-
-    status = result.get("status", "success")
-    logger.info(
-        "Local remote crawl finished: status=%s source=%s total=%s urgent=%s",
-        status,
-        result.get("source"),
-        result.get("total"),
-        result.get("urgent"),
-    )
-
-    if status != "success":
-        raise SystemExit(1)
+    args.database_url = database_url
+    exit_code = run(args)
+    if exit_code:
+        raise SystemExit(exit_code)
 
 
 if __name__ == "__main__":
