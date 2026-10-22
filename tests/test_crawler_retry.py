@@ -179,6 +179,36 @@ class CrawlerRetryTest(unittest.TestCase):
         self.assertEqual(delays, [])
         self.assertEqual(len(listings), 1)
 
+    def test_aborts_when_failed_combos_exceed_ratio_of_planned(self):
+        responses = {
+            (code, ptype, ttype, 1): fail(401)
+            for code in ("111", "222") for ptype in ("OBYG", "SGJT", "TJ") for ttype in ("A1", "B1", "B2")
+        }
+        crawler, _, _, page = self._crawl(responses, regions=TWO_DISTRICTS)
+        total = 2 * COMBOS_PER_DISTRICT
+        # 18 × 0.2 = 3.6 → 4번째 실패에서 중단, 나머지는 시도하지 않음
+        self.assertEqual(len(page.evaluate_calls), 4)
+        self.assertEqual(crawler.last_crawl_stats, {"failed_combos": total, "total_combos": total})
+
+    def test_unattempted_combos_count_as_failed_when_crawl_crashes(self):
+        real_info = crawler_module.logger.info
+
+        def crash_on_district_log(msg, *args, **kwargs):
+            if str(msg).startswith("[1/"):
+                raise RuntimeError("browser crashed")
+            return real_info(msg, *args, **kwargs)
+
+        with mock.patch.object(crawler_module.logger, "info", side_effect=crash_on_district_log):
+            crawler, listings, _, _ = self._crawl(
+                {("111", "OBYG", "A1", 1): ok([_article(1)])}, regions=TWO_DISTRICTS
+            )
+        total = 2 * COMBOS_PER_DISTRICT
+        self.assertEqual(len(listings), 1)
+        self.assertEqual(
+            crawler.last_crawl_stats,
+            {"failed_combos": COMBOS_PER_DISTRICT, "total_combos": total},
+        )
+
     def test_token_bootstrap_failure_reports_zero_combos(self):
         crawler = crawler_module.NaverRealEstateCrawler(db=mock.Mock())
         page = _FakePage({})

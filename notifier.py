@@ -99,23 +99,38 @@ class AlertState:
             except (OSError, ValueError, AttributeError):
                 logger.warning("알림 상태 파일이 손상되어 새로 시작: %s", self.path)
 
+    def _prune(self):
+        parsed = {}
+        for day, value in self._data["days"].items():
+            try:
+                parsed[day] = (date.fromisoformat(day), value)
+            except (TypeError, ValueError):
+                continue
+        if parsed:
+            cutoff = max(d for d, _ in parsed.values()) - timedelta(days=STATE_RETENTION_DAYS)
+            parsed = {day: item for day, item in parsed.items() if item[0] >= cutoff}
+        self._data["days"] = {day: value for day, (_, value) in parsed.items()}
+
     def _save(self):
-        days = self._data["days"]
-        if days:
-            newest = max(date.fromisoformat(day) for day in days)
-            cutoff = newest - timedelta(days=STATE_RETENTION_DAYS)
-            self._data["days"] = {
-                day: value for day, value in days.items() if date.fromisoformat(day) >= cutoff
-            }
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self._data, ensure_ascii=False, indent=2), encoding="utf-8")
+        """임시 파일에 쓴 뒤 교체한다. 저장 실패는 크롤링을 막지 않도록 경고만 남긴다."""
+        self._prune()
+        tmp_path = self.path.with_name(self.path.name + ".tmp")
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            tmp_path.write_text(json.dumps(self._data, ensure_ascii=False, indent=2), encoding="utf-8")
+            os.replace(tmp_path, self.path)
+        except OSError as exc:
+            logger.warning("알림 상태 파일 저장 실패 (%s): %s", self.path, exc)
 
     def record_attempt(self, day: date, success: bool):
-        entry = self._data["days"].setdefault(day.isoformat(), {"attempts": 0, "failures": 0})
-        entry["attempts"] += 1
-        if not success:
-            entry["failures"] += 1
+        entry = self._data["days"].setdefault(day.isoformat(), {})
+        entry["attempts"] = entry.get("attempts", 0) + 1
+        key = "successes" if success else "failures"
+        entry[key] = entry.get(key, 0) + 1
         self._save()
+
+    def had_success(self, day: date) -> bool:
+        return bool((self._data["days"].get(day.isoformat()) or {}).get("successes"))
 
     def had_failure(self, day: date) -> bool:
         return bool((self._data["days"].get(day.isoformat()) or {}).get("failures"))

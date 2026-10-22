@@ -57,6 +57,10 @@ class PageFetchError(Exception):
         self.status = status
 
 
+class _TooManyFailedCombos(Exception):
+    """실패 조합이 허용 비율을 넘어 남은 조합을 시도할 필요가 없음."""
+
+
 class NaverRealEstateCrawler:
     REGIONS_FILE = Path(__file__).resolve().parent / "data" / "regions.json"
     API_BASE = "https://new.land.naver.com/api"
@@ -586,6 +590,7 @@ class NaverRealEstateCrawler:
             return []
 
         listings = []
+        planned_combos = 0
         seen_articles = set()
         prop_codes = ["OBYG", "SGJT", "TJ"]
         trade_codes = ["A1", "B1", "B2"]
@@ -655,6 +660,8 @@ class NaverRealEstateCrawler:
 
                 # ── 지역별 × 유형별 급매 크롤링 ────────────
                 total_districts = sum(len(r["districts"]) for r in self.REGIONS.values())
+                planned_combos = total_districts * len(prop_codes) * len(trade_codes)
+                max_failed = self.MAX_FAILED_COMBO_RATIO * planned_combos
                 done = 0
 
                 for region_name, region_info in self.REGIONS.items():
@@ -728,6 +735,8 @@ class NaverRealEstateCrawler:
                                     logger.warning(f"API 오류 ({district_name}/{ptype_code}/{ttype_code}): {e}")
                                 if combo_failed:
                                     self.last_crawl_stats["failed_combos"] += 1
+                                    if self.last_crawl_stats["failed_combos"] > max_failed:
+                                        raise _TooManyFailedCombos()
 
                         logger.info(
                             f"[{done}/{total_districts}] {region_name} {district_name}: "
@@ -735,8 +744,22 @@ class NaverRealEstateCrawler:
                         )
 
                 browser.close()
+        except _TooManyFailedCombos:
+            logger.error(
+                "실패한 조합이 %.0f%%를 넘어 크롤링을 조기 중단 (failed=%s, planned=%s)",
+                self.MAX_FAILED_COMBO_RATIO * 100,
+                self.last_crawl_stats["failed_combos"],
+                planned_combos,
+            )
         except Exception as e:
             logger.error(f"Playwright 크롤링 실패: {e}")
+        finally:
+            # 중단·예외로 시도하지 못한 조합도 실패로 세어, 일부 지역만 수집된 결과가
+            # 성공으로 저장되지 않게 한다.
+            if planned_combos:
+                attempted = self.last_crawl_stats["total_combos"]
+                self.last_crawl_stats["failed_combos"] += max(0, planned_combos - attempted)
+                self.last_crawl_stats["total_combos"] = planned_combos
 
         logger.info(f"급매 크롤링 완료: {len(listings)}개 급매 수집")
         return listings

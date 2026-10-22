@@ -109,6 +109,36 @@ class AlertStateTest(unittest.TestCase):
         state.record_attempt(date(2026, 10, 22), success=False)
         self.assertTrue(AlertState(self.path).had_failure(date(2026, 10, 22)))
 
+    def test_had_success_is_recorded(self):
+        today = date(2026, 10, 22)
+        state = AlertState(self.path)
+        state.record_attempt(today, success=False)
+        self.assertFalse(AlertState(self.path).had_success(today))
+        state.record_attempt(today, success=True)
+        self.assertTrue(AlertState(self.path).had_success(today))
+
+    def test_unwritable_state_never_raises(self):
+        self.path.parent.mkdir(parents=True)
+        self.path.parent.chmod(0o500)
+        self.addCleanup(self.path.parent.chmod, 0o700)
+        state = AlertState(self.path)
+        with self.assertLogs("notifier", level="WARNING"):
+            state.record_attempt(date(2026, 10, 22), success=False)
+            state.add_pending("x")
+            self.assertEqual(state.take_pending(), ["x"])
+        self.assertTrue(state.had_failure(date(2026, 10, 22)))
+
+    def test_bad_day_keys_are_ignored_when_pruning(self):
+        self.path.parent.mkdir(parents=True)
+        self.path.write_text('{"days": {"garbage": {"failures": 1}}, "pending": []}')
+        state = AlertState(self.path)
+        state.record_attempt(date(2026, 10, 22), success=True)
+        self.assertTrue(AlertState(self.path).had_success(date(2026, 10, 22)))
+
+    def test_save_is_atomic_and_leaves_no_temp_file(self):
+        AlertState(self.path).record_attempt(date(2026, 10, 22), success=True)
+        self.assertEqual([p.name for p in self.path.parent.iterdir()], [self.path.name])
+
     def test_alert_state_prunes_old_days(self):
         today = date(2026, 10, 22)
         state = AlertState(self.path)
