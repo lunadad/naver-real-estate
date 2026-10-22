@@ -110,7 +110,23 @@
         <div class="alert-panel-inner">
           <p class="alert-helper">상단 검색창과 현재 필터 조건을 저장하고, 새 급매가 들어오면 브라우저 알림을 보냅니다.</p>
           <div id="notification-status" class="alert-status">브라우저 알림 상태 확인 중...</div>
-          <input id="alert-keyword" class="alert-input" type="text" placeholder="아파트명 또는 지역명 직접 입력" />
+          <input id="alert-keyword" class="alert-input" type="text" placeholder="아파트명 또는 지역명 직접 입력" aria-label="알림 키워드" />
+          <div class="alert-bargain-options">
+            <label class="alert-check"><input id="alert-bargain-only" type="checkbox" /> 진짜 급매만 (단지 중앙값보다 싼 매매)</label>
+            <div class="alert-bargain-row">
+              <label class="alert-field" for="alert-min-discount">최소 할인율</label>
+              <select id="alert-min-discount" class="alert-input">
+                <option value="">10%</option>
+                <option value="0.15">15%</option>
+                <option value="0.2">20%</option>
+                <option value="0.3">30%</option>
+              </select>
+            </div>
+            <div class="alert-bargain-row">
+              <label class="alert-field" for="alert-max-price">매매가 상한</label>
+              <input id="alert-max-price" class="alert-input" type="text" inputmode="text" placeholder="예: 20억, 15억5천" />
+            </div>
+          </div>
           <div id="alert-current-filters" class="alert-current-filters"></div>
           <div class="alert-actions">
             <button id="btn-alert-enable" class="alert-btn secondary">알림 권한 요청</button>

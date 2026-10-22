@@ -1329,16 +1329,40 @@ function updateNotificationStatus() {
   if (cls) el.classList.add(cls);
 }
 
+// "20억", "15억5천", "15억 5,000", "9000" → 만원 (서버 deal_query.parse_price와 같은 규칙)
+function parsePriceManwon(text) {
+  const raw = String(text || '').replace(/[\s,]/g, '').replace('만원', '').replace('만', '');
+  if (!raw) return null;
+  const m = raw.match(/^(?:(\d+(?:\.\d+)?)억)?(?:(\d+)천)?(\d+)?$/);
+  if (!m || !(m[1] || m[2] || m[3])) return null;
+  return Math.round((m[1] ? parseFloat(m[1]) * 10000 : 0) + (m[2] ? parseInt(m[2], 10) * 1000 : 0) + (m[3] ? parseInt(m[3], 10) : 0));
+}
+
+function formatManwon(value) {
+  const eok = Math.floor(value / 10000);
+  const rest = value % 10000;
+  if (!eok) return `${rest.toLocaleString('ko-KR')}만`;
+  return `${eok}억${rest ? ' ' + rest.toLocaleString('ko-KR') : ''}`;
+}
+
 function buildAlertDraft() {
   const keywordInput = document.getElementById('alert-keyword');
   const keyword = keywordInput?.value.trim() || state.filters.search;
   const propertyType = state.filters.property_type === '__OTHER__' ? '' : state.filters.property_type;
+  const bargainOnly = Boolean(document.getElementById('alert-bargain-only')?.checked || state.filters.bargain_only);
+  const minDiscount = document.getElementById('alert-min-discount')?.value || '';
+  const maxPriceText = document.getElementById('alert-max-price')?.value.trim() || '';
+  const maxPrice = parsePriceManwon(maxPriceText);
   return {
     client_id: state.clientId,
     keyword,
     district: state.filters.district,
     property_type: propertyType,
     trade_type: state.filters.trade_type,
+    bargain_only: bargainOnly,
+    min_discount: bargainOnly && minDiscount ? Number(minDiscount) : null,
+    max_price: maxPrice,
+    max_price_invalid: Boolean(maxPriceText) && maxPrice == null,
   };
 }
 
@@ -1352,6 +1376,8 @@ function refreshAlertDraftSummary() {
   if (draft.district) parts.push(`지역: ${draft.district}`);
   if (draft.property_type) parts.push(`유형: ${draft.property_type}`);
   if (draft.trade_type) parts.push(`거래: ${draft.trade_type}`);
+  if (draft.bargain_only) parts.push(`진짜 급매 ${Math.round((draft.min_discount || 0.1) * 100)}%↓`);
+  if (draft.max_price) parts.push(`${formatManwon(draft.max_price)} 이하`);
   const summary = parts.length
     ? `저장될 조건: ${parts.join(' · ')}`
     : '검색어나 지역/유형/거래 필터를 먼저 선택하세요.';
@@ -1380,6 +1406,8 @@ function renderAlertRules() {
       rule.trade_type ? `거래 ${rule.trade_type}` : '',
       rule.building_name ? `단지 ${rule.building_name}` : '',
       Number(rule.min_daily_change) > 0 ? `하루 ±${rule.min_daily_change}건` : '',
+      Number(rule.bargain_only) ? `진짜 급매 ${Math.round((Number(rule.min_discount) || 0.1) * 100)}%↓` : '',
+      Number(rule.max_price) > 0 ? `${formatManwon(Number(rule.max_price))} 이하` : '',
     ].filter(Boolean).join(' · ');
 
     return `
@@ -1511,7 +1539,12 @@ async function ensureNotificationsReady(interactive = false) {
 
 async function saveAlertRule() {
   const draft = buildAlertDraft();
-  if (!draft.keyword && !draft.district && !draft.property_type && !draft.trade_type) {
+  if (draft.max_price_invalid) {
+    showToast('매매가 상한은 "20억", "15억5천"처럼 입력하세요.', 'error');
+    return;
+  }
+  delete draft.max_price_invalid;
+  if (!draft.keyword && !draft.district && !draft.property_type && !draft.trade_type && !draft.bargain_only && !draft.max_price) {
     showToast('검색어나 필터를 먼저 선택하세요.', 'error');
     return;
   }
@@ -2032,6 +2065,10 @@ function wireEvents() {
     }
   });
   document.getElementById('alert-keyword').addEventListener('input', refreshAlertDraftSummary);
+  ['alert-bargain-only', 'alert-min-discount', 'alert-max-price'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(id === 'alert-max-price' ? 'input' : 'change', refreshAlertDraftSummary);
+  });
   document.getElementById('alert-rules-list').addEventListener('click', async (event) => {
     const button = event.target.closest('.alert-rule-remove');
     if (!button) return;
