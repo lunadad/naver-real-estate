@@ -21,6 +21,10 @@ except ImportError:  # pragma: no cover - optional for sqlite-only use
 
 logger = logging.getLogger(__name__)
 
+# 단지별 일일 매물 수 보관 기간. 화면은 최대 30일만 보므로 90일이면 충분하고,
+# 180일이면 이 표만 약 250MB까지 커져 DB 무료 한도(0.5GB)에 부담이 된다.
+BUILDING_STATS_RETENTION_DAYS = 90
+
 from insights import tracking as tracking_store
 from bargain import BARGAIN_MAX, BARGAIN_MIN, GENERIC_BUILDING_NAMES, compute_bargain_scores, is_bargain
 from deal_query import format_manwon
@@ -1517,7 +1521,7 @@ class Database:
                     building_payload,
                 )
 
-            building_stats_cutoff = (datetime.now() - timedelta(days=180)).isoformat()
+            building_stats_cutoff = (datetime.now() - timedelta(days=BUILDING_STATS_RETENTION_DAYS)).isoformat()
             conn.execute(
                 "DELETE FROM crawl_building_stats WHERE created_at < ?",
                 (building_stats_cutoff,),

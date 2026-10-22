@@ -205,17 +205,19 @@ class BuildingSnapshotInsertTest(unittest.TestCase):
         self.assertEqual(len(rows), 1)  # 중복 행 없이 하나로 유지
         self.assertEqual(rows[0]["total_count"], 3)  # 최신 값으로 갱신
 
-    def test_stats_older_than_180_days_are_pruned_on_next_insert(self):
-        old_date = (datetime.now() - timedelta(days=200)).isoformat()
+    def test_stats_older_than_90_days_are_pruned_on_next_insert(self):
+        # 저장 용량 관리: 화면은 최대 30일만 보므로 90일까지만 보관한다
         with self.db.get_connection() as conn:
-            conn.execute(
-                """
-                INSERT INTO crawl_building_stats
-                (session_id, region, district, building_name, total_count, price_down_count, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                ("old-session", "서울특별시", "서초구", "오래된단지", 3, 0, old_date),
-            )
+            for session, name, days in (("old-session", "오래된단지", 100), ("recent-session", "80일전단지", 80)):
+                conn.execute(
+                    """
+                    INSERT INTO crawl_building_stats
+                    (session_id, region, district, building_name, total_count, price_down_count, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (session, "서울특별시", "서초구", name, 3, 0,
+                     (datetime.now() - timedelta(days=days)).isoformat()),
+                )
 
         listings = [
             make_listing("A1", building_name="래미안원베일리"),
@@ -226,6 +228,7 @@ class BuildingSnapshotInsertTest(unittest.TestCase):
         rows = self._building_stats_rows()
         names = [row["building_name"] for row in rows]
         self.assertNotIn("오래된단지", names)
+        self.assertIn("80일전단지", names)
         self.assertIn("래미안원베일리", names)
 
 
