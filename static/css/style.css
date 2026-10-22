@@ -1083,17 +1083,26 @@ a { color: var(--accent); text-decoration: none; }
   justify-content: space-between;
   gap: 8px;
 }
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+/* 매물 추이·가격 이력 버튼은 같은 모양으로 오른쪽에 나란히 둔다 */
 .card-trend-btn {
   flex-shrink: 0;
-  background: none;
-  font-size: 13px;
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 11px;
   line-height: 1;
-  padding: 4px 6px;
+  padding: 5px 8px;
   border-radius: var(--radius);
-  color: var(--text3);
+  border: 1px solid var(--border);
   transition: all var(--transition);
 }
-.card-trend-btn:hover { background: var(--bg3); color: var(--text); }
+.card-trend-btn:hover { color: var(--text); border-color: var(--accent); }
+.card-trend-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .building-trend-loading,
 .building-trend-empty {

@@ -1079,8 +1079,10 @@ function renderListings(data) {
       </div>
       <div class="card-name-row">
         <div class="card-name" title="${escHtml(l.building_name)}">${l.district && l.building_name ? `<a class="card-name-link" href="${complexPageUrl(l.district, l.building_name)}">${escHtml(l.building_name)}</a>` : escHtml(l.building_name)}</div>
-        ${l.district && l.building_name ? `<button type="button" class="card-trend-btn" data-district="${escHtml(l.district)}" data-building-name="${escHtml(l.building_name)}" title="일별 매물수 추이" aria-label="일별 매물수 추이 보기">📈</button>` : ''}
-        ${l.article_no ? `<button type="button" class="card-history-btn" data-article-no="${escHtml(l.article_no)}" aria-haspopup="dialog">가격 이력</button>` : ''}
+        <div class="card-actions">
+          ${l.district && l.building_name ? `<button type="button" class="card-trend-btn" data-district="${escHtml(l.district)}" data-building-name="${escHtml(l.building_name)}" title="일별 매물수 추이" aria-label="일별 매물수 추이 보기">매물 추이</button>` : ''}
+          ${l.article_no ? `<button type="button" class="card-history-btn" data-article-no="${escHtml(l.article_no)}" aria-haspopup="dialog">가격 이력</button>` : ''}
+        </div>
       </div>
       <div class="card-location-line">${escHtml(compactRegion)}</div>
       <div class="card-meta">
