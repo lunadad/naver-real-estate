@@ -216,7 +216,12 @@ class StatsRowsCharacterizationTest(GoldenMixin, unittest.TestCase):
 
     def test_region_and_building_stats_rows(self):
         rows = {}
-        for label, listings in (("edge", STATS_EDGE_LISTINGS), ("main", LISTINGS), ("empty", [])):
+        for label, listings in (
+            ("edge", STATS_EDGE_LISTINGS),
+            ("edge_without_int_tags", STATS_EDGE_LISTINGS[:-1]),
+            ("main", LISTINGS),
+            ("empty", []),
+        ):
             for builder in ("_build_region_stats_rows", "_build_building_stats_rows"):
                 try:
                     result = getattr(self.db, builder)("sess", listings, "T")

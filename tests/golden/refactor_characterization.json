@@ -5514,6 +5514,32 @@
     "edge:_build_region_stats_rows": {
       "raised": "TypeError"
     },
+    "edge_without_int_tags:_build_building_stats_rows": [
+      {
+        "building_name": "힐스",
+        "district": "수원시",
+        "price_down_count": 1,
+        "region": "",
+        "session_id": "sess",
+        "total_count": 2
+      }
+    ],
+    "edge_without_int_tags:_build_region_stats_rows": [
+      {
+        "district": "강남구",
+        "price_down_count": 4,
+        "region": "서울특별시",
+        "session_id": "sess",
+        "total_count": 8
+      },
+      {
+        "district": "수원시",
+        "price_down_count": 0,
+        "region": "경기도",
+        "session_id": "sess",
+        "total_count": 4
+      }
+    ],
     "empty:_build_building_stats_rows": [],
     "empty:_build_region_stats_rows": [],
     "main:_build_building_stats_rows": [
