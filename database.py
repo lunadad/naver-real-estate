@@ -908,49 +908,29 @@ class Database:
             min_daily_change,
         )
 
+        insert_sql = """
+            INSERT INTO alert_rules
+            (client_id, name, keyword, district, property_type, trade_type,
+             building_name, min_daily_change, enabled, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+        """
         with self.get_connection() as conn:
+            params = (
+                client_id,
+                name,
+                keyword,
+                district,
+                property_type,
+                trade_type,
+                building_name,
+                min_daily_change,
+                datetime.now().isoformat(),
+            )
             if self.driver == "postgres":
-                cursor = conn.execute(
-                    """
-                    INSERT INTO alert_rules
-                    (client_id, name, keyword, district, property_type, trade_type,
-                     building_name, min_daily_change, enabled, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-                    RETURNING id
-                    """,
-                    (
-                        client_id,
-                        name,
-                        keyword,
-                        district,
-                        property_type,
-                        trade_type,
-                        building_name,
-                        min_daily_change,
-                        datetime.now().isoformat(),
-                    ),
-                )
+                cursor = conn.execute(insert_sql + "RETURNING id", params)
                 rule_id = cursor.fetchone()["id"]
             else:
-                cursor = conn.execute(
-                    """
-                    INSERT INTO alert_rules
-                    (client_id, name, keyword, district, property_type, trade_type,
-                     building_name, min_daily_change, enabled, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-                    """,
-                    (
-                        client_id,
-                        name,
-                        keyword,
-                        district,
-                        property_type,
-                        trade_type,
-                        building_name,
-                        min_daily_change,
-                        datetime.now().isoformat(),
-                    ),
-                )
+                cursor = conn.execute(insert_sql, params)
                 rule_id = cursor.lastrowid
 
         return self.get_alert_rule(client_id, rule_id)
@@ -1944,20 +1924,24 @@ class Database:
             for (district, building_name), change in changes.items()
         ]
 
+    @staticmethod
+    def _fetch_last_live_crawl(conn: ConnectionWrapper):
+        return conn.execute(
+            """
+            SELECT *
+            FROM crawl_history
+            WHERE status = 'success'
+              AND COALESCE(source, 'naver') <> 'demo'
+            ORDER BY crawled_at DESC
+            LIMIT 1
+            """
+        ).fetchone()
+
     def get_last_crawl(self, prefer_visible: bool = False):
         with self.get_connection() as conn:
             row = None
             if prefer_visible:
-                row = conn.execute(
-                    """
-                    SELECT *
-                    FROM crawl_history
-                    WHERE status = 'success'
-                      AND COALESCE(source, 'naver') <> 'demo'
-                    ORDER BY crawled_at DESC
-                    LIMIT 1
-                    """
-                ).fetchone()
+                row = self._fetch_last_live_crawl(conn)
             if not row:
                 row = conn.execute(
                     "SELECT * FROM crawl_history ORDER BY crawled_at DESC LIMIT 1"
@@ -1966,16 +1950,7 @@ class Database:
 
     def get_last_successful_live_crawl(self):
         with self.get_connection() as conn:
-            row = conn.execute(
-                """
-                SELECT *
-                FROM crawl_history
-                WHERE status = 'success'
-                  AND COALESCE(source, 'naver') <> 'demo'
-                ORDER BY crawled_at DESC
-                LIMIT 1
-                """
-            ).fetchone()
+            row = self._fetch_last_live_crawl(conn)
         return dict(row) if row else None
 
     def get_recent_successful_crawls(self, limit: int = 90):
