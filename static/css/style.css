@@ -2594,9 +2594,43 @@ body.sidebar-overlay-open {
     right: 12px;
     bottom: calc(var(--status-h) + 10px);
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
     z-index: 1180;
+  }
+
+  #mobile-more-menu {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    min-width: 180px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+    background: var(--bg2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  }
+
+  .mobile-more-item {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 12px;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    text-decoration: none;
+  }
+
+  .mobile-more-item:active {
+    background: var(--bg3);
   }
 
   .quickbar-btn {

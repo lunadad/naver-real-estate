@@ -1910,6 +1910,30 @@ function wireEvents() {
       showToast('알림 등록 실패: ' + e.message, 'error');
     }
   });
+  // 모바일에선 헤더 오른쪽(히트맵·사라진 매물·테마)이 숨겨지므로 하단 '더보기'로 연다
+  const moreBtn = document.getElementById('btn-mobile-more-fab');
+  const moreMenu = document.getElementById('mobile-more-menu');
+  const setMoreMenu = open => {
+    moreMenu.classList.toggle('hidden', !open);
+    moreBtn.setAttribute('aria-expanded', String(open));
+  };
+  moreBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    setMoreMenu(moreMenu.classList.contains('hidden'));
+  });
+  document.getElementById('btn-mobile-theme').addEventListener('click', () => {
+    applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+    setMoreMenu(false);
+  });
+  document.addEventListener('click', e => {
+    if (!moreMenu.classList.contains('hidden') && !moreMenu.contains(e.target)) setMoreMenu(false);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !moreMenu.classList.contains('hidden')) {
+      setMoreMenu(false);
+      moreBtn.focus();
+    }
+  });
   document.getElementById('btn-mobile-alert-fab').addEventListener('click', async () => {
     try {
       await saveAlertRule();

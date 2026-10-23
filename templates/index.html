@@ -338,7 +338,13 @@
 <div id="mobile-quickbar">
   <button id="btn-mobile-filter-fab" class="quickbar-btn">필터</button>
   <button id="btn-mobile-map-fab" class="quickbar-btn">지도</button>
+  <button id="btn-mobile-more-fab" class="quickbar-btn" aria-controls="mobile-more-menu" aria-expanded="false">더보기</button>
   <button id="btn-mobile-alert-fab" class="quickbar-btn primary">알림 등록</button>
+  <div id="mobile-more-menu" class="hidden" role="menu" aria-label="더보기">
+    <a class="mobile-more-item" role="menuitem" href="/heatmap">지역 히트맵</a>
+    <a class="mobile-more-item" role="menuitem" href="/disappeared">사라진 매물</a>
+    <button id="btn-mobile-theme" class="mobile-more-item" role="menuitem" type="button">다크/라이트 전환</button>
+  </div>
 </div>
 
 <!-- ══════════════════════════════ STATUS BAR ═══════════════════════════════ -->
