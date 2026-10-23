@@ -8,21 +8,6 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link rel="dns-prefetch" href="https://dapi.kakao.com" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-  <script>
-    // 그리기 전에 레이아웃을 정해 깜빡임을 막는다. ?layout=classic|tabs 로 바꾸면 이 브라우저에 기억된다.
-    var DEFAULT_LAYOUT = "{{ default_layout }}";
-    (function () {
-      var layout = DEFAULT_LAYOUT;
-      try {
-        var q = new URLSearchParams(location.search).get('layout');
-        if (q === 'tabs' || q === 'classic') localStorage.setItem('layout', q);
-        var saved = localStorage.getItem('layout');
-        if (saved === 'tabs' || saved === 'classic') layout = saved;
-      } catch (e) {}
-      document.documentElement.setAttribute('data-layout', layout);
-      document.documentElement.setAttribute('data-tab', 'list');
-    })();
-  </script>
   <link rel="stylesheet" href="{{ asset_url('css/style.css') }}" />
   {% if kakao_map_app_key %}
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_map_app_key }}&autoload=false&libraries=clusterer" defer></script>
@@ -79,7 +64,6 @@
   <div class="header-right">
     <a class="nav-link-pill" href="/heatmap">지역 히트맵</a>
     <a class="nav-link-pill" href="/disappeared">사라진 매물</a>
-    <button id="btn-layout-tabs" class="nav-link-pill layout-switch-btn" type="button" title="탭으로 나눈 화면으로 바꿉니다">탭 화면</button>
     <div class="divider-v"></div>
     <button id="theme-btn" title="다크/라이트 전환">
       <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -95,17 +79,6 @@
     </button>
   </div>
 </header>
-
-<!-- 탭형 레이아웃 전용 (데스크톱). 기존 화면에서는 CSS로 숨겨진다 -->
-<nav id="tab-nav" aria-label="화면 전환">
-  <div class="tab-nav-tabs" role="tablist">
-    <button type="button" class="tab-nav-btn active" role="tab" data-tab="list" aria-selected="true">급매 목록</button>
-    <button type="button" class="tab-nav-btn" role="tab" data-tab="trend" aria-selected="false">지역 트렌드</button>
-    <button type="button" class="tab-nav-btn" role="tab" data-tab="map" aria-selected="false">지도</button>
-    <button type="button" class="tab-nav-btn" role="tab" data-tab="alert" aria-selected="false">알림 <span id="tab-alert-count" class="tab-nav-count">0</span></button>
-  </div>
-  <button type="button" id="btn-layout-classic" class="tab-nav-restore" title="사이드바가 있는 기존 화면으로 돌아갑니다">기존 화면으로</button>
-</nav>
 
 <!-- ════════════════════════════ MAIN LAYOUT ════════════════════════════════ -->
 <div id="app-body">
@@ -336,9 +309,6 @@
         <span class="stat-lbl">진짜 급매</span>
       </div>
     </div>
-
-    <!-- 탭형 레이아웃에서 태그 필터를 목록 위로 옮겨 오는 자리 -->
-    <div id="tabs-tag-slot"></div>
 
     <div id="listings-toolbar">
       <div class="listings-toolbar-copy">

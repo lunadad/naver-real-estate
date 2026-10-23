@@ -150,8 +150,6 @@ function updateHeroAlertCount() {
   const el = document.getElementById('hero-alert-rule-count');
   if (!el) return;
   el.textContent = `${fmtNum(state.alertRules.length || 0)}개`;
-  const tabCount = document.getElementById('tab-alert-count');
-  if (tabCount) tabCount.textContent = fmtNum(state.alertRules.length || 0);
 }
 
 function updateHeroFocusRegion() {
@@ -1765,59 +1763,6 @@ function toggleSidebar() {
   if (state.map) setTimeout(() => state.map.relayout(), 250);
 }
 
-// ── Layout (탭형 / 기존 사이드바형) ───────────────────────────────────────────
-// 레이아웃은 <head>의 인라인 스크립트가 html[data-layout]에 미리 정해 둔다.
-const TAB_IDS = ['list', 'trend', 'map', 'alert'];
-
-function isTabsLayout() {
-  return document.documentElement.dataset.layout === 'tabs' && !isMobileViewport();
-}
-
-function setLayout(layout) {
-  try {
-    localStorage.setItem('layout', layout);
-  } catch (e) {
-    // 저장이 막힌 브라우저에서는 주소로 넘겨 이번 방문에만 적용한다
-  }
-  const url = new URL(location.href);
-  url.searchParams.set('layout', layout);
-  location.replace(url.toString());
-}
-
-function setTab(tab) {
-  if (!TAB_IDS.includes(tab)) tab = 'list';
-  document.documentElement.dataset.tab = tab;
-  document.querySelectorAll('.tab-nav-btn').forEach(btn => {
-    const on = btn.dataset.tab === tab;
-    btn.classList.toggle('active', on);
-    btn.setAttribute('aria-selected', String(on));
-  });
-  document.getElementById('main-content')?.scrollTo({ top: 0 });
-  document.getElementById('sidebar')?.scrollTo({ top: 0 });
-  // 숨겨져 있던 지도는 크기를 다시 계산해야 제대로 그려진다
-  if (tab === 'map' && state.map) setTimeout(() => state.map.relayout(), 50);
-}
-
-// 헤더는 폭에 따라 줄바꿈되므로 실제 높이를 재서 탭 바 위치에 쓴다
-function syncHeaderHeight() {
-  const header = document.getElementById('app-header');
-  if (!header) return;
-  document.documentElement.style.setProperty('--app-header-real', `${header.offsetHeight}px`);
-}
-
-// 탭형(데스크톱)에서는 태그 필터를 목록 위로, 그 밖에는 사이드바 알림 구독 아래로
-function placeTagFilter() {
-  const section = document.getElementById('tag-filter-section');
-  const slot = document.getElementById('tabs-tag-slot');
-  const alertSection = document.querySelector('#sidebar .alert-section');
-  if (!section || !slot || !alertSection) return;
-  if (isTabsLayout()) {
-    if (section.parentElement !== slot) slot.appendChild(section);
-  } else if (section.parentElement === slot) {
-    alertSection.after(section);
-  }
-}
-
 // ── Mobile notification guide modal ──────────────────────────────────────────
 function showMobileNotifGuide() {
   // Remove existing guide if any
@@ -1921,14 +1866,6 @@ function wireEvents() {
   document.getElementById('theme-btn').addEventListener('click', () => {
     applyTheme(state.theme === 'dark' ? 'light' : 'dark');
   });
-
-  // Layout switch & tabs
-  document.querySelectorAll('.tab-nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => setTab(btn.dataset.tab));
-  });
-  document.getElementById('btn-layout-classic').addEventListener('click', () => setLayout('classic'));
-  document.getElementById('btn-layout-tabs').addEventListener('click', () => setLayout('tabs'));
-  window.matchMedia('(max-width: 900px)').addEventListener('change', placeTagFilter);
 
   // Sidebar toggle
   document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
@@ -2134,10 +2071,7 @@ function wireEvents() {
   ['list-increasing', 'list-decreasing', 'list-price-down', 'list-region-stats'].forEach(id => {
     document.getElementById(id)?.addEventListener('click', e => {
       const item = e.target.closest('[data-district]');
-      if (!item) return;
-      selectDistrict(item.dataset.district);
-      // 탭형에서는 트렌드 탭에서 지역을 고르면 그 지역 목록을 바로 보여 준다
-      if (isTabsLayout()) setTab('list');
+      if (item) selectDistrict(item.dataset.district);
     });
   });
 
@@ -2274,11 +2208,6 @@ async function init() {
   }
 
   wireEvents();
-  placeTagFilter();
-  syncHeaderHeight();
-  if ('ResizeObserver' in window) {
-    new ResizeObserver(syncHeaderHeight).observe(document.getElementById('app-header'));
-  }
   presetDistrictFromQuery();
   initMap();
   applyMapVisibility();
