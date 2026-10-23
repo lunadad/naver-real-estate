@@ -680,9 +680,22 @@ app.config["GET_DB"] = lambda: db  # 블루프린트가 (테스트에서 교체�
 app.register_blueprint(tracking_bp)
 
 
+LAYOUTS = ("tabs", "classic")
+
+
+def default_layout() -> str:
+    # DEFAULT_LAYOUT=classic 이면 모든 방문자의 기본 화면을 기존(사이드바형)으로 되돌린다.
+    value = os.environ.get("DEFAULT_LAYOUT", "").strip().lower()
+    return value if value in LAYOUTS else "tabs"
+
+
 @app.route("/")
 def index():
-    return render_template("index.html", kakao_map_app_key=KAKAO_MAP_APP_KEY)
+    return render_template(
+        "index.html",
+        kakao_map_app_key=KAKAO_MAP_APP_KEY,
+        default_layout=default_layout(),
+    )
 
 
 @app.route("/manifest.json")
