@@ -675,9 +675,11 @@ def dispatch_push_alerts(limit: int = 5):
 
 # ── Routes ───────────────────────────────────────────────────────────────────
 from views.tracking import bp as tracking_bp  # noqa: E402
+from views.watchlist import bp as watchlist_bp  # noqa: E402
 
 app.config["GET_DB"] = lambda: db  # 블루프린트가 (테스트에서 교체되는) 현재 db를 읽는다
 app.register_blueprint(tracking_bp)
+app.register_blueprint(watchlist_bp)
 
 
 @app.route("/")

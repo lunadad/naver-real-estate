@@ -12,6 +12,7 @@
   {% if kakao_map_app_key %}
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_map_app_key }}&autoload=false&libraries=clusterer" defer></script>
   {% endif %}
+  <script src="{{ asset_url('js/watch-store.js') }}" defer></script>
   <script src="{{ asset_url('js/app.js') }}" defer></script>
   <script src="{{ asset_url('js/price-history.js') }}" defer></script>
   <link rel="manifest" href="/manifest.json" />
@@ -62,6 +63,7 @@
   </div>
 
   <div class="header-right">
+    <a class="nav-link-pill" href="/watchlist">관심 매물</a>
     <a class="nav-link-pill" href="/heatmap">지역 히트맵</a>
     <a class="nav-link-pill" href="/disappeared">사라진 매물</a>
     <div class="divider-v"></div>
@@ -341,10 +343,17 @@
   <button id="btn-mobile-more-fab" class="quickbar-btn" aria-controls="mobile-more-menu" aria-expanded="false">더보기</button>
   <button id="btn-mobile-alert-fab" class="quickbar-btn primary">알림 등록</button>
   <div id="mobile-more-menu" class="hidden" role="menu" aria-label="더보기">
+    <a class="mobile-more-item" role="menuitem" href="/watchlist">관심 매물</a>
     <a class="mobile-more-item" role="menuitem" href="/heatmap">지역 히트맵</a>
     <a class="mobile-more-item" role="menuitem" href="/disappeared">사라진 매물</a>
     <button id="btn-mobile-theme" class="mobile-more-item" role="menuitem" type="button">다크/라이트 전환</button>
   </div>
+</div>
+
+<div id="compare-tray" class="hidden" role="region" aria-label="매물 비교함">
+  <span id="compare-tray-count" aria-live="polite">비교함 0/3</span>
+  <button id="btn-compare-clear" type="button" class="compare-tray-clear">비우기</button>
+  <button id="btn-compare-open" type="button" class="compare-tray-open" aria-haspopup="dialog" disabled>비교하기</button>
 </div>
 
 <!-- ══════════════════════════════ STATUS BAR ═══════════════════════════════ -->

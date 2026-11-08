@@ -1043,6 +1043,7 @@ function renderListings(data) {
     return;
   }
 
+  state.listingsByNo = Object.fromEntries(listings.filter(l => l.article_no).map(l => [String(l.article_no), l]));
   grid.innerHTML = listings.map(l => {
     const tags = parseTags(l.tags);
     const hasPriceDown = tags.includes('가격인하');
@@ -1080,6 +1081,7 @@ function renderListings(data) {
       <div class="card-name-row">
         <div class="card-name" title="${escHtml(l.building_name)}">${l.district && l.building_name ? `<a class="card-name-link" href="${complexPageUrl(l.district, l.building_name)}">${escHtml(l.building_name)}</a>` : escHtml(l.building_name)}</div>
         <div class="card-actions">
+          ${l.article_no ? watchButtonsHtml(l.article_no) : ''}
           ${l.district && l.building_name ? `<button type="button" class="card-trend-btn" data-district="${escHtml(l.district)}" data-building-name="${escHtml(l.building_name)}" title="일별 매물수 추이" aria-label="일별 매물수 추이 보기">매물 추이</button>` : ''}
           ${l.article_no ? `<button type="button" class="card-history-btn" data-article-no="${escHtml(l.article_no)}" aria-haspopup="dialog">가격 이력</button>` : ''}
         </div>
@@ -1095,6 +1097,132 @@ function renderListings(data) {
       </div>
     </div>`;
   }).join('');
+}
+
+// ── 관심 매물(찜) · 매물 비교 ───────────────────────────────────────────────
+function watchButtonsHtml(articleNo) {
+  const watched = window.WatchStore?.has(articleNo);
+  const compared = window.WatchStore?.inCompare(articleNo);
+  return `
+    <button type="button" class="card-watch-btn" data-article-no="${escHtml(articleNo)}" aria-pressed="${watched ? 'true' : 'false'}" aria-label="${watched ? '찜 해제' : '찜하기'}">${watched ? '♥ 찜함' : '♡ 찜'}</button>
+    <button type="button" class="card-compare-btn" data-article-no="${escHtml(articleNo)}" aria-pressed="${compared ? 'true' : 'false'}">${compared ? '비교 담음' : '비교'}</button>`;
+}
+
+function refreshCardWatchButtons() {
+  document.querySelectorAll('.card-watch-btn').forEach(btn => {
+    const watched = window.WatchStore.has(btn.dataset.articleNo);
+    btn.setAttribute('aria-pressed', watched ? 'true' : 'false');
+    btn.setAttribute('aria-label', watched ? '찜 해제' : '찜하기');
+    btn.textContent = watched ? '♥ 찜함' : '♡ 찜';
+  });
+  document.querySelectorAll('.card-compare-btn').forEach(btn => {
+    const compared = window.WatchStore.inCompare(btn.dataset.articleNo);
+    btn.setAttribute('aria-pressed', compared ? 'true' : 'false');
+    btn.textContent = compared ? '비교 담음' : '비교';
+  });
+}
+
+function toggleWatch(articleNo) {
+  const listing = state.listingsByNo?.[String(articleNo)];
+  if (!listing || !window.WatchStore) return;
+  const result = window.WatchStore.toggle(listing);
+  if (result === null) showToast(`찜은 최대 ${window.WatchStore.MAX_WATCH}개까지 할 수 있어요.`, 'error');
+  else showToast(result ? '관심 매물에 담았어요. "관심 매물" 화면에서 변동을 확인하세요.' : '찜을 해제했어요.', 'info');
+  refreshCardWatchButtons();
+}
+
+function toggleCompare(articleNo) {
+  if (!window.WatchStore) return;
+  const result = window.WatchStore.toggleCompare(articleNo);
+  if (result === null) showToast(`비교는 최대 ${window.WatchStore.MAX_COMPARE}개까지 담을 수 있어요.`, 'error');
+  refreshCardWatchButtons();
+  renderCompareTray();
+}
+
+function renderCompareTray() {
+  const tray = document.getElementById('compare-tray');
+  if (!tray || !window.WatchStore) return;
+  const count = window.WatchStore.compareList().length;
+  tray.classList.toggle('hidden', count === 0);
+  document.body.classList.toggle('has-compare-tray', count > 0);
+  document.getElementById('compare-tray-count').textContent = `비교함 ${count}/${window.WatchStore.MAX_COMPARE}`;
+  document.getElementById('btn-compare-open').disabled = count < 2;
+}
+
+const COMPARE_ROWS = [
+  { label: '가격', value: i => i.price || '—', score: i => i.price_sort_value, best: 'min' },
+  { label: '평당가', value: i => i.price_per_pyeong ? `${fmtNum(i.price_per_pyeong)}만` : '—', score: i => i.price_per_pyeong, best: 'min' },
+  { label: '단지 중앙값 대비', value: i => i.median_gap_pct == null ? '—' : `${i.median_gap_pct > 0 ? '+' : ''}${i.median_gap_pct}%`, score: i => i.median_gap_pct, best: 'min' },
+  { label: '발견 후', value: i => i.days_listed == null ? '—' : `${i.days_listed}일`, score: i => i.days_listed, best: 'max' },
+  { label: '가격 인하', value: i => i.cut_count ? `${i.cut_count}회` : '없음', score: i => i.cut_count, best: 'max' },
+  { label: '면적·층', value: i => [i.area, i.floor ? `${i.floor}층` : ''].filter(Boolean).join(' · ') || '—' },
+  { label: '태그', value: i => (i.tags || []).filter(t => t !== '급매').slice(0, 3).join(', ') || '—' },
+];
+
+function bestIndexes(items, row) {
+  if (!row.score) return new Set();
+  const scores = items.map(i => (i.status === 'active' ? row.score(i) : null));
+  const valid = scores.filter(v => v != null);
+  if (valid.length < 2) return new Set();
+  const target = row.best === 'min' ? Math.min(...valid) : Math.max(...valid);
+  if (valid.every(v => v === target)) return new Set();
+  return new Set(scores.map((v, idx) => (v === target ? idx : -1)).filter(idx => idx >= 0));
+}
+
+function renderCompareBody(items) {
+  if (items.length < 2) return '<div class="building-trend-empty">비교하려면 매물을 2개 이상 담아 주세요.</div>';
+  const letters = ['A', 'B', 'C'];
+  const head = items.map((i, idx) => `
+    <th scope="col">
+      <span class="cmp-letter">${letters[idx]}</span>
+      <span class="cmp-name">${escHtml(i.building_name || '사라진 매물')}</span>
+      ${i.status === 'active' ? '' : '<span class="cmp-gone">지금은 없음</span>'}
+    </th>`).join('');
+  const body = COMPARE_ROWS.map(row => {
+    const best = bestIndexes(items, row);
+    return `<tr><th scope="row">${row.label}</th>${items.map((i, idx) =>
+      `<td class="${best.has(idx) ? 'cmp-best' : ''}">${escHtml(i.status === 'unknown' ? '—' : row.value(i))}</td>`).join('')}</tr>`;
+  }).join('');
+  const active = items.filter(i => i.status === 'active');
+  const notes = [];
+  const cheapest = active.filter(i => i.price_per_pyeong).sort((a, b) => a.price_per_pyeong - b.price_per_pyeong)[0];
+  if (cheapest) notes.push(`평당가는 ${letters[items.indexOf(cheapest)]}(${cheapest.building_name})가 가장 낮아요.`);
+  const cutMost = active.filter(i => i.cut_count).sort((a, b) => b.cut_count - a.cut_count)[0];
+  if (cutMost) notes.push(`${letters[items.indexOf(cutMost)]}는 이미 ${cutMost.cut_count}번 내려서 추가 조정 여지가 있어 보여요.`);
+  return `
+    <div class="cmp-wrap">
+      <table class="cmp-table">
+        <thead><tr><th scope="col"><span class="sr-only">항목</span></th>${head}</tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+    <p class="cmp-legend"><span class="cmp-swatch" aria-hidden="true"></span>항목별로 사는 사람에게 가장 유리한 값</p>
+    ${notes.length ? `<p class="cmp-summary">${escHtml(notes.join(' '))}</p>` : ''}
+    <div class="cmp-actions">
+      <button type="button" class="cmp-clear-btn">비교함 비우기</button>
+    </div>`;
+}
+
+async function openCompareModal(triggerElement = null) {
+  const overlay = document.getElementById('modal-overlay');
+  const titleEl = document.getElementById('modal-title');
+  const bodyEl = document.getElementById('modal-body');
+  if (!overlay || !titleEl || !bodyEl || !window.WatchStore) return;
+  const ids = window.WatchStore.compareList();
+  const requestToken = ++buildingTrendRequestToken;
+  modalTrigger = triggerElement;
+  titleEl.textContent = `매물 비교 ${ids.length}`;
+  bodyEl.innerHTML = '<div class="building-trend-loading">불러오는 중…</div>';
+  overlay.classList.remove('hidden');
+  document.getElementById('modal-close')?.focus();
+  try {
+    const data = await api(`/api/listings/compare?ids=${ids.map(encodeURIComponent).join(',')}`);
+    if (requestToken !== buildingTrendRequestToken) return;
+    bodyEl.innerHTML = renderCompareBody(data.items || []);
+  } catch (err) {
+    if (requestToken !== buildingTrendRequestToken) return;
+    bodyEl.innerHTML = '<div class="building-trend-empty">비교 정보를 불러오지 못했습니다.</div>';
+  }
 }
 
 function updateStats(data) {
@@ -2033,6 +2161,18 @@ function wireEvents() {
       return;
     }
     if (e.target.closest('.card-name-link')) return; // 단지 페이지 링크는 카드의 네이버 열기를 막고 그대로 이동
+    const watchBtn = e.target.closest('.card-watch-btn');
+    if (watchBtn) {
+      e.stopPropagation();
+      toggleWatch(watchBtn.dataset.articleNo);
+      return;
+    }
+    const compareBtn = e.target.closest('.card-compare-btn');
+    if (compareBtn) {
+      e.stopPropagation();
+      toggleCompare(compareBtn.dataset.articleNo);
+      return;
+    }
     const historyBtn = e.target.closest('.card-history-btn');
     if (historyBtn) {
       e.stopPropagation();
@@ -2049,7 +2189,28 @@ function wireEvents() {
   document.getElementById('modal-overlay')?.addEventListener('click', e => {
     if (e.target.id === 'modal-overlay') closeModal();
   });
+  document.getElementById('btn-compare-open')?.addEventListener('click', e => openCompareModal(e.currentTarget));
+  document.getElementById('btn-compare-clear')?.addEventListener('click', () => {
+    window.WatchStore?.clearCompare();
+    refreshCardWatchButtons();
+    renderCompareTray();
+  });
+  window.addEventListener('watchstore:change', () => {
+    refreshCardWatchButtons();
+    renderCompareTray();
+  });
+  window.addEventListener('storage', e => {
+    if (e.key === 'watchlist.v1' || e.key === 'compare.v1') {
+      refreshCardWatchButtons();
+      renderCompareTray();
+    }
+  });
   document.getElementById('modal-body')?.addEventListener('click', async e => {
+    if (e.target.closest('.cmp-clear-btn')) {
+      window.WatchStore?.clearCompare();
+      closeModal();
+      return;
+    }
     const button = e.target.closest('.building-change-alert-btn');
     if (!button) return;
     const input = button.closest('.building-change-alert-control')?.querySelector('.building-change-threshold');
@@ -2208,6 +2369,7 @@ async function init() {
   }
 
   wireEvents();
+  renderCompareTray();
   presetDistrictFromQuery();
   initMap();
   applyMapVisibility();

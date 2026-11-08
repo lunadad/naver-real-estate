@@ -117,6 +117,47 @@
       <p class="ph-muted">기준은 우리가 처음 발견한 날이며 실제 등록일이 아닙니다.</p></div>`;
   }
 
+  const NEGOTIATION_LABEL = { high: '있음', some: '조금', low: '적음' };
+
+  function fairPrice(fp) {
+    if (!fp) return '';
+    if (!fp.available) return `<div class="fp fp-unavailable"><span class="fp-title">적정가 판단</span> <span class="ph-muted">${esc(fp.reason)}</span></div>`;
+    const span = Math.max(1, fp.max - fp.min);
+    const pos = (v) => (fp.max === fp.min ? 50 : ((v - fp.min) / span) * 100).toFixed(1);
+    const gap = fp.gap_pct || 0;
+    const verdict = gap < 0 ? `중앙값보다 ${Math.abs(gap)}% 낮음` : gap > 0 ? `중앙값보다 ${gap}% 높음` : '중앙값 수준';
+    const rank = fp.rank === 1 ? '가장 쌈' : `${fp.count}개 중 ${fp.rank}번째로 쌈`;
+    const basis = fp.basis === 'same_area' ? `같은 단지 ${esc(fp.area)} 매물 ${fp.count}개 기준` : `같은 단지 매물 ${fp.count}개 기준(평형 무관)`;
+    const dots = fp.points.map((p) => `<span class="fp-dot${p.is_self ? ' fp-self' : ''}" style="left:${pos(p.value)}%"></span>`).join('');
+    const stats = [];
+    if (fp.days_listed != null) stats.push(`발견 후 <b>${fp.days_listed}일</b>`);
+    if (fp.complex_avg_days != null) stats.push(`단지 평균 <b>${fp.complex_avg_days}일</b>`);
+    if (fp.sell_days) stats.push(`비슷한 급매 평균 <b>${fp.sell_days.days}일</b> 내 사라짐(${fp.sell_days.scope === 'complex' ? '단지' : '구'} 기준)`);
+    const neg = fp.negotiation || { level: 'low', signals: [] };
+    return `
+      <section class="fp" aria-labelledby="fp-title">
+        <div class="fp-head"><span id="fp-title" class="fp-title">적정가 판단</span><span class="ph-muted">${basis}</span></div>
+        <div class="fp-verdict"><span class="fp-chip ${gap < 0 ? 'fp-chip-low' : ''}">${esc(verdict)}</span><span>${esc(rank)}</span></div>
+        <div class="fp-strip" role="img" aria-label="평당가 분포: 최저 ${fp.min.toLocaleString()}만, 중앙값 ${fp.median.toLocaleString()}만, 최고 ${fp.max.toLocaleString()}만, 이 매물 ${fp.value.toLocaleString()}만">
+          <span class="fp-line"></span><span class="fp-median" style="left:${pos(fp.median)}%"></span>${dots}
+        </div>
+        <div class="fp-axis"><span>${fp.min.toLocaleString()}만</span><span>중앙값 ${fp.median.toLocaleString()}만 · <b class="fp-self-label">이 매물 ${fp.value.toLocaleString()}만</b></span><span>${fp.max.toLocaleString()}만</span></div>
+        ${stats.length ? `<div class="fp-stats">${stats.join(' · ')}</div>` : ''}
+        <div class="fp-neg"><span class="fp-neg-title">협상 여지</span><span class="fp-level fp-level-${esc(neg.level)}">${NEGOTIATION_LABEL[neg.level] || '적음'}</span></div>
+        ${neg.signals.length ? `<ul class="fp-signals">${neg.signals.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+        <p class="ph-muted">평당가(3.3㎡) 기준 참고용 정보입니다. 실거래가와 다를 수 있어요.</p>
+      </section>`;
+  }
+
+  async function loadFairPrice(articleNo) {
+    try {
+      const res = await fetch('/api/listings/' + encodeURIComponent(articleNo) + '/fair-price');
+      return res.ok ? await res.json() : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   async function open(articleNo, trigger) {
     ensureModal();
     opener = trigger || document.activeElement;
@@ -125,10 +166,11 @@
     body.innerHTML = '<div class="ph-muted">불러오는 중…</div>';
     overlay.classList.remove('hidden');
     overlay.querySelector('#ph-close').focus();
+    const fairPromise = loadFairPrice(articleNo);
     try {
       const res = await fetch('/api/listings/' + encodeURIComponent(articleNo) + '/history');
       if (res.status === 404) {
-        body.innerHTML = '<div class="ph-muted">아직 가격 이력이 없습니다. 이력은 배포일부터 쌓입니다.</div>';
+        body.innerHTML = fairPrice(await fairPromise) + '<div class="ph-muted">아직 가격 이력이 없습니다. 이력은 배포일부터 쌓입니다.</div>';
         return;
       }
       if (!res.ok) throw new Error('API error ' + res.status);
@@ -136,7 +178,7 @@
       const l = data.listing || {};
       overlay.querySelector('#ph-title').textContent =
         [l.building_name, l.area, l.floor ? l.floor + '층' : ''].filter(Boolean).join(' · ') || '가격 이력';
-      body.innerHTML = stepChart(data.events) + timeline(data.events) + clues(data.insight);
+      body.innerHTML = fairPrice(await fairPromise) + stepChart(data.events) + timeline(data.events) + clues(data.insight);
     } catch (e) {
       body.innerHTML = '<div class="ph-muted">가격 이력을 불러오지 못했습니다.</div>';
     }
