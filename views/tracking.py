@@ -1,32 +1,17 @@
 """가격 이력(②)·사라진 매물(③) 라우트."""
 
-import os
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
-from flask import Blueprint, current_app, jsonify, render_template, request
+from flask import Blueprint, jsonify, render_template, request
 
 from insights import tracking as store
 from insights.dates import days_span
 from insights.price_history import build_insight
+from views.common import error_response, get_db, naive_now
 
 bp = Blueprint("tracking", __name__)
 
 ALLOWED_DAYS = (1, 7, 30)
-KST = timezone(timedelta(hours=9))
-
-
-def _db():
-    return current_app.config["GET_DB"]()
-
-
-def _naive_now() -> datetime:
-    """크롤러가 저장하는 naive 시각(datetime.now())과 같은 기준의 현재 시각.
-
-    운영(DATABASE_URL 설정)은 맥미니 크롤러가 KST로 저장하므로 서버 시간대와 무관하게 KST를 쓴다.
-    """
-    if os.getenv("DATABASE_URL", "").strip():
-        return datetime.now(KST).replace(tzinfo=None)
-    return datetime.now()
 
 
 def _normalize_days(raw, default=7) -> int:
@@ -42,13 +27,13 @@ def _normalize_days(raw, default=7) -> int:
 
 @bp.route("/api/listings/<article_no>/history")
 def listing_history(article_no):
-    with _db().get_connection() as conn:
+    with get_db().get_connection() as conn:
         history = store.get_history(conn, article_no)
     if history is None:
-        return jsonify({"status": "error", "message": "history not found"}), 404
+        return error_response("history not found", 404)
     listing = history["listing"] or {}
     insight = build_insight(
-        history["tracking"], history["events"], listing.get("bargain_discount"), now=_naive_now()
+        history["tracking"], history["events"], listing.get("bargain_discount"), now=naive_now()
     )
     return jsonify(
         {
@@ -73,8 +58,8 @@ def disappeared_api():
         limit = min(500, max(1, int(request.args.get("limit", 100))))
     except (TypeError, ValueError):
         limit = 100
-    since = (_naive_now() - timedelta(days=days)).isoformat()
-    with _db().get_connection() as conn:
+    since = (naive_now() - timedelta(days=days)).isoformat()
+    with get_db().get_connection() as conn:
         rows = store.list_disappeared(conn, since, limit)
         total = conn.execute(
             "SELECT COUNT(*) AS c FROM listing_disappearances WHERE disappeared_at >= ?", (since,)
@@ -98,5 +83,5 @@ def disappeared_api():
 @bp.route("/api/disappeared/fast-complexes")
 def fast_complexes_api():
     days = _normalize_days(request.args.get("days"))
-    with _db().get_connection() as conn:
+    with get_db().get_connection() as conn:
         return jsonify(store.fast_complexes(conn, days))
