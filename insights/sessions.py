@@ -7,8 +7,9 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Sequence, Tuple
 
+from insights.sql import LIVE_SESSION_SQL
+
 WEEK_WINDOW = timedelta(hours=12)
-LIVE_SESSION_SQL = "status = 'success' AND COALESCE(source, 'naver') <> 'demo'"
 
 
 def parse_dt(value) -> Optional[datetime]:

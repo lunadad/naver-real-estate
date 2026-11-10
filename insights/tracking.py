@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from bargain import is_bargain
-from insights.sql import chunks, placeholders
+from insights.sql import LIVE_SESSION_SQL, chunks, placeholders
 
 RETENTION_DAYS = 90
 
@@ -375,7 +375,7 @@ def fast_complexes(conn, days: int, limit: int = 5) -> Dict:
     비교 기준 세션은 주간 리포트와 같은 규칙: 최신 라이브 성공 세션보다 days일(-12시간 허용)
     이전인 가장 최근 라이브 성공 세션, 없으면 최신과 다른 가장 오래된 라이브 성공 세션.
     """
-    live = "status = 'success' AND COALESCE(source, 'naver') <> 'demo'"
+    live = LIVE_SESSION_SQL
     latest = conn.execute(
         f"SELECT session_id, crawled_at FROM crawl_history WHERE {live} ORDER BY crawled_at DESC LIMIT 1"
     ).fetchone()
