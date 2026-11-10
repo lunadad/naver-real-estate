@@ -1,6 +1,6 @@
 """단지 상세 페이지: GET /complex (HTML), GET /api/complex (JSON)."""
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, render_template, request
 
 from insights.complex import build_areas, build_stats, order_listings
 from insights.sessions import get_latest_session, get_week_ago_session

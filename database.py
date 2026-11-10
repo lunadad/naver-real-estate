@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 BUILDING_STATS_RETENTION_DAYS = 90
 
 from insights import tracking as tracking_store
+from insights.sessions import get_building_counts, get_comparison_session
+from insights.sql import LIVE_SESSION_SQL
 from bargain import BARGAIN_MAX, BARGAIN_MIN, GENERIC_BUILDING_NAMES, compute_bargain_scores, is_bargain
 from deal_query import format_manwon
 
@@ -1839,10 +1841,10 @@ class Database:
 
     def _get_latest_and_prev_sessions(self, conn: ConnectionWrapper):
         latest_session_row = conn.execute(
-            """
+            f"""
             SELECT session_id, DATE(crawled_at) AS crawl_date
             FROM crawl_history
-            WHERE status = 'success' AND COALESCE(source, 'naver') <> 'demo'
+            WHERE {LIVE_SESSION_SQL}
             ORDER BY crawled_at DESC
             LIMIT 1
             """
@@ -1858,9 +1860,9 @@ class Database:
 
         prev_date = (date.fromisoformat(latest_date) - timedelta(days=1)).isoformat()
         prev_session_row = conn.execute(
-            """
+            f"""
             SELECT session_id FROM crawl_history
-            WHERE status = 'success' AND COALESCE(source, 'naver') <> 'demo'
+            WHERE {LIVE_SESSION_SQL}
               AND DATE(crawled_at) = ?
             ORDER BY crawled_at DESC
             LIMIT 1
@@ -1979,7 +1981,7 @@ class Database:
                 SELECT session_id, crawled_at,
                        ROW_NUMBER() OVER (ORDER BY crawled_at DESC) AS session_rank
                 FROM crawl_history
-                WHERE status = 'success' AND COALESCE(source, 'naver') <> 'demo'
+                WHERE {LIVE_SESSION_SQL}
             ),
             ranked AS (
                 SELECT cb.district, cb.building_name, cb.total_count, cb.price_down_count,
@@ -2057,11 +2059,10 @@ class Database:
     @staticmethod
     def _fetch_last_live_crawl(conn: ConnectionWrapper):
         return conn.execute(
-            """
+            f"""
             SELECT *
             FROM crawl_history
-            WHERE status = 'success'
-              AND COALESCE(source, 'naver') <> 'demo'
+            WHERE {LIVE_SESSION_SQL}
             ORDER BY crawled_at DESC
             LIMIT 1
             """
@@ -2087,11 +2088,10 @@ class Database:
         limit = max(1, int(limit or 90))
         with self.get_connection() as conn:
             rows = conn.execute(
-                """
+                f"""
                 SELECT *
                 FROM crawl_history
-                WHERE status = 'success'
-                  AND COALESCE(source, 'naver') <> 'demo'
+                WHERE {LIVE_SESSION_SQL}
                 ORDER BY crawled_at DESC
                 LIMIT ?
                 """,
@@ -2109,11 +2109,10 @@ class Database:
         end = start + timedelta(days=1)
         with self.get_connection() as conn:
             row = conn.execute(
-                """
+                f"""
                 SELECT 1
                 FROM crawl_history
-                WHERE status = 'success'
-                  AND COALESCE(source, 'naver') <> 'demo'
+                WHERE {LIVE_SESSION_SQL}
                   AND crawled_at >= ? AND crawled_at < ?
                 LIMIT 1
                 """,
@@ -2135,7 +2134,6 @@ class Database:
         risers/fallers가 None이면 비교할 단지 통계가 없다는 뜻(빈 리스트와 구분).
         진짜 급매는 listings(최신 2개 세션만 보관)의 최신 세션 저장 점수를 쓴다.
         """
-        live = "status = 'success' AND COALESCE(source, 'naver') <> 'demo'"
         cols = "session_id, crawled_at, total_count"
 
         def session_dict(row):
@@ -2147,7 +2145,7 @@ class Database:
 
         with self.get_connection() as conn:
             row = conn.execute(
-                f"SELECT {cols} FROM crawl_history WHERE {live} AND crawled_at <= ? "
+                f"SELECT {cols} FROM crawl_history WHERE {LIVE_SESSION_SQL} AND crawled_at <= ? "
                 "ORDER BY crawled_at DESC LIMIT 1",
                 (now.isoformat(),),
             ).fetchone()
@@ -2155,18 +2153,7 @@ class Database:
                 return None
             latest = session_dict(row)
 
-            cutoff = latest["crawled_at"] - timedelta(days=7) + timedelta(hours=12)
-            row = conn.execute(
-                f"SELECT {cols} FROM crawl_history WHERE {live} AND session_id <> ? AND crawled_at <= ? "
-                "ORDER BY crawled_at DESC LIMIT 1",
-                (latest["session_id"], cutoff.isoformat()),
-            ).fetchone()
-            if row is None:
-                row = conn.execute(
-                    f"SELECT {cols} FROM crawl_history WHERE {live} AND session_id <> ? "
-                    "ORDER BY crawled_at ASC LIMIT 1",
-                    (latest["session_id"],),
-                ).fetchone()
+            row = get_comparison_session(conn, latest["session_id"], latest["crawled_at"], 7, cols)
             previous = session_dict(row) if row is not None else None
 
             def price_down_ratio(session_id):
@@ -2184,15 +2171,8 @@ class Database:
 
             risers = fallers = None
             if previous:
-                def building_counts(session_id):
-                    rows = conn.execute(
-                        "SELECT district, building_name, total_count FROM crawl_building_stats WHERE session_id = ?",
-                        (session_id,),
-                    ).fetchall()
-                    return {(r["district"], r["building_name"]): r["total_count"] or 0 for r in rows}
-
-                cur_counts = building_counts(latest["session_id"])
-                prev_counts = building_counts(previous["session_id"])
+                cur_counts = get_building_counts(conn, latest["session_id"])
+                prev_counts = get_building_counts(conn, previous["session_id"])
                 if cur_counts and prev_counts:
                     movers = [
                         (district, building, prev_counts.get((district, building), 0),

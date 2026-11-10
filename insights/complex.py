@@ -1,7 +1,7 @@
 """단지 상세 페이지의 순수 계산 — DB 접근 없이 매물 dict 목록만 다룬다."""
 
 import statistics
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Mapping, Optional
 
 from bargain import area_number, is_bargain
 
@@ -16,7 +16,8 @@ def median_price(values: List[int]):
     return _tidy(statistics.median(values)) if values else None
 
 
-def has_price_down(listing: Dict) -> bool:
+def has_price_down(listing: Mapping) -> bool:
+    """tags 원문(JSON 문자열 또는 리스트)에 가격인하가 들어 있는지 — 부분 문자열로 본다."""
     return "가격인하" in str(listing.get("tags") or "")
 
 

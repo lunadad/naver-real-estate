@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Sequence
 
 from bargain import area_number, is_bargain
+from insights.dates import days_between, days_span, parse_naive
+from insights.sql import placeholders
 
 MAX_WATCH_ITEMS = 50
 MAX_COMPARE_ITEMS = 3
@@ -25,20 +27,6 @@ LISTING_COLUMNS = (
 )
 
 
-def _parse(value) -> Optional[datetime]:
-    if isinstance(value, datetime):
-        return value.replace(tzinfo=None)
-    try:
-        return datetime.fromisoformat(str(value)).replace(tzinfo=None)
-    except (TypeError, ValueError):
-        return None
-
-
-def _days_between(start, end: datetime) -> Optional[int]:
-    start = _parse(start)
-    return max(0, (end - start).days) if start else None
-
-
 def _tags(raw) -> List[str]:
     if isinstance(raw, (list, tuple)):
         return list(raw)
@@ -47,10 +35,6 @@ def _tags(raw) -> List[str]:
     except (TypeError, ValueError):
         return []
     return list(tags) if isinstance(tags, (list, tuple)) else []
-
-
-def _placeholders(count: int) -> str:
-    return ",".join("?" * count)
 
 
 def price_per_pyeong(price_value, area) -> Optional[int]:
@@ -109,7 +93,7 @@ def _listing_payload(row: Dict, cut_count, now: datetime) -> Dict:
         "median_gap_pct": round(-discount * 100, 1) if discount is not None else None,
         "price_per_pyeong": price_per_pyeong(row.get("price_sort_value"), row.get("area")),
         "first_seen_at": row.get("first_seen_at"),
-        "days_listed": _days_between(row.get("first_seen_at"), now),
+        "days_listed": days_between(row.get("first_seen_at"), now),
         "cut_count": int(cut_count or 0),
     }
 
@@ -123,14 +107,14 @@ def lookup(conn, session_id: Optional[str], article_nos: Sequence[str], now: dat
     if session_id:
         for row in conn.execute(
             f"SELECT {LISTING_COLUMNS} FROM listings WHERE crawl_session = ? "
-            f"AND article_no IN ({_placeholders(len(nos))})",
+            f"AND article_no IN ({placeholders(len(nos))})",
             [session_id] + nos,
         ).fetchall():
             rows[str(row["article_no"])] = dict(row)
     cuts = {
         str(row["article_no"]): row["price_cut_count"]
         for row in conn.execute(
-            f"SELECT article_no, price_cut_count FROM listing_tracking WHERE article_no IN ({_placeholders(len(nos))})",
+            f"SELECT article_no, price_cut_count FROM listing_tracking WHERE article_no IN ({placeholders(len(nos))})",
             nos,
         ).fetchall()
     }
@@ -140,7 +124,7 @@ def lookup(conn, session_id: Optional[str], article_nos: Sequence[str], now: dat
         for row in conn.execute(
             "SELECT article_no, disappeared_at, region, district, building_name, property_type, trade_type, "
             "area, floor, price, naver_url, first_seen_at FROM listing_disappearances "
-            f"WHERE reappeared_at IS NULL AND article_no IN ({_placeholders(len(missing))}) "
+            f"WHERE reappeared_at IS NULL AND article_no IN ({placeholders(len(missing))}) "
             "ORDER BY disappeared_at ASC, id ASC",
             missing,
         ).fetchall():
@@ -152,13 +136,12 @@ def lookup(conn, session_id: Optional[str], article_nos: Sequence[str], now: dat
             result[no] = _listing_payload(rows[no], cuts.get(no, rows[no].get("price_cut_count")), now)
         elif no in gone:
             snap = gone[no]
-            first_seen, gone_at = _parse(snap.get("first_seen_at")), _parse(snap.get("disappeared_at"))
             result[no] = {
                 **{k: snap.get(k) for k in ("region", "district", "building_name", "property_type", "trade_type",
                                             "area", "floor", "price", "naver_url", "disappeared_at")},
                 "article_no": no,
                 "status": "gone",
-                "days_listed": max(0, (gone_at - first_seen).days) if first_seen and gone_at else None,
+                "days_listed": days_span(snap.get("first_seen_at"), snap.get("disappeared_at")),
                 "cut_count": int(cuts.get(no) or 0),
             }
         else:
@@ -189,8 +172,8 @@ def new_bargains(conn, session_id: Optional[str], watched: Sequence[Dict], limit
             row = dict(row)
             if str(row["article_no"]) in watched_nos or not is_bargain(row.get("bargain_discount")):
                 continue
-            first_seen = _parse(row.get("first_seen_at"))
-            since_dt = _parse(since)
+            first_seen = parse_naive(row.get("first_seen_at"))
+            since_dt = parse_naive(since)
             if first_seen is None or (since_dt is not None and first_seen <= since_dt):
                 continue
             found.append(_listing_payload(row, row.get("price_cut_count"), datetime.now()))
@@ -211,11 +194,8 @@ def bargain_sell_days(conn, district, building_name, now: datetime) -> Optional[
             f"WHERE was_bargain = 1 AND reappeared_at IS NULL AND disappeared_at >= ? AND {where}",
             (since,) + params,
         ).fetchall()
-        days = []
-        for row in rows:
-            start, end = _parse(row["first_seen_at"]), _parse(row["disappeared_at"])
-            if start and end:
-                days.append(max(0, (end - start).days))
+        spans = (days_span(row["first_seen_at"], row["disappeared_at"]) for row in rows)
+        days = [span for span in spans if span is not None]
         if len(days) >= minimum:
             return {"days": round(sum(days) / len(days)), "scope": scope, "count": len(days)}
     return None
@@ -261,13 +241,13 @@ def fair_price(conn, session_id: Optional[str], article_no: str, now: datetime) 
     values = [p["value"] for p in points]
     median = round(statistics.median(values))
 
-    listed_days = [d for d in (_days_between(row.get("first_seen_at"), now) for row in complex_rows) if d is not None]
+    listed_days = [d for d in (days_between(row.get("first_seen_at"), now) for row in complex_rows) if d is not None]
     complex_avg_days = round(sum(listed_days) / len(listed_days)) if listed_days else None
     tracking = conn.execute(
         "SELECT price_cut_count FROM listing_tracking WHERE article_no = ?", (str(article_no),)
     ).fetchone()
     cut_count = int((tracking["price_cut_count"] if tracking else target.get("price_cut_count")) or 0)
-    days_listed = _days_between(target.get("first_seen_at"), now)
+    days_listed = days_between(target.get("first_seen_at"), now)
     sell = bargain_sell_days(conn, target.get("district"), target.get("building_name"), now)
 
     return {

@@ -1,19 +1,11 @@
 """관심 매물(찜) 페이지 · 매물 비교 · 적정가 판단 라우트."""
 
-from flask import Blueprint, current_app, jsonify, render_template, request
+from flask import Blueprint, jsonify, render_template, request
 
 from insights import watchlist as store
-from views.tracking import _naive_now
+from views.common import error_response, get_db, naive_now
 
 bp = Blueprint("watchlist", __name__)
-
-
-def _db():
-    return current_app.config["GET_DB"]()
-
-
-def _error(message, status_code):
-    return jsonify({"status": "error", "message": message}), status_code
 
 
 def _price_value(raw):
@@ -34,7 +26,7 @@ def watchlist_status():
     body = request.get_json(silent=True) or {}
     raw_items = body.get("items")
     if not isinstance(raw_items, list):
-        return _error("items must be a list", 400)
+        return error_response("items must be a list", 400)
     saved = []
     for raw in raw_items:
         if isinstance(raw, dict) and str(raw.get("article_no") or "").strip():
@@ -42,8 +34,8 @@ def watchlist_status():
         if len(saved) >= store.MAX_WATCH_ITEMS:
             break
 
-    db = _db()
-    now = _naive_now()
+    db = get_db()
+    now = naive_now()
     with db.get_connection() as conn:
         session_id = db._get_latest_visible_session_id(conn)
         current = store.lookup(conn, session_id, [item["article_no"] for item in saved], now)
@@ -70,18 +62,18 @@ def compare_listings():
     ids = [part.strip() for part in (request.args.get("ids") or "").split(",") if part.strip()]
     ids = list(dict.fromkeys(ids))[: store.MAX_COMPARE_ITEMS]
     if not ids:
-        return _error("ids required", 400)
-    db = _db()
+        return error_response("ids required", 400)
+    db = get_db()
     with db.get_connection() as conn:
-        current = store.lookup(conn, db._get_latest_visible_session_id(conn), ids, _naive_now())
+        current = store.lookup(conn, db._get_latest_visible_session_id(conn), ids, naive_now())
     return jsonify({"items": [current[no] for no in ids if no in current]})
 
 
 @bp.route("/api/listings/<article_no>/fair-price")
 def listing_fair_price(article_no):
-    db = _db()
+    db = get_db()
     with db.get_connection() as conn:
-        result = store.fair_price(conn, db._get_latest_visible_session_id(conn), article_no, _naive_now())
+        result = store.fair_price(conn, db._get_latest_visible_session_id(conn), article_no, naive_now())
     if result is None:
-        return _error("listing not found", 404)
+        return error_response("listing not found", 404)
     return jsonify(result)

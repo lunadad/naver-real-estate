@@ -5,10 +5,12 @@
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Sequence, Tuple
+from typing import Dict, Optional, Sequence, Tuple
+
+from insights.sql import LIVE_SESSION_SQL
 
 WEEK_WINDOW = timedelta(hours=12)
-LIVE_SESSION_SQL = "status = 'success' AND COALESCE(source, 'naver') <> 'demo'"
+COMPARISON_SLACK = timedelta(hours=12)
 
 
 def parse_dt(value) -> Optional[datetime]:
@@ -63,6 +65,38 @@ def get_latest_session(db, conn) -> Tuple[Optional[str], Optional[datetime]]:
         ).fetchone()
         crawled_at = row["crawled_at"] if row else None
     return session_id, parse_dt(crawled_at)
+
+
+def get_comparison_session(
+    conn, latest_session_id: str, latest_at: datetime, days: int, columns: str = "session_id, crawled_at"
+):
+    """latest보다 days일(-12시간 허용) 이전인 가장 최근 라이브 성공 세션 행.
+
+    없으면 latest와 다른 가장 오래된 라이브 성공 세션 행, 그것도 없으면 None.
+    주간 리포트와 "빨리 빠지는 단지"가 같은 규칙을 쓴다.
+    """
+    cutoff = (latest_at - timedelta(days=days) + COMPARISON_SLACK).isoformat()
+    row = conn.execute(
+        f"SELECT {columns} FROM crawl_history WHERE {LIVE_SESSION_SQL} AND session_id <> ? "
+        "AND crawled_at <= ? ORDER BY crawled_at DESC LIMIT 1",
+        (latest_session_id, cutoff),
+    ).fetchone()
+    if row is None:
+        row = conn.execute(
+            f"SELECT {columns} FROM crawl_history WHERE {LIVE_SESSION_SQL} AND session_id <> ? "
+            "ORDER BY crawled_at ASC LIMIT 1",
+            (latest_session_id,),
+        ).fetchone()
+    return row
+
+
+def get_building_counts(conn, session_id: str) -> Dict[Tuple[str, str], int]:
+    """(district, building_name) → 그 세션의 단지별 매물 수."""
+    rows = conn.execute(
+        "SELECT district, building_name, total_count FROM crawl_building_stats WHERE session_id = ?",
+        (session_id,),
+    ).fetchall()
+    return {(row["district"], row["building_name"]): row["total_count"] or 0 for row in rows}
 
 
 def get_week_ago_session(conn, latest_session_id: str, latest_at) -> Optional[str]:

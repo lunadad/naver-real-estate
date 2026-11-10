@@ -3,6 +3,7 @@
 from typing import Dict, Iterable, List, Mapping, Optional
 
 from bargain import is_bargain
+from insights.complex import has_price_down
 
 DEFAULT_REGION = "서울특별시"
 
@@ -38,7 +39,7 @@ def build_districts(
     for row in listing_rows:
         entry = counted.setdefault(row["district"], {"total": 0, "down": 0, "bargain": 0})
         entry["total"] += 1
-        if "가격인하" in str(row.get("tags") or ""):
+        if has_price_down(row):
             entry["down"] += 1
         if is_bargain(row.get("bargain_discount")):
             entry["bargain"] += 1

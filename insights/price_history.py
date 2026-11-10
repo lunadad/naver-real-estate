@@ -4,22 +4,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from bargain import is_bargain
-
-
-def _parse(value) -> Optional[datetime]:
-    if isinstance(value, datetime):
-        return value.replace(tzinfo=None)
-    try:
-        return datetime.fromisoformat(str(value)).replace(tzinfo=None)
-    except (TypeError, ValueError):
-        return None
-
-
-def _days_between(start, end: datetime) -> Optional[int]:
-    start = _parse(start)
-    if start is None:
-        return None
-    return max(0, (end - start).days)
+from insights.dates import days_between
 
 
 def build_insight(
@@ -41,8 +26,8 @@ def build_insight(
         if len(events) > 1:
             last_change_at = events[-1].get("observed_at")
     return {
-        "days_since_first_seen": _days_between(tracking.get("first_seen_at"), now),
-        "days_since_last_change": _days_between(last_change_at, now) if last_change_at else None,
+        "days_since_first_seen": days_between(tracking.get("first_seen_at"), now),
+        "days_since_last_change": days_between(last_change_at, now) if last_change_at else None,
         "cut_count": int(tracking.get("price_cut_count") or 0),
         "total_change_pct": total_change_pct,
         "bargain_discount_pct": round(bargain_discount * 100, 1) if is_bargain(bargain_discount) else None,

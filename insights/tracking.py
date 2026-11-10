@@ -10,8 +10,11 @@ from datetime import datetime, timedelta
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from bargain import is_bargain
+from insights.sessions import get_building_counts, get_comparison_session
+from insights import sql
+from insights.sql import LIVE_SESSION_SQL, chunks, placeholders
 
-CHUNK = 500
+CHUNK = sql.CHUNK  # 기존 공개 이름 유지
 RETENTION_DAYS = 90
 
 TRACKING_TABLES_SQLITE = """
@@ -118,15 +121,6 @@ TRACKING_INDEXES = [
 ]
 
 
-def _chunks(items: Sequence, size: int = CHUNK):
-    for start in range(0, len(items), size):
-        yield items[start : start + size]
-
-
-def _placeholders(count: int) -> str:
-    return ",".join("?" * count)
-
-
 def _iso(value) -> Optional[str]:
     if value is None:
         return None
@@ -154,11 +148,11 @@ def record_price_events(
             article_nos.append(article_no)
 
     state: Dict[str, Dict] = {}
-    for chunk in _chunks(article_nos):
+    for chunk in chunks(article_nos):
         rows = conn.execute(
             "SELECT article_no, first_seen_at, last_price, last_price_sort_value, "
             "price_change_count, price_cut_count FROM listing_tracking "
-            f"WHERE article_no IN ({_placeholders(len(chunk))})",
+            f"WHERE article_no IN ({placeholders(len(chunk))})",
             chunk,
         ).fetchall()
         for row in rows:
@@ -172,10 +166,10 @@ def record_price_events(
             }
 
     seen_this_session = set()
-    for chunk in _chunks(article_nos):
+    for chunk in chunks(article_nos):
         rows = conn.execute(
             "SELECT article_no FROM listing_price_events "
-            f"WHERE session_id = ? AND article_no IN ({_placeholders(len(chunk))})",
+            f"WHERE session_id = ? AND article_no IN ({placeholders(len(chunk))})",
             [session_id] + list(chunk),
         ).fetchall()
         seen_this_session.update(row["article_no"] for row in rows)
@@ -226,20 +220,20 @@ def record_price_events(
                 (article_no, entry["first_seen_at"], now, entry["last_price"], entry["last_value"],
                  entry["changes"], entry["cuts"])
             )
-    for chunk in _chunks(new_rows):
+    for chunk in chunks(new_rows):
         conn.executemany(
             "INSERT INTO listing_tracking (article_no, first_seen_at, last_seen_at, last_price, "
             "last_price_sort_value, price_change_count, price_cut_count) VALUES (?, ?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(article_no) DO NOTHING",
             chunk,
         )
-    for chunk in _chunks(update_rows):
+    for chunk in chunks(update_rows):
         conn.executemany(
             "UPDATE listing_tracking SET last_seen_at = ?, last_price = ?, last_price_sort_value = ?, "
             "price_change_count = ?, price_cut_count = ? WHERE article_no = ?",
             chunk,
         )
-    for chunk in _chunks(events):
+    for chunk in chunks(events):
         conn.executemany(
             "INSERT INTO listing_price_events (article_no, session_id, observed_at, price, "
             "price_sort_value, prev_price, prev_price_sort_value, change_pct) "
@@ -252,10 +246,10 @@ def record_price_events(
 def mark_reappeared(conn, article_nos: Iterable[str], session_id: str, now: str) -> None:
     """새 세션에 다시 나타난 매물의 열린 소멸 기록에 reappeared_at을 찍는다."""
     nos = sorted({str(no) for no in article_nos})
-    for chunk in _chunks(nos):
+    for chunk in chunks(nos):
         conn.execute(
             "UPDATE listing_disappearances SET reappeared_at = ? "
-            f"WHERE reappeared_at IS NULL AND session_id <> ? AND article_no IN ({_placeholders(len(chunk))})",
+            f"WHERE reappeared_at IS NULL AND session_id <> ? AND article_no IN ({placeholders(len(chunk))})",
             [now, session_id] + list(chunk),
         )
 
@@ -308,7 +302,7 @@ def record_disappearances(conn, session_id: str, now: str, incomplete_scopes=Non
                 1 if is_bargain(row["bargain_discount"]) else 0, 1 if had_price_down else 0,
             )
         )
-    for chunk in _chunks(payload):
+    for chunk in chunks(payload):
         conn.executemany(
             "INSERT INTO listing_disappearances (article_no, session_id, disappeared_at, region, district, "
             "building_name, property_type, trade_type, area, floor, price, naver_url, first_seen_at, "
@@ -384,9 +378,9 @@ def fast_complexes(conn, days: int, limit: int = 5) -> Dict:
     비교 기준 세션은 주간 리포트와 같은 규칙: 최신 라이브 성공 세션보다 days일(-12시간 허용)
     이전인 가장 최근 라이브 성공 세션, 없으면 최신과 다른 가장 오래된 라이브 성공 세션.
     """
-    live = "status = 'success' AND COALESCE(source, 'naver') <> 'demo'"
     latest = conn.execute(
-        f"SELECT session_id, crawled_at FROM crawl_history WHERE {live} ORDER BY crawled_at DESC LIMIT 1"
+        f"SELECT session_id, crawled_at FROM crawl_history WHERE {LIVE_SESSION_SQL} "
+        "ORDER BY crawled_at DESC LIMIT 1"
     ).fetchone()
     empty = {"days": days, "items": [], "latest_session": None, "previous_session": None}
     if latest is None:
@@ -394,29 +388,12 @@ def fast_complexes(conn, days: int, limit: int = 5) -> Dict:
     latest_at = latest["crawled_at"]
     if not isinstance(latest_at, datetime):
         latest_at = datetime.fromisoformat(str(latest_at))
-    cutoff = (latest_at - timedelta(days=days) + timedelta(hours=12)).isoformat()
-    previous = conn.execute(
-        f"SELECT session_id, crawled_at FROM crawl_history WHERE {live} AND session_id <> ? "
-        "AND crawled_at <= ? ORDER BY crawled_at DESC LIMIT 1",
-        (latest["session_id"], cutoff),
-    ).fetchone()
-    if previous is None:
-        previous = conn.execute(
-            f"SELECT session_id, crawled_at FROM crawl_history WHERE {live} AND session_id <> ? "
-            "ORDER BY crawled_at ASC LIMIT 1",
-            (latest["session_id"],),
-        ).fetchone()
+    previous = get_comparison_session(conn, latest["session_id"], latest_at, days)
     if previous is None:
         return {**empty, "latest_session": latest["session_id"]}
 
-    def counts(session_id):
-        rows = conn.execute(
-            "SELECT district, building_name, total_count FROM crawl_building_stats WHERE session_id = ?",
-            (session_id,),
-        ).fetchall()
-        return {(r["district"], r["building_name"]): r["total_count"] or 0 for r in rows}
-
-    cur, prev = counts(latest["session_id"]), counts(previous["session_id"])
+    cur = get_building_counts(conn, latest["session_id"])
+    prev = get_building_counts(conn, previous["session_id"])
     items = []
     if cur and prev:
         for key, prev_count in prev.items():
