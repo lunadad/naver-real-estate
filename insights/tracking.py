@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from bargain import is_bargain
+from insights.sessions import get_building_counts, get_comparison_session
 from insights.sql import LIVE_SESSION_SQL, chunks, placeholders
 
 RETENTION_DAYS = 90
@@ -375,9 +376,9 @@ def fast_complexes(conn, days: int, limit: int = 5) -> Dict:
     비교 기준 세션은 주간 리포트와 같은 규칙: 최신 라이브 성공 세션보다 days일(-12시간 허용)
     이전인 가장 최근 라이브 성공 세션, 없으면 최신과 다른 가장 오래된 라이브 성공 세션.
     """
-    live = LIVE_SESSION_SQL
     latest = conn.execute(
-        f"SELECT session_id, crawled_at FROM crawl_history WHERE {live} ORDER BY crawled_at DESC LIMIT 1"
+        f"SELECT session_id, crawled_at FROM crawl_history WHERE {LIVE_SESSION_SQL} "
+        "ORDER BY crawled_at DESC LIMIT 1"
     ).fetchone()
     empty = {"days": days, "items": [], "latest_session": None, "previous_session": None}
     if latest is None:
@@ -385,29 +386,12 @@ def fast_complexes(conn, days: int, limit: int = 5) -> Dict:
     latest_at = latest["crawled_at"]
     if not isinstance(latest_at, datetime):
         latest_at = datetime.fromisoformat(str(latest_at))
-    cutoff = (latest_at - timedelta(days=days) + timedelta(hours=12)).isoformat()
-    previous = conn.execute(
-        f"SELECT session_id, crawled_at FROM crawl_history WHERE {live} AND session_id <> ? "
-        "AND crawled_at <= ? ORDER BY crawled_at DESC LIMIT 1",
-        (latest["session_id"], cutoff),
-    ).fetchone()
-    if previous is None:
-        previous = conn.execute(
-            f"SELECT session_id, crawled_at FROM crawl_history WHERE {live} AND session_id <> ? "
-            "ORDER BY crawled_at ASC LIMIT 1",
-            (latest["session_id"],),
-        ).fetchone()
+    previous = get_comparison_session(conn, latest["session_id"], latest_at, days)
     if previous is None:
         return {**empty, "latest_session": latest["session_id"]}
 
-    def counts(session_id):
-        rows = conn.execute(
-            "SELECT district, building_name, total_count FROM crawl_building_stats WHERE session_id = ?",
-            (session_id,),
-        ).fetchall()
-        return {(r["district"], r["building_name"]): r["total_count"] or 0 for r in rows}
-
-    cur, prev = counts(latest["session_id"]), counts(previous["session_id"])
+    cur = get_building_counts(conn, latest["session_id"])
+    prev = get_building_counts(conn, previous["session_id"])
     items = []
     if cur and prev:
         for key, prev_count in prev.items():
