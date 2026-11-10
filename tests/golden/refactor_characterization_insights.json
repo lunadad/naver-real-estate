@@ -1,0 +1,4839 @@
+{
+  "build_insight_event_shapes": {
+    "missing_last_value": {
+      "bargain_discount_pct": 10.0,
+      "cut_count": 0,
+      "days_since_first_seen": null,
+      "days_since_last_change": null,
+      "total_change_pct": null
+    },
+    "no_events": {
+      "bargain_discount_pct": null,
+      "cut_count": 0,
+      "days_since_first_seen": null,
+      "days_since_last_change": null,
+      "total_change_pct": null
+    },
+    "price_up": {
+      "bargain_discount_pct": 40.0,
+      "cut_count": 0,
+      "days_since_first_seen": 1,
+      "days_since_last_change": 0,
+      "total_change_pct": 33.33
+    },
+    "single_event": {
+      "bargain_discount_pct": null,
+      "cut_count": 0,
+      "days_since_first_seen": 10,
+      "days_since_last_change": null,
+      "total_change_pct": 0.0
+    },
+    "zero_first_value": {
+      "bargain_discount_pct": null,
+      "cut_count": 3,
+      "days_since_first_seen": null,
+      "days_since_last_change": null,
+      "total_change_pct": null
+    }
+  },
+  "build_insight_time_inputs": {
+    "almost_one_day": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": 0,
+      "days_since_last_change": 0,
+      "total_change_pct": -10.0
+    },
+    "aware_datetime": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": 10,
+      "days_since_last_change": 10,
+      "total_change_pct": -10.0
+    },
+    "aware_kst_iso": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": 10,
+      "days_since_last_change": 10,
+      "total_change_pct": -10.0
+    },
+    "aware_z_iso": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": 10,
+      "days_since_last_change": 10,
+      "total_change_pct": -10.0
+    },
+    "date_object": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": 10,
+      "days_since_last_change": 10,
+      "total_change_pct": -10.0
+    },
+    "date_only": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": 10,
+      "days_since_last_change": 10,
+      "total_change_pct": -10.0
+    },
+    "empty": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": null,
+      "days_since_last_change": null,
+      "total_change_pct": -10.0
+    },
+    "future": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": 0,
+      "days_since_last_change": 0,
+      "total_change_pct": -10.0
+    },
+    "garbage": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": null,
+      "days_since_last_change": null,
+      "total_change_pct": -10.0
+    },
+    "naive_datetime": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": 10,
+      "days_since_last_change": 10,
+      "total_change_pct": -10.0
+    },
+    "naive_iso": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": 10,
+      "days_since_last_change": 10,
+      "total_change_pct": -10.0
+    },
+    "naive_iso_space": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": 10,
+      "days_since_last_change": 10,
+      "total_change_pct": -10.0
+    },
+    "none": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": null,
+      "days_since_last_change": null,
+      "total_change_pct": -10.0
+    },
+    "padded": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": null,
+      "days_since_last_change": null,
+      "total_change_pct": -10.0
+    },
+    "zero": {
+      "bargain_discount_pct": 20.0,
+      "cut_count": 1,
+      "days_since_first_seen": null,
+      "days_since_last_change": null,
+      "total_change_pct": -10.0
+    }
+  },
+  "complex_stats": {
+    "areas": [
+      {
+        "area": "84A",
+        "median": 100003.5,
+        "prices": [
+          {
+            "bargain": true,
+            "value": 100000
+          },
+          {
+            "bargain": true,
+            "value": 100001
+          },
+          {
+            "bargain": false,
+            "value": 100002
+          },
+          {
+            "bargain": false,
+            "value": 100003
+          },
+          {
+            "bargain": false,
+            "value": 100004
+          },
+          {
+            "bargain": false,
+            "value": 100005
+          },
+          {
+            "bargain": true,
+            "value": 100006
+          },
+          {
+            "bargain": false,
+            "value": 100007
+          }
+        ]
+      }
+    ],
+    "has_price_down": {
+      "empty_list": false,
+      "json": true,
+      "list": true,
+      "none": false,
+      "number": false,
+      "other": false,
+      "plain": true,
+      "substring": true
+    },
+    "missing_key": false,
+    "ordered": [
+      {
+        "area": "84A",
+        "article_no": "P1",
+        "bargain_discount": 0.4,
+        "is_bargain": true,
+        "price_sort_value": 100001,
+        "tags": "[\"가격인하\", \"급매\"]",
+        "trade_type": "매매"
+      },
+      {
+        "area": "84A",
+        "article_no": "P6",
+        "bargain_discount": 0.25,
+        "is_bargain": true,
+        "price_sort_value": 100006,
+        "tags": [],
+        "trade_type": "매매"
+      },
+      {
+        "area": "84A",
+        "article_no": "P0",
+        "bargain_discount": 0.1,
+        "is_bargain": true,
+        "price_sort_value": 100000,
+        "tags": [
+          "가격인하"
+        ],
+        "trade_type": "매매"
+      },
+      {
+        "area": "84A",
+        "article_no": "P2",
+        "bargain_discount": 0.41,
+        "is_bargain": false,
+        "price_sort_value": 100002,
+        "tags": "[\"가격인하예정\"]",
+        "trade_type": "매매"
+      },
+      {
+        "area": "84A",
+        "article_no": "P4",
+        "bargain_discount": 0.09,
+        "is_bargain": false,
+        "price_sort_value": 100004,
+        "tags": "[\"급매\"]",
+        "trade_type": "매매"
+      },
+      {
+        "area": "84A",
+        "article_no": "P7",
+        "bargain_discount": 0.0,
+        "is_bargain": false,
+        "price_sort_value": 100007,
+        "tags": 0,
+        "trade_type": "매매"
+      },
+      {
+        "area": "84A",
+        "article_no": "P5",
+        "bargain_discount": -0.2,
+        "is_bargain": false,
+        "price_sort_value": 100005,
+        "tags": null,
+        "trade_type": "매매"
+      },
+      {
+        "area": "84A",
+        "article_no": "P3",
+        "bargain_discount": null,
+        "is_bargain": false,
+        "price_sort_value": 100003,
+        "tags": "가격인하",
+        "trade_type": "매매"
+      }
+    ],
+    "stats": {
+      "bargain_count": 3,
+      "current_count": 8,
+      "price_down_ratio": 0.5,
+      "week_ago_count": 3
+    },
+    "stats_empty": {
+      "bargain_count": 0,
+      "current_count": 0,
+      "price_down_ratio": 0.0,
+      "week_ago_count": null
+    }
+  },
+  "fast_complexes": {
+    "all": {
+      "1": {
+        "days": 1,
+        "items": [
+          {
+            "building_name": "푸르지오",
+            "count": 0,
+            "district": "마포구",
+            "drop": 5,
+            "drop_ratio": 1.0,
+            "prev_count": 5
+          },
+          {
+            "building_name": "래미안",
+            "count": 4,
+            "district": "강남구",
+            "drop": 2,
+            "drop_ratio": 0.3333333333333333,
+            "prev_count": 6
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_prev"
+      },
+      "30": {
+        "days": 30,
+        "items": [
+          {
+            "building_name": "자이",
+            "count": 3,
+            "district": "서초구",
+            "drop": 5,
+            "drop_ratio": 0.625,
+            "prev_count": 8
+          },
+          {
+            "building_name": "래미안",
+            "count": 4,
+            "district": "강남구",
+            "drop": 5,
+            "drop_ratio": 0.5555555555555556,
+            "prev_count": 9
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_old"
+      },
+      "7": {
+        "days": 7,
+        "items": [
+          {
+            "building_name": "푸르지오",
+            "count": 0,
+            "district": "마포구",
+            "drop": 4,
+            "drop_ratio": 1.0,
+            "prev_count": 4
+          },
+          {
+            "building_name": "래미안",
+            "count": 4,
+            "district": "강남구",
+            "drop": 4,
+            "drop_ratio": 0.5,
+            "prev_count": 8
+          },
+          {
+            "building_name": "자이",
+            "count": 3,
+            "district": "서초구",
+            "drop": 3,
+            "drop_ratio": 0.5,
+            "prev_count": 6
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_week"
+      },
+      "limit_1": {
+        "days": 7,
+        "items": [
+          {
+            "building_name": "푸르지오",
+            "count": 0,
+            "district": "마포구",
+            "drop": 4,
+            "drop_ratio": 1.0,
+            "prev_count": 4
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_week"
+      }
+    },
+    "new_and_demo": {
+      "1": {
+        "days": 1,
+        "items": [],
+        "latest_session": "s_new",
+        "previous_session": null
+      },
+      "30": {
+        "days": 30,
+        "items": [],
+        "latest_session": "s_new",
+        "previous_session": null
+      },
+      "7": {
+        "days": 7,
+        "items": [],
+        "latest_session": "s_new",
+        "previous_session": null
+      },
+      "limit_1": {
+        "days": 7,
+        "items": [],
+        "latest_session": "s_new",
+        "previous_session": null
+      }
+    },
+    "new_and_prev": {
+      "1": {
+        "days": 1,
+        "items": [
+          {
+            "building_name": "푸르지오",
+            "count": 0,
+            "district": "마포구",
+            "drop": 5,
+            "drop_ratio": 1.0,
+            "prev_count": 5
+          },
+          {
+            "building_name": "래미안",
+            "count": 4,
+            "district": "강남구",
+            "drop": 2,
+            "drop_ratio": 0.3333333333333333,
+            "prev_count": 6
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_prev"
+      },
+      "30": {
+        "days": 30,
+        "items": [
+          {
+            "building_name": "푸르지오",
+            "count": 0,
+            "district": "마포구",
+            "drop": 5,
+            "drop_ratio": 1.0,
+            "prev_count": 5
+          },
+          {
+            "building_name": "래미안",
+            "count": 4,
+            "district": "강남구",
+            "drop": 2,
+            "drop_ratio": 0.3333333333333333,
+            "prev_count": 6
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_prev"
+      },
+      "7": {
+        "days": 7,
+        "items": [
+          {
+            "building_name": "푸르지오",
+            "count": 0,
+            "district": "마포구",
+            "drop": 5,
+            "drop_ratio": 1.0,
+            "prev_count": 5
+          },
+          {
+            "building_name": "래미안",
+            "count": 4,
+            "district": "강남구",
+            "drop": 2,
+            "drop_ratio": 0.3333333333333333,
+            "prev_count": 6
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_prev"
+      },
+      "limit_1": {
+        "days": 7,
+        "items": [
+          {
+            "building_name": "푸르지오",
+            "count": 0,
+            "district": "마포구",
+            "drop": 5,
+            "drop_ratio": 1.0,
+            "prev_count": 5
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_prev"
+      }
+    },
+    "new_and_week_late": {
+      "1": {
+        "days": 1,
+        "items": [
+          {
+            "building_name": "래미안",
+            "count": 4,
+            "district": "강남구",
+            "drop": 3,
+            "drop_ratio": 0.42857142857142855,
+            "prev_count": 7
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_week_late"
+      },
+      "30": {
+        "days": 30,
+        "items": [
+          {
+            "building_name": "래미안",
+            "count": 4,
+            "district": "강남구",
+            "drop": 3,
+            "drop_ratio": 0.42857142857142855,
+            "prev_count": 7
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_week_late"
+      },
+      "7": {
+        "days": 7,
+        "items": [
+          {
+            "building_name": "래미안",
+            "count": 4,
+            "district": "강남구",
+            "drop": 3,
+            "drop_ratio": 0.42857142857142855,
+            "prev_count": 7
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_week_late"
+      },
+      "limit_1": {
+        "days": 7,
+        "items": [
+          {
+            "building_name": "래미안",
+            "count": 4,
+            "district": "강남구",
+            "drop": 3,
+            "drop_ratio": 0.42857142857142855,
+            "prev_count": 7
+          }
+        ],
+        "latest_session": "s_new",
+        "previous_session": "s_week_late"
+      }
+    },
+    "none": {
+      "1": {
+        "days": 1,
+        "items": [],
+        "latest_session": null,
+        "previous_session": null
+      },
+      "30": {
+        "days": 30,
+        "items": [],
+        "latest_session": null,
+        "previous_session": null
+      },
+      "7": {
+        "days": 7,
+        "items": [],
+        "latest_session": null,
+        "previous_session": null
+      },
+      "limit_1": {
+        "days": 7,
+        "items": [],
+        "latest_session": null,
+        "previous_session": null
+      }
+    },
+    "only_demo_and_fail": {
+      "1": {
+        "days": 1,
+        "items": [],
+        "latest_session": null,
+        "previous_session": null
+      },
+      "30": {
+        "days": 30,
+        "items": [],
+        "latest_session": null,
+        "previous_session": null
+      },
+      "7": {
+        "days": 7,
+        "items": [],
+        "latest_session": null,
+        "previous_session": null
+      },
+      "limit_1": {
+        "days": 7,
+        "items": [],
+        "latest_session": null,
+        "previous_session": null
+      }
+    },
+    "only_new": {
+      "1": {
+        "days": 1,
+        "items": [],
+        "latest_session": "s_new",
+        "previous_session": null
+      },
+      "30": {
+        "days": 30,
+        "items": [],
+        "latest_session": "s_new",
+        "previous_session": null
+      },
+      "7": {
+        "days": 7,
+        "items": [],
+        "latest_session": "s_new",
+        "previous_session": null
+      },
+      "limit_1": {
+        "days": 7,
+        "items": [],
+        "latest_session": "s_new",
+        "previous_session": null
+      }
+    }
+  },
+  "heatmap_districts": {
+    "with_prev": [
+      {
+        "bargain_count": 2,
+        "bargain_ratio": 0.6667,
+        "district": "강남구",
+        "price_down_ratio": 1.0,
+        "total": 3,
+        "weekly_change_pct": 50.0
+      },
+      {
+        "bargain_count": 0,
+        "bargain_ratio": 0.0,
+        "district": "서초구",
+        "price_down_ratio": 0.4,
+        "total": 10,
+        "weekly_change_pct": null
+      },
+      {
+        "bargain_count": 1,
+        "bargain_ratio": 0.5,
+        "district": "마포구",
+        "price_down_ratio": 0.0,
+        "total": 2,
+        "weekly_change_pct": null
+      },
+      {
+        "bargain_count": 0,
+        "bargain_ratio": null,
+        "district": "송파구",
+        "price_down_ratio": null,
+        "total": 0,
+        "weekly_change_pct": null
+      },
+      {
+        "bargain_count": 0,
+        "bargain_ratio": null,
+        "district": "없는구",
+        "price_down_ratio": null,
+        "total": 0,
+        "weekly_change_pct": null
+      }
+    ],
+    "without_prev": [
+      {
+        "bargain_count": 2,
+        "bargain_ratio": 0.6667,
+        "district": "강남구",
+        "price_down_ratio": 1.0,
+        "total": 3,
+        "weekly_change_pct": null
+      },
+      {
+        "bargain_count": 0,
+        "bargain_ratio": 0.0,
+        "district": "서초구",
+        "price_down_ratio": 0.5,
+        "total": 2,
+        "weekly_change_pct": null
+      },
+      {
+        "bargain_count": 1,
+        "bargain_ratio": 0.5,
+        "district": "마포구",
+        "price_down_ratio": 0.0,
+        "total": 2,
+        "weekly_change_pct": null
+      },
+      {
+        "bargain_count": 0,
+        "bargain_ratio": null,
+        "district": "송파구",
+        "price_down_ratio": null,
+        "total": 0,
+        "weekly_change_pct": null
+      },
+      {
+        "bargain_count": 0,
+        "bargain_ratio": null,
+        "district": "없는구",
+        "price_down_ratio": null,
+        "total": 0,
+        "weekly_change_pct": null
+      }
+    ]
+  },
+  "live_session_queries": {
+    "all": {
+      "building_history": [
+        {
+          "crawled_at": "2026-10-20T09:00:00",
+          "price_down_count": 3,
+          "session_id": "s_new",
+          "total_count": 4
+        },
+        {
+          "crawled_at": "2026-10-19T09:30:00",
+          "price_down_count": 3,
+          "session_id": "s_prev",
+          "total_count": 6
+        },
+        {
+          "crawled_at": "2026-10-13T22:00:00",
+          "price_down_count": 2,
+          "session_id": "s_week_late",
+          "total_count": 7
+        }
+      ],
+      "last_crawl": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "last_crawl_visible": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "last_live": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "latest_building_changes": {
+        "('강남구', '래미안')": {
+          "current_crawled_at": "2026-10-20T09:00:00",
+          "current_price_down": 3,
+          "current_session_id": "s_new",
+          "current_total": 4,
+          "previous_crawled_at": "2026-10-19T09:30:00",
+          "previous_price_down": 3,
+          "previous_session_id": "s_prev",
+          "previous_total": 6,
+          "price_down_diff": 0,
+          "total_diff": -2
+        },
+        "('서초구', '자이')": {
+          "current_crawled_at": "2026-10-20T09:00:00",
+          "current_price_down": 0,
+          "current_session_id": "s_new",
+          "current_total": 3,
+          "previous_crawled_at": "2026-10-19T09:30:00",
+          "previous_price_down": 1,
+          "previous_session_id": "s_prev",
+          "previous_total": 3,
+          "price_down_diff": -1,
+          "total_diff": 0
+        }
+      },
+      "latest_session": [
+        "s_new",
+        "2026-10-20 09:00:00"
+      ],
+      "live_on": {
+        "2026-10-12": false,
+        "2026-10-13": true,
+        "2026-10-19": true,
+        "2026-10-20": true,
+        "2026-10-21": false
+      },
+      "price_down_ratio_trend": {
+        "diff_pp": 5.272727272727277,
+        "today_ratio": 28.000000000000004,
+        "yesterday_ratio": 22.727272727272727
+      },
+      "recent_live": [
+        {
+          "crawled_at": "2026-10-20T09:00:00",
+          "session_id": "s_new",
+          "source": "naver",
+          "status": "success",
+          "total_count": 25,
+          "urgent_count": 25
+        },
+        {
+          "crawled_at": "2026-10-19T09:30:00",
+          "session_id": "s_prev",
+          "source": "naver",
+          "status": "success",
+          "total_count": 20,
+          "urgent_count": 20
+        },
+        {
+          "crawled_at": "2026-10-13T22:00:00",
+          "session_id": "s_week_late",
+          "source": "naver",
+          "status": "success",
+          "total_count": 31,
+          "urgent_count": 31
+        }
+      ],
+      "top_building_movers": [
+        {
+          "building_name": "래미안",
+          "current_crawled_at": "2026-10-20T09:00:00",
+          "current_price_down": 3,
+          "current_session_id": "s_new",
+          "current_total": 4,
+          "district": "강남구",
+          "previous_crawled_at": "2026-10-19T09:30:00",
+          "previous_price_down": 3,
+          "previous_session_id": "s_prev",
+          "previous_total": 6,
+          "price_down_diff": 0,
+          "total_diff": -2
+        },
+        {
+          "building_name": "자이",
+          "current_crawled_at": "2026-10-20T09:00:00",
+          "current_price_down": 0,
+          "current_session_id": "s_new",
+          "current_total": 3,
+          "district": "서초구",
+          "previous_crawled_at": "2026-10-19T09:30:00",
+          "previous_price_down": 1,
+          "previous_session_id": "s_prev",
+          "previous_total": 3,
+          "price_down_diff": -1,
+          "total_diff": 0
+        }
+      ],
+      "trends": [
+        {
+          "current_cnt": 10,
+          "current_date": "2026-10-20",
+          "diff": 10,
+          "display_name": "서울특별시 마포구",
+          "district": "마포구",
+          "prev_cnt": 0,
+          "previous_date": "2026-10-19",
+          "price_down_count": 1,
+          "region": "서울특별시"
+        },
+        {
+          "current_cnt": 15,
+          "current_date": "2026-10-20",
+          "diff": 3,
+          "display_name": "서울특별시 강남구",
+          "district": "강남구",
+          "prev_cnt": 12,
+          "previous_date": "2026-10-19",
+          "price_down_count": 6,
+          "region": "서울특별시"
+        },
+        {
+          "current_cnt": 0,
+          "current_date": "2026-10-20",
+          "diff": -2,
+          "display_name": "세종특별자치시",
+          "district": "세종특별자치시",
+          "prev_cnt": 2,
+          "previous_date": "2026-10-19",
+          "price_down_count": 0,
+          "region": "세종특별자치시"
+        },
+        {
+          "current_cnt": 0,
+          "current_date": "2026-10-20",
+          "diff": -8,
+          "display_name": "서울특별시 서초구",
+          "district": "서초구",
+          "prev_cnt": 8,
+          "previous_date": "2026-10-19",
+          "price_down_count": 0,
+          "region": "서울특별시"
+        }
+      ],
+      "week_ago_session": "s_week"
+    },
+    "new_and_demo": {
+      "building_history": [
+        {
+          "crawled_at": "2026-10-20T09:00:00",
+          "price_down_count": 3,
+          "session_id": "s_new",
+          "total_count": 4
+        }
+      ],
+      "last_crawl": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "last_crawl_visible": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "last_live": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "latest_building_changes": {},
+      "latest_session": [
+        "s_new",
+        "2026-10-20 09:00:00"
+      ],
+      "live_on": {
+        "2026-10-12": false,
+        "2026-10-13": false,
+        "2026-10-19": false,
+        "2026-10-20": true,
+        "2026-10-21": false
+      },
+      "price_down_ratio_trend": {
+        "diff_pp": null,
+        "today_ratio": 28.000000000000004,
+        "yesterday_ratio": null
+      },
+      "recent_live": [
+        {
+          "crawled_at": "2026-10-20T09:00:00",
+          "session_id": "s_new",
+          "source": "naver",
+          "status": "success",
+          "total_count": 25,
+          "urgent_count": 25
+        }
+      ],
+      "top_building_movers": [],
+      "trends": [
+        {
+          "current_cnt": 15,
+          "current_date": "2026-10-20",
+          "diff": 15,
+          "display_name": "서울특별시 강남구",
+          "district": "강남구",
+          "prev_cnt": 0,
+          "previous_date": "2026-10-19",
+          "price_down_count": 6,
+          "region": "서울특별시"
+        },
+        {
+          "current_cnt": 10,
+          "current_date": "2026-10-20",
+          "diff": 10,
+          "display_name": "서울특별시 마포구",
+          "district": "마포구",
+          "prev_cnt": 0,
+          "previous_date": "2026-10-19",
+          "price_down_count": 1,
+          "region": "서울특별시"
+        }
+      ],
+      "week_ago_session": null
+    },
+    "new_and_prev": {
+      "building_history": [
+        {
+          "crawled_at": "2026-10-20T09:00:00",
+          "price_down_count": 3,
+          "session_id": "s_new",
+          "total_count": 4
+        },
+        {
+          "crawled_at": "2026-10-19T09:30:00",
+          "price_down_count": 3,
+          "session_id": "s_prev",
+          "total_count": 6
+        }
+      ],
+      "last_crawl": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "last_crawl_visible": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "last_live": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "latest_building_changes": {
+        "('강남구', '래미안')": {
+          "current_crawled_at": "2026-10-20T09:00:00",
+          "current_price_down": 3,
+          "current_session_id": "s_new",
+          "current_total": 4,
+          "previous_crawled_at": "2026-10-19T09:30:00",
+          "previous_price_down": 3,
+          "previous_session_id": "s_prev",
+          "previous_total": 6,
+          "price_down_diff": 0,
+          "total_diff": -2
+        },
+        "('서초구', '자이')": {
+          "current_crawled_at": "2026-10-20T09:00:00",
+          "current_price_down": 0,
+          "current_session_id": "s_new",
+          "current_total": 3,
+          "previous_crawled_at": "2026-10-19T09:30:00",
+          "previous_price_down": 1,
+          "previous_session_id": "s_prev",
+          "previous_total": 3,
+          "price_down_diff": -1,
+          "total_diff": 0
+        }
+      },
+      "latest_session": [
+        "s_new",
+        "2026-10-20 09:00:00"
+      ],
+      "live_on": {
+        "2026-10-12": false,
+        "2026-10-13": false,
+        "2026-10-19": true,
+        "2026-10-20": true,
+        "2026-10-21": false
+      },
+      "price_down_ratio_trend": {
+        "diff_pp": 5.272727272727277,
+        "today_ratio": 28.000000000000004,
+        "yesterday_ratio": 22.727272727272727
+      },
+      "recent_live": [
+        {
+          "crawled_at": "2026-10-20T09:00:00",
+          "session_id": "s_new",
+          "source": "naver",
+          "status": "success",
+          "total_count": 25,
+          "urgent_count": 25
+        },
+        {
+          "crawled_at": "2026-10-19T09:30:00",
+          "session_id": "s_prev",
+          "source": "naver",
+          "status": "success",
+          "total_count": 20,
+          "urgent_count": 20
+        }
+      ],
+      "top_building_movers": [
+        {
+          "building_name": "래미안",
+          "current_crawled_at": "2026-10-20T09:00:00",
+          "current_price_down": 3,
+          "current_session_id": "s_new",
+          "current_total": 4,
+          "district": "강남구",
+          "previous_crawled_at": "2026-10-19T09:30:00",
+          "previous_price_down": 3,
+          "previous_session_id": "s_prev",
+          "previous_total": 6,
+          "price_down_diff": 0,
+          "total_diff": -2
+        },
+        {
+          "building_name": "자이",
+          "current_crawled_at": "2026-10-20T09:00:00",
+          "current_price_down": 0,
+          "current_session_id": "s_new",
+          "current_total": 3,
+          "district": "서초구",
+          "previous_crawled_at": "2026-10-19T09:30:00",
+          "previous_price_down": 1,
+          "previous_session_id": "s_prev",
+          "previous_total": 3,
+          "price_down_diff": -1,
+          "total_diff": 0
+        }
+      ],
+      "trends": [
+        {
+          "current_cnt": 10,
+          "current_date": "2026-10-20",
+          "diff": 10,
+          "display_name": "서울특별시 마포구",
+          "district": "마포구",
+          "prev_cnt": 0,
+          "previous_date": "2026-10-19",
+          "price_down_count": 1,
+          "region": "서울특별시"
+        },
+        {
+          "current_cnt": 15,
+          "current_date": "2026-10-20",
+          "diff": 3,
+          "display_name": "서울특별시 강남구",
+          "district": "강남구",
+          "prev_cnt": 12,
+          "previous_date": "2026-10-19",
+          "price_down_count": 6,
+          "region": "서울특별시"
+        },
+        {
+          "current_cnt": 0,
+          "current_date": "2026-10-20",
+          "diff": -2,
+          "display_name": "세종특별자치시",
+          "district": "세종특별자치시",
+          "prev_cnt": 2,
+          "previous_date": "2026-10-19",
+          "price_down_count": 0,
+          "region": "세종특별자치시"
+        },
+        {
+          "current_cnt": 0,
+          "current_date": "2026-10-20",
+          "diff": -8,
+          "display_name": "서울특별시 서초구",
+          "district": "서초구",
+          "prev_cnt": 8,
+          "previous_date": "2026-10-19",
+          "price_down_count": 0,
+          "region": "서울특별시"
+        }
+      ],
+      "week_ago_session": null
+    },
+    "new_and_week_late": {
+      "building_history": [
+        {
+          "crawled_at": "2026-10-20T09:00:00",
+          "price_down_count": 3,
+          "session_id": "s_new",
+          "total_count": 4
+        },
+        {
+          "crawled_at": "2026-10-13T22:00:00",
+          "price_down_count": 2,
+          "session_id": "s_week_late",
+          "total_count": 7
+        }
+      ],
+      "last_crawl": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "last_crawl_visible": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "last_live": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "latest_building_changes": {
+        "('강남구', '래미안')": {
+          "current_crawled_at": "2026-10-20T09:00:00",
+          "current_price_down": 3,
+          "current_session_id": "s_new",
+          "current_total": 4,
+          "previous_crawled_at": "2026-10-13T22:00:00",
+          "previous_price_down": 2,
+          "previous_session_id": "s_week_late",
+          "previous_total": 7,
+          "price_down_diff": 1,
+          "total_diff": -3
+        }
+      },
+      "latest_session": [
+        "s_new",
+        "2026-10-20 09:00:00"
+      ],
+      "live_on": {
+        "2026-10-12": false,
+        "2026-10-13": true,
+        "2026-10-19": false,
+        "2026-10-20": true,
+        "2026-10-21": false
+      },
+      "price_down_ratio_trend": {
+        "diff_pp": null,
+        "today_ratio": 28.000000000000004,
+        "yesterday_ratio": null
+      },
+      "recent_live": [
+        {
+          "crawled_at": "2026-10-20T09:00:00",
+          "session_id": "s_new",
+          "source": "naver",
+          "status": "success",
+          "total_count": 25,
+          "urgent_count": 25
+        },
+        {
+          "crawled_at": "2026-10-13T22:00:00",
+          "session_id": "s_week_late",
+          "source": "naver",
+          "status": "success",
+          "total_count": 31,
+          "urgent_count": 31
+        }
+      ],
+      "top_building_movers": [
+        {
+          "building_name": "래미안",
+          "current_crawled_at": "2026-10-20T09:00:00",
+          "current_price_down": 3,
+          "current_session_id": "s_new",
+          "current_total": 4,
+          "district": "강남구",
+          "previous_crawled_at": "2026-10-13T22:00:00",
+          "previous_price_down": 2,
+          "previous_session_id": "s_week_late",
+          "previous_total": 7,
+          "price_down_diff": 1,
+          "total_diff": -3
+        }
+      ],
+      "trends": [
+        {
+          "current_cnt": 15,
+          "current_date": "2026-10-20",
+          "diff": 15,
+          "display_name": "서울특별시 강남구",
+          "district": "강남구",
+          "prev_cnt": 0,
+          "previous_date": "2026-10-19",
+          "price_down_count": 6,
+          "region": "서울특별시"
+        },
+        {
+          "current_cnt": 10,
+          "current_date": "2026-10-20",
+          "diff": 10,
+          "display_name": "서울특별시 마포구",
+          "district": "마포구",
+          "prev_cnt": 0,
+          "previous_date": "2026-10-19",
+          "price_down_count": 1,
+          "region": "서울특별시"
+        }
+      ],
+      "week_ago_session": null
+    },
+    "none": {
+      "building_history": [],
+      "last_crawl": null,
+      "last_crawl_visible": null,
+      "last_live": null,
+      "latest_building_changes": {},
+      "latest_session": [
+        null,
+        null
+      ],
+      "live_on": {
+        "2026-10-12": false,
+        "2026-10-13": false,
+        "2026-10-19": false,
+        "2026-10-20": false,
+        "2026-10-21": false
+      },
+      "price_down_ratio_trend": null,
+      "recent_live": [],
+      "top_building_movers": [],
+      "trends": [],
+      "week_ago_session": null
+    },
+    "only_demo_and_fail": {
+      "building_history": [],
+      "last_crawl": {
+        "crawled_at": "2026-10-19T12:00:00",
+        "session_id": "s_fail",
+        "source": "naver",
+        "status": "error",
+        "total_count": 0,
+        "urgent_count": 0
+      },
+      "last_crawl_visible": {
+        "crawled_at": "2026-10-19T12:00:00",
+        "session_id": "s_fail",
+        "source": "naver",
+        "status": "error",
+        "total_count": 0,
+        "urgent_count": 0
+      },
+      "last_live": null,
+      "latest_building_changes": {},
+      "latest_session": [
+        null,
+        null
+      ],
+      "live_on": {
+        "2026-10-12": false,
+        "2026-10-13": false,
+        "2026-10-19": false,
+        "2026-10-20": false,
+        "2026-10-21": false
+      },
+      "price_down_ratio_trend": null,
+      "recent_live": [],
+      "top_building_movers": [],
+      "trends": [],
+      "week_ago_session": null
+    },
+    "only_new": {
+      "building_history": [
+        {
+          "crawled_at": "2026-10-20T09:00:00",
+          "price_down_count": 3,
+          "session_id": "s_new",
+          "total_count": 4
+        }
+      ],
+      "last_crawl": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "last_crawl_visible": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "last_live": {
+        "crawled_at": "2026-10-20T09:00:00",
+        "session_id": "s_new",
+        "source": "naver",
+        "status": "success",
+        "total_count": 25,
+        "urgent_count": 25
+      },
+      "latest_building_changes": {},
+      "latest_session": [
+        "s_new",
+        "2026-10-20 09:00:00"
+      ],
+      "live_on": {
+        "2026-10-12": false,
+        "2026-10-13": false,
+        "2026-10-19": false,
+        "2026-10-20": true,
+        "2026-10-21": false
+      },
+      "price_down_ratio_trend": {
+        "diff_pp": null,
+        "today_ratio": 28.000000000000004,
+        "yesterday_ratio": null
+      },
+      "recent_live": [
+        {
+          "crawled_at": "2026-10-20T09:00:00",
+          "session_id": "s_new",
+          "source": "naver",
+          "status": "success",
+          "total_count": 25,
+          "urgent_count": 25
+        }
+      ],
+      "top_building_movers": [],
+      "trends": [
+        {
+          "current_cnt": 15,
+          "current_date": "2026-10-20",
+          "diff": 15,
+          "display_name": "서울특별시 강남구",
+          "district": "강남구",
+          "prev_cnt": 0,
+          "previous_date": "2026-10-19",
+          "price_down_count": 6,
+          "region": "서울특별시"
+        },
+        {
+          "current_cnt": 10,
+          "current_date": "2026-10-20",
+          "diff": 10,
+          "display_name": "서울특별시 마포구",
+          "district": "마포구",
+          "prev_cnt": 0,
+          "previous_date": "2026-10-19",
+          "price_down_count": 1,
+          "region": "서울특별시"
+        }
+      ],
+      "week_ago_session": null
+    }
+  },
+  "parse_dt_and_week_ago_pick": {
+    "parsed": {
+      "almost_one_day": "2026-10-19 10:00:01",
+      "aware_datetime": "2026-10-10 00:00:00",
+      "aware_kst_iso": "2026-10-10 00:00:00",
+      "aware_z_iso": "2026-10-10 09:00:00",
+      "date_object": "2026-10-10 00:00:00",
+      "date_only": "2026-10-10 00:00:00",
+      "empty": null,
+      "future": "2026-12-25 00:00:00",
+      "garbage": null,
+      "naive_datetime": "2026-10-10 09:00:00",
+      "naive_iso": "2026-10-10 09:00:00",
+      "naive_iso_space": "2026-10-10 09:00:00.123456",
+      "none": null,
+      "padded": "2026-10-10 09:00:00",
+      "zero": null
+    },
+    "picks": {
+      "edge_inside": "s_week_late",
+      "edge_outside": null,
+      "garbage": null,
+      "latest": "s_week",
+      "latest_aware": "s_week",
+      "none": null
+    }
+  },
+  "tracking_queries": {
+    "disappeared": [
+      {
+        "area": "84A",
+        "article_no": "G4",
+        "building_name": "다른단지",
+        "disappeared_at": "2026-10-20T09:00:00",
+        "district": "강남구",
+        "first_seen_at": null,
+        "floor": "3/20",
+        "had_price_down": 0,
+        "naver_url": "https://example.com/G4",
+        "price": "9억",
+        "property_type": "아파트",
+        "reappeared_at": null,
+        "region": "서울특별시",
+        "trade_type": "매매",
+        "was_bargain": 1
+      },
+      {
+        "area": "84A",
+        "article_no": "G3",
+        "building_name": "다른단지",
+        "disappeared_at": "2026-10-20T09:00:00",
+        "district": "강남구",
+        "first_seen_at": "2026-10-10T09:00:00+09:00",
+        "floor": "3/20",
+        "had_price_down": 0,
+        "naver_url": "https://example.com/G3",
+        "price": "9억",
+        "property_type": "아파트",
+        "reappeared_at": null,
+        "region": "서울특별시",
+        "trade_type": "매매",
+        "was_bargain": 1
+      },
+      {
+        "area": "84A",
+        "article_no": "G2",
+        "building_name": "래미안",
+        "disappeared_at": "2026-10-19T09:30:00",
+        "district": "강남구",
+        "first_seen_at": "2026-10-15T23:00:00",
+        "floor": "3/20",
+        "had_price_down": 0,
+        "naver_url": "https://example.com/G2",
+        "price": "9억",
+        "property_type": "아파트",
+        "reappeared_at": null,
+        "region": "서울특별시",
+        "trade_type": "매매",
+        "was_bargain": 1
+      },
+      {
+        "area": "84A",
+        "article_no": "G1",
+        "building_name": "래미안",
+        "disappeared_at": "2026-10-19T09:30:00",
+        "district": "강남구",
+        "first_seen_at": "2026-10-01T09:00:00",
+        "floor": "3/20",
+        "had_price_down": 1,
+        "naver_url": "https://example.com/G1",
+        "price": "9억",
+        "property_type": "아파트",
+        "reappeared_at": null,
+        "region": "서울특별시",
+        "trade_type": "매매",
+        "was_bargain": 1
+      }
+    ],
+    "history": {
+      "123": null,
+      "A1": {
+        "events": [
+          {
+            "change_pct": null,
+            "observed_at": "2026-10-18T09:00:00",
+            "prev_price": null,
+            "prev_price_sort_value": null,
+            "price": "10억",
+            "price_sort_value": 100000,
+            "session_id": "s_week"
+          },
+          {
+            "change_pct": -10.0,
+            "observed_at": "2026-10-19T09:30:00",
+            "prev_price": "10억",
+            "prev_price_sort_value": 100000,
+            "price": "9억",
+            "price_sort_value": 90000,
+            "session_id": "s_prev"
+          },
+          {
+            "change_pct": -11.11,
+            "observed_at": "2026-10-20T09:00:00",
+            "prev_price": "9억",
+            "prev_price_sort_value": 90000,
+            "price": "8억",
+            "price_sort_value": 80000,
+            "session_id": "s_new"
+          }
+        ],
+        "listing": {
+          "area": "84A",
+          "article_no": "A1",
+          "bargain_basis": "same_area",
+          "bargain_discount": 0.2,
+          "building_name": "래미안",
+          "district": "강남구",
+          "floor": "10/20",
+          "naver_url": "https://example.com/A1",
+          "price": "8억",
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "trade_type": "매매"
+        },
+        "tracking": {
+          "article_no": "A1",
+          "first_seen_at": "2026-10-18T09:00:00",
+          "last_price": "8억",
+          "last_price_sort_value": 80000,
+          "last_seen_at": "2026-10-20T09:00:00",
+          "price_change_count": 2,
+          "price_cut_count": 2
+        }
+      },
+      "A2": {
+        "events": [
+          {
+            "change_pct": null,
+            "observed_at": "2026-09-20T09:00:00",
+            "prev_price": null,
+            "prev_price_sort_value": null,
+            "price": "10억",
+            "price_sort_value": 100000,
+            "session_id": "s_week"
+          }
+        ],
+        "listing": {
+          "area": "84A",
+          "article_no": "A2",
+          "bargain_basis": null,
+          "bargain_discount": 0.0,
+          "building_name": "래미안",
+          "district": "강남구",
+          "floor": "10/20",
+          "naver_url": "https://example.com/A2",
+          "price": "10억",
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "trade_type": "매매"
+        },
+        "tracking": {
+          "article_no": "A2",
+          "first_seen_at": "2026-09-20T09:00:00",
+          "last_price": "10억",
+          "last_price_sort_value": 100000,
+          "last_seen_at": "2026-10-20T09:00:00",
+          "price_change_count": 0,
+          "price_cut_count": 0
+        }
+      },
+      "G1": {
+        "events": [],
+        "listing": null,
+        "tracking": {
+          "article_no": "G1",
+          "first_seen_at": "2026-10-01T09:00:00",
+          "last_price": "9억",
+          "last_price_sort_value": 90000,
+          "last_seen_at": "2026-10-15T09:00:00",
+          "price_change_count": 1,
+          "price_cut_count": 1
+        }
+      },
+      "NOPE": null
+    },
+    "tags": [
+      "진짜 급매였음",
+      "진짜 급매였음",
+      "진짜 급매였음",
+      "진짜 급매였음",
+      "철회 후 재등록",
+      "인하 후 소진",
+      "진짜 급매였음",
+      "급매",
+      "진짜 급매였음"
+    ]
+  },
+  "view_pages": {
+    "/complex": 200,
+    "/disappeared": 200,
+    "/heatmap": 200,
+    "/watchlist": 200
+  },
+  "view_routes_with_data": {
+    "compare": {
+      "cache": null,
+      "json": {
+        "items": [
+          {
+            "area": "84A",
+            "article_no": "V2",
+            "building_name": "래미안",
+            "cut_count": 0,
+            "days_listed": 3,
+            "district": "강남구",
+            "floor": "10/20",
+            "is_bargain": false,
+            "median_gap_pct": null,
+            "naver_url": "https://example.com/V2",
+            "price": "10억",
+            "price_per_pyeong": 3935,
+            "price_sort_value": 100000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "status": "active",
+            "tags": [],
+            "trade_type": "매매"
+          },
+          {
+            "area": "84A",
+            "article_no": "V1",
+            "building_name": "래미안",
+            "cut_count": 1,
+            "days_listed": 10,
+            "district": "강남구",
+            "floor": "10/20",
+            "is_bargain": true,
+            "median_gap_pct": -20.0,
+            "naver_url": "https://example.com/V1",
+            "price": "8억",
+            "price_per_pyeong": 3148,
+            "price_sort_value": 80000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "status": "active",
+            "tags": [
+              "가격인하"
+            ],
+            "trade_type": "매매"
+          },
+          {
+            "article_no": "NOPE",
+            "status": "unknown"
+          }
+        ]
+      },
+      "status": 200
+    },
+    "compare_blank": {
+      "cache": null,
+      "json": {
+        "message": "ids required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "compare_missing": {
+      "cache": null,
+      "json": {
+        "message": "ids required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "complex": {
+      "cache": "public, max-age=300",
+      "json": {
+        "areas": [
+          {
+            "area": "84A",
+            "median": 100000,
+            "prices": [
+              {
+                "bargain": true,
+                "value": 80000
+              },
+              {
+                "bargain": false,
+                "value": 100000
+              },
+              {
+                "bargain": false,
+                "value": 105000
+              }
+            ]
+          }
+        ],
+        "building_name": "래미안",
+        "district": "강남구",
+        "listings": [
+          {
+            "area": "84A",
+            "article_no": "V1",
+            "bargain_basis": null,
+            "bargain_discount": 0.2,
+            "building_name": "래미안",
+            "confirmed_date": null,
+            "district": "강남구",
+            "floor": "10/20",
+            "is_bargain": true,
+            "naver_url": "https://example.com/V1",
+            "price": "8억",
+            "price_sort_value": 80000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tags": "[\"가격인하\"]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84A",
+            "article_no": "V3",
+            "bargain_basis": null,
+            "bargain_discount": -0.05,
+            "building_name": "래미안",
+            "confirmed_date": null,
+            "district": "강남구",
+            "floor": "10/20",
+            "is_bargain": false,
+            "naver_url": "https://example.com/V3",
+            "price": "10억",
+            "price_sort_value": 105000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tags": "[]",
+            "trade_type": "매매"
+          },
+          {
+            "area": "84A",
+            "article_no": "V2",
+            "bargain_basis": null,
+            "bargain_discount": null,
+            "building_name": "래미안",
+            "confirmed_date": null,
+            "district": "강남구",
+            "floor": "10/20",
+            "is_bargain": false,
+            "naver_url": "https://example.com/V2",
+            "price": "10억",
+            "price_sort_value": 100000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tags": "[]",
+            "trade_type": "매매"
+          }
+        ],
+        "region": "서울특별시",
+        "stats": {
+          "bargain_count": 1,
+          "current_count": 3,
+          "price_down_ratio": 0.3333,
+          "week_ago_count": 6
+        }
+      },
+      "status": 200
+    },
+    "complex_missing_args": {
+      "cache": null,
+      "json": {
+        "message": "district and building_name required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "complex_unknown": {
+      "cache": null,
+      "json": {
+        "message": "complex not found",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "disappeared_1": {
+      "cache": null,
+      "json": {
+        "bargain_total": 1,
+        "count": 1,
+        "days": 1,
+        "items": [
+          {
+            "area": "84A",
+            "article_no": "D1",
+            "building_name": "래미안",
+            "days_listed": 5,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "진짜 급매였음",
+            "trade_type": "매매",
+            "was_bargain": true
+          }
+        ],
+        "total": 1
+      },
+      "status": 200
+    },
+    "disappeared_2_rounds_up": {
+      "cache": null,
+      "json": {
+        "bargain_total": 2,
+        "count": 2,
+        "days": 7,
+        "items": [
+          {
+            "area": "84A",
+            "article_no": "D1",
+            "building_name": "래미안",
+            "days_listed": 5,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "진짜 급매였음",
+            "trade_type": "매매",
+            "was_bargain": true
+          },
+          {
+            "area": "84A",
+            "article_no": "D2",
+            "building_name": "래미안",
+            "days_listed": 17,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": true,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "인하 후 소진",
+            "trade_type": "매매",
+            "was_bargain": false
+          }
+        ],
+        "total": 4
+      },
+      "status": 200
+    },
+    "disappeared_30": {
+      "cache": null,
+      "json": {
+        "bargain_total": 2,
+        "count": 5,
+        "days": 30,
+        "items": [
+          {
+            "area": "84A",
+            "article_no": "D1",
+            "building_name": "래미안",
+            "days_listed": 5,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "진짜 급매였음",
+            "trade_type": "매매",
+            "was_bargain": true
+          },
+          {
+            "area": "84A",
+            "article_no": "D2",
+            "building_name": "래미안",
+            "days_listed": 17,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": true,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "인하 후 소진",
+            "trade_type": "매매",
+            "was_bargain": false
+          },
+          {
+            "area": "84A",
+            "article_no": "D3",
+            "building_name": "래미안",
+            "days_listed": null,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "급매",
+            "trade_type": "매매",
+            "was_bargain": false
+          },
+          {
+            "area": "84A",
+            "article_no": "D4",
+            "building_name": "래미안",
+            "days_listed": 0,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": true,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "철회 후 재등록",
+            "trade_type": "매매",
+            "was_bargain": true
+          },
+          {
+            "area": "84A",
+            "article_no": "D5",
+            "building_name": "래미안",
+            "days_listed": null,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "급매",
+            "trade_type": "매매",
+            "was_bargain": false
+          }
+        ],
+        "total": 5
+      },
+      "status": 200
+    },
+    "disappeared_bad_args": {
+      "cache": null,
+      "json": {
+        "bargain_total": 2,
+        "count": 4,
+        "days": 7,
+        "items": [
+          {
+            "area": "84A",
+            "article_no": "D1",
+            "building_name": "래미안",
+            "days_listed": 5,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "진짜 급매였음",
+            "trade_type": "매매",
+            "was_bargain": true
+          },
+          {
+            "area": "84A",
+            "article_no": "D2",
+            "building_name": "래미안",
+            "days_listed": 17,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": true,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "인하 후 소진",
+            "trade_type": "매매",
+            "was_bargain": false
+          },
+          {
+            "area": "84A",
+            "article_no": "D3",
+            "building_name": "래미안",
+            "days_listed": null,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "급매",
+            "trade_type": "매매",
+            "was_bargain": false
+          },
+          {
+            "area": "84A",
+            "article_no": "D4",
+            "building_name": "래미안",
+            "days_listed": 0,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": true,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "철회 후 재등록",
+            "trade_type": "매매",
+            "was_bargain": true
+          }
+        ],
+        "total": 4
+      },
+      "status": 200
+    },
+    "disappeared_default": {
+      "cache": null,
+      "json": {
+        "bargain_total": 2,
+        "count": 4,
+        "days": 7,
+        "items": [
+          {
+            "area": "84A",
+            "article_no": "D1",
+            "building_name": "래미안",
+            "days_listed": 5,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "진짜 급매였음",
+            "trade_type": "매매",
+            "was_bargain": true
+          },
+          {
+            "area": "84A",
+            "article_no": "D2",
+            "building_name": "래미안",
+            "days_listed": 17,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": true,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "인하 후 소진",
+            "trade_type": "매매",
+            "was_bargain": false
+          },
+          {
+            "area": "84A",
+            "article_no": "D3",
+            "building_name": "래미안",
+            "days_listed": null,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "급매",
+            "trade_type": "매매",
+            "was_bargain": false
+          },
+          {
+            "area": "84A",
+            "article_no": "D4",
+            "building_name": "래미안",
+            "days_listed": 0,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": true,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "철회 후 재등록",
+            "trade_type": "매매",
+            "was_bargain": true
+          }
+        ],
+        "total": 4
+      },
+      "status": 200
+    },
+    "disappeared_huge": {
+      "cache": null,
+      "json": {
+        "bargain_total": 2,
+        "count": 1,
+        "days": 30,
+        "items": [
+          {
+            "area": "84A",
+            "article_no": "D1",
+            "building_name": "래미안",
+            "days_listed": 5,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "진짜 급매였음",
+            "trade_type": "매매",
+            "was_bargain": true
+          }
+        ],
+        "total": 5
+      },
+      "status": 200
+    },
+    "disappeared_negative": {
+      "cache": null,
+      "json": {
+        "bargain_total": 1,
+        "count": 1,
+        "days": 1,
+        "items": [
+          {
+            "area": "84A",
+            "article_no": "D1",
+            "building_name": "래미안",
+            "days_listed": 5,
+            "district": "강남구",
+            "floor": "3/20",
+            "had_price_down": false,
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "tag": "진짜 급매였음",
+            "trade_type": "매매",
+            "was_bargain": true
+          }
+        ],
+        "total": 1
+      },
+      "status": 200
+    },
+    "fair_price": {
+      "cache": null,
+      "json": {
+        "area": "84A",
+        "available": true,
+        "basis": "same_area",
+        "complex_avg_days": 18,
+        "count": 3,
+        "cut_count": 1,
+        "days_listed": 10,
+        "gap_pct": -20.0,
+        "max": 4132,
+        "median": 3935,
+        "min": 3148,
+        "negotiation": {
+          "level": "high",
+          "signals": [
+            "이미 1번 가격을 내렸어요",
+            "비슷한 급매는 보통 8일 안에 사라졌는데 아직 남아 있어요"
+          ]
+        },
+        "points": [
+          {
+            "is_self": true,
+            "value": 3148
+          },
+          {
+            "is_self": false,
+            "value": 3935
+          },
+          {
+            "is_self": false,
+            "value": 4132
+          }
+        ],
+        "rank": 1,
+        "sell_days": {
+          "count": 2,
+          "days": 8,
+          "scope": "complex"
+        },
+        "value": 3148
+      },
+      "status": 200
+    },
+    "fair_price_unknown": {
+      "cache": null,
+      "json": {
+        "message": "listing not found",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "fast_complexes": {
+      "cache": null,
+      "json": {
+        "days": 7,
+        "items": [
+          {
+            "building_name": "래미안",
+            "count": 3,
+            "district": "강남구",
+            "drop": 3,
+            "drop_ratio": 0.5,
+            "prev_count": 6
+          }
+        ],
+        "latest_session": "v_new",
+        "previous_session": "v_week"
+      },
+      "status": 200
+    },
+    "fast_complexes_30": {
+      "cache": null,
+      "json": {
+        "days": 30,
+        "items": [
+          {
+            "building_name": "래미안",
+            "count": 3,
+            "district": "강남구",
+            "drop": 3,
+            "drop_ratio": 0.5,
+            "prev_count": 6
+          }
+        ],
+        "latest_session": "v_new",
+        "previous_session": "v_week"
+      },
+      "status": 200
+    },
+    "heatmap": {
+      "cache": "public, max-age=300",
+      "json": {
+        "districts": [
+          {
+            "bargain_count": 1,
+            "bargain_ratio": 0.1667,
+            "district": "강남구",
+            "price_down_ratio": 0.1667,
+            "total": 6,
+            "weekly_change_pct": -50.0
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "강동구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "강북구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "서초구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "송파구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "마포구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "용산구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "종로구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "중구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "광진구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "성동구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "동대문구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "중랑구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "성북구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "도봉구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "노원구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "은평구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "서대문구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "양천구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "강서구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "구로구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "금천구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "관악구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "동작구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "영등포구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          }
+        ],
+        "metric_defs": [
+          {
+            "key": "bargain_ratio",
+            "label": "진짜 급매 비율",
+            "unit": "ratio"
+          },
+          {
+            "key": "price_down_ratio",
+            "label": "가격인하 비율",
+            "unit": "ratio"
+          },
+          {
+            "key": "weekly_change_pct",
+            "label": "주간 급매 증감",
+            "unit": "pct"
+          }
+        ],
+        "region": "서울특별시",
+        "regions": [
+          "서울특별시",
+          "경기도",
+          "인천광역시",
+          "부산광역시",
+          "대구광역시",
+          "대전광역시",
+          "광주광역시",
+          "울산광역시",
+          "세종특별자치시",
+          "강원특별자치도",
+          "충청북도",
+          "충청남도",
+          "전북특별자치도",
+          "전라남도",
+          "경상북도",
+          "경상남도",
+          "제주특별자치도"
+        ]
+      },
+      "status": 200
+    },
+    "heatmap_unknown": {
+      "cache": null,
+      "json": {
+        "message": "unknown region",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "history_known": {
+      "cache": null,
+      "json": {
+        "article_no": "V1",
+        "events": [
+          {
+            "change_pct": null,
+            "prev_price": null,
+            "prev_price_sort_value": null,
+            "price": "10억",
+            "price_sort_value": 100000,
+            "session_id": "v_week"
+          },
+          {
+            "change_pct": -20.0,
+            "prev_price": "10억",
+            "prev_price_sort_value": 100000,
+            "price": "8억",
+            "price_sort_value": 80000,
+            "session_id": "v_new"
+          }
+        ],
+        "insight": {
+          "bargain_discount_pct": 20.0,
+          "cut_count": 1,
+          "days_since_first_seen": 10,
+          "days_since_last_change": 2,
+          "total_change_pct": -20.0
+        },
+        "listing": {
+          "area": "84A",
+          "article_no": "V1",
+          "bargain_basis": null,
+          "bargain_discount": 0.2,
+          "building_name": "래미안",
+          "district": "강남구",
+          "floor": "10/20",
+          "naver_url": "https://example.com/V1",
+          "price": "8억",
+          "property_type": "아파트",
+          "region": "서울특별시",
+          "trade_type": "매매"
+        },
+        "tracking": {
+          "article_no": "V1",
+          "last_price": "8억",
+          "last_price_sort_value": 80000,
+          "price_change_count": 1,
+          "price_cut_count": 1
+        }
+      },
+      "status": 200
+    },
+    "history_unknown": {
+      "cache": null,
+      "json": {
+        "message": "history not found",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "watch_status": {
+      "cache": null,
+      "json": {
+        "items": [
+          {
+            "area": "84A",
+            "article_no": "V1",
+            "building_name": "래미안",
+            "change": {
+              "diff": -10000,
+              "kind": "price_down",
+              "pct": -11.1
+            },
+            "cut_count": 1,
+            "days_listed": 10,
+            "district": "강남구",
+            "floor": "10/20",
+            "is_bargain": true,
+            "median_gap_pct": -20.0,
+            "naver_url": "https://example.com/V1",
+            "price": "8억",
+            "price_per_pyeong": 3148,
+            "price_sort_value": 80000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "status": "active",
+            "tags": [
+              "가격인하"
+            ],
+            "trade_type": "매매"
+          },
+          {
+            "area": "84A",
+            "article_no": "V2",
+            "building_name": "래미안",
+            "change": {
+              "kind": "none"
+            },
+            "cut_count": 0,
+            "days_listed": 3,
+            "district": "강남구",
+            "floor": "10/20",
+            "is_bargain": false,
+            "median_gap_pct": null,
+            "naver_url": "https://example.com/V2",
+            "price": "10억",
+            "price_per_pyeong": 3935,
+            "price_sort_value": 100000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "status": "active",
+            "tags": [],
+            "trade_type": "매매"
+          },
+          {
+            "area": "84A",
+            "article_no": "V3",
+            "building_name": "래미안",
+            "change": {
+              "kind": "none"
+            },
+            "cut_count": 0,
+            "days_listed": 40,
+            "district": "강남구",
+            "floor": "10/20",
+            "is_bargain": false,
+            "median_gap_pct": 5.0,
+            "naver_url": "https://example.com/V3",
+            "price": "10억",
+            "price_per_pyeong": 4132,
+            "price_sort_value": 105000,
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "status": "active",
+            "tags": [],
+            "trade_type": "매매"
+          },
+          {
+            "area": "84A",
+            "article_no": "D1",
+            "building_name": "래미안",
+            "change": {
+              "kind": "gone"
+            },
+            "cut_count": 0,
+            "days_listed": 5,
+            "district": "강남구",
+            "floor": "3/20",
+            "naver_url": "",
+            "price": "9억",
+            "property_type": "아파트",
+            "region": "서울특별시",
+            "status": "gone",
+            "trade_type": "매매"
+          },
+          {
+            "article_no": "NOPE",
+            "change": {
+              "kind": "none"
+            },
+            "status": "unknown"
+          }
+        ],
+        "new_bargains": []
+      },
+      "status": 200
+    },
+    "watch_status_empty": {
+      "cache": null,
+      "json": {
+        "items": [],
+        "new_bargains": []
+      },
+      "status": 200
+    },
+    "watch_status_no_body": {
+      "cache": null,
+      "json": {
+        "message": "items must be a list",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "watch_status_not_list": {
+      "cache": null,
+      "json": {
+        "message": "items must be a list",
+        "status": "error"
+      },
+      "status": 400
+    }
+  },
+  "view_routes_with_empty_db": {
+    "compare": {
+      "cache": null,
+      "json": {
+        "items": [
+          {
+            "article_no": "V2",
+            "status": "unknown"
+          },
+          {
+            "article_no": "V1",
+            "status": "unknown"
+          },
+          {
+            "article_no": "NOPE",
+            "status": "unknown"
+          }
+        ]
+      },
+      "status": 200
+    },
+    "compare_blank": {
+      "cache": null,
+      "json": {
+        "message": "ids required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "compare_missing": {
+      "cache": null,
+      "json": {
+        "message": "ids required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "complex": {
+      "cache": null,
+      "json": {
+        "message": "complex not found",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "complex_missing_args": {
+      "cache": null,
+      "json": {
+        "message": "district and building_name required",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "complex_unknown": {
+      "cache": null,
+      "json": {
+        "message": "complex not found",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "disappeared_1": {
+      "cache": null,
+      "json": {
+        "bargain_total": 0,
+        "count": 0,
+        "days": 1,
+        "items": [],
+        "total": 0
+      },
+      "status": 200
+    },
+    "disappeared_2_rounds_up": {
+      "cache": null,
+      "json": {
+        "bargain_total": 0,
+        "count": 0,
+        "days": 7,
+        "items": [],
+        "total": 0
+      },
+      "status": 200
+    },
+    "disappeared_30": {
+      "cache": null,
+      "json": {
+        "bargain_total": 0,
+        "count": 0,
+        "days": 30,
+        "items": [],
+        "total": 0
+      },
+      "status": 200
+    },
+    "disappeared_bad_args": {
+      "cache": null,
+      "json": {
+        "bargain_total": 0,
+        "count": 0,
+        "days": 7,
+        "items": [],
+        "total": 0
+      },
+      "status": 200
+    },
+    "disappeared_default": {
+      "cache": null,
+      "json": {
+        "bargain_total": 0,
+        "count": 0,
+        "days": 7,
+        "items": [],
+        "total": 0
+      },
+      "status": 200
+    },
+    "disappeared_huge": {
+      "cache": null,
+      "json": {
+        "bargain_total": 0,
+        "count": 0,
+        "days": 30,
+        "items": [],
+        "total": 0
+      },
+      "status": 200
+    },
+    "disappeared_negative": {
+      "cache": null,
+      "json": {
+        "bargain_total": 0,
+        "count": 0,
+        "days": 1,
+        "items": [],
+        "total": 0
+      },
+      "status": 200
+    },
+    "fair_price": {
+      "cache": null,
+      "json": {
+        "message": "listing not found",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "fair_price_unknown": {
+      "cache": null,
+      "json": {
+        "message": "listing not found",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "fast_complexes": {
+      "cache": null,
+      "json": {
+        "days": 7,
+        "items": [],
+        "latest_session": null,
+        "previous_session": null
+      },
+      "status": 200
+    },
+    "fast_complexes_30": {
+      "cache": null,
+      "json": {
+        "days": 30,
+        "items": [],
+        "latest_session": null,
+        "previous_session": null
+      },
+      "status": 200
+    },
+    "heatmap": {
+      "cache": "public, max-age=300",
+      "json": {
+        "districts": [
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "강남구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "강동구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "강북구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "서초구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "송파구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "마포구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "용산구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "종로구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "중구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "광진구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "성동구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "동대문구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "중랑구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "성북구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "도봉구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "노원구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "은평구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "서대문구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "양천구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "강서구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "구로구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "금천구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "관악구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "동작구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          },
+          {
+            "bargain_count": 0,
+            "bargain_ratio": null,
+            "district": "영등포구",
+            "price_down_ratio": null,
+            "total": 0,
+            "weekly_change_pct": null
+          }
+        ],
+        "metric_defs": [
+          {
+            "key": "bargain_ratio",
+            "label": "진짜 급매 비율",
+            "unit": "ratio"
+          },
+          {
+            "key": "price_down_ratio",
+            "label": "가격인하 비율",
+            "unit": "ratio"
+          },
+          {
+            "key": "weekly_change_pct",
+            "label": "주간 급매 증감",
+            "unit": "pct"
+          }
+        ],
+        "region": "서울특별시",
+        "regions": [
+          "서울특별시",
+          "경기도",
+          "인천광역시",
+          "부산광역시",
+          "대구광역시",
+          "대전광역시",
+          "광주광역시",
+          "울산광역시",
+          "세종특별자치시",
+          "강원특별자치도",
+          "충청북도",
+          "충청남도",
+          "전북특별자치도",
+          "전라남도",
+          "경상북도",
+          "경상남도",
+          "제주특별자치도"
+        ]
+      },
+      "status": 200
+    },
+    "heatmap_unknown": {
+      "cache": null,
+      "json": {
+        "message": "unknown region",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "history_known": {
+      "cache": null,
+      "json": {
+        "message": "history not found",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "history_unknown": {
+      "cache": null,
+      "json": {
+        "message": "history not found",
+        "status": "error"
+      },
+      "status": 404
+    },
+    "watch_status": {
+      "cache": null,
+      "json": {
+        "items": [
+          {
+            "article_no": "V1",
+            "change": {
+              "kind": "none"
+            },
+            "status": "unknown"
+          },
+          {
+            "article_no": "V2",
+            "change": {
+              "kind": "none"
+            },
+            "status": "unknown"
+          },
+          {
+            "article_no": "V3",
+            "change": {
+              "kind": "none"
+            },
+            "status": "unknown"
+          },
+          {
+            "article_no": "D1",
+            "change": {
+              "kind": "none"
+            },
+            "status": "unknown"
+          },
+          {
+            "article_no": "NOPE",
+            "change": {
+              "kind": "none"
+            },
+            "status": "unknown"
+          }
+        ],
+        "new_bargains": []
+      },
+      "status": 200
+    },
+    "watch_status_empty": {
+      "cache": null,
+      "json": {
+        "items": [],
+        "new_bargains": []
+      },
+      "status": 200
+    },
+    "watch_status_no_body": {
+      "cache": null,
+      "json": {
+        "message": "items must be a list",
+        "status": "error"
+      },
+      "status": 400
+    },
+    "watch_status_not_list": {
+      "cache": null,
+      "json": {
+        "message": "items must be a list",
+        "status": "error"
+      },
+      "status": 400
+    }
+  },
+  "watchlist_listing_payload_time_inputs": {
+    "almost_one_day": {
+      "days_listed": 0,
+      "first_seen_at": "2026-10-19T10:00:01"
+    },
+    "aware_datetime": {
+      "days_listed": 10,
+      "first_seen_at": "2026-10-10 09:00:00+09:00"
+    },
+    "aware_kst_iso": {
+      "days_listed": 10,
+      "first_seen_at": "2026-10-10T09:00:00+09:00"
+    },
+    "aware_z_iso": {
+      "days_listed": 10,
+      "first_seen_at": "2026-10-10T09:00:00Z"
+    },
+    "date_object": {
+      "days_listed": 10,
+      "first_seen_at": "2026-10-10"
+    },
+    "date_only": {
+      "days_listed": 10,
+      "first_seen_at": "2026-10-10"
+    },
+    "empty": {
+      "days_listed": null,
+      "first_seen_at": ""
+    },
+    "future": {
+      "days_listed": 0,
+      "first_seen_at": "2026-12-25T00:00:00"
+    },
+    "garbage": {
+      "days_listed": null,
+      "first_seen_at": "not-a-date"
+    },
+    "naive_datetime": {
+      "days_listed": 10,
+      "first_seen_at": "2026-10-10 09:00:00"
+    },
+    "naive_iso": {
+      "days_listed": 10,
+      "first_seen_at": "2026-10-10T09:00:00"
+    },
+    "naive_iso_space": {
+      "days_listed": 10,
+      "first_seen_at": "2026-10-10 09:00:00.123456"
+    },
+    "none": {
+      "days_listed": null,
+      "first_seen_at": null
+    },
+    "padded": {
+      "days_listed": null,
+      "first_seen_at": " 2026-10-10T09:00:00 "
+    },
+    "zero": {
+      "days_listed": null,
+      "first_seen_at": 0
+    }
+  },
+  "watchlist_payload_tags_and_discount": {
+    "blank_items": {
+      "area": null,
+      "article_no": "T",
+      "building_name": null,
+      "cut_count": 0,
+      "days_listed": null,
+      "district": null,
+      "first_seen_at": null,
+      "floor": null,
+      "is_bargain": false,
+      "median_gap_pct": -41.0,
+      "naver_url": null,
+      "price": null,
+      "price_per_pyeong": null,
+      "price_sort_value": null,
+      "property_type": null,
+      "region": null,
+      "status": "active",
+      "tags": [
+        " ",
+        "",
+        "x"
+      ],
+      "trade_type": null
+    },
+    "broken": {
+      "area": null,
+      "article_no": "T",
+      "building_name": null,
+      "cut_count": 0,
+      "days_listed": null,
+      "district": null,
+      "first_seen_at": null,
+      "floor": null,
+      "is_bargain": false,
+      "median_gap_pct": -41.0,
+      "naver_url": null,
+      "price": null,
+      "price_per_pyeong": null,
+      "price_sort_value": null,
+      "property_type": null,
+      "region": null,
+      "status": "active",
+      "tags": [],
+      "trade_type": null
+    },
+    "empty": {
+      "area": null,
+      "article_no": "T",
+      "building_name": null,
+      "cut_count": 0,
+      "days_listed": null,
+      "district": null,
+      "first_seen_at": null,
+      "floor": null,
+      "is_bargain": false,
+      "median_gap_pct": -41.0,
+      "naver_url": null,
+      "price": null,
+      "price_per_pyeong": null,
+      "price_sort_value": null,
+      "property_type": null,
+      "region": null,
+      "status": "active",
+      "tags": [],
+      "trade_type": null
+    },
+    "json": {
+      "area": null,
+      "article_no": "T",
+      "building_name": null,
+      "cut_count": 2,
+      "days_listed": null,
+      "district": null,
+      "first_seen_at": null,
+      "floor": null,
+      "is_bargain": true,
+      "median_gap_pct": -40.0,
+      "naver_url": null,
+      "price": null,
+      "price_per_pyeong": null,
+      "price_sort_value": null,
+      "property_type": null,
+      "region": null,
+      "status": "active",
+      "tags": [
+        "가격인하"
+      ],
+      "trade_type": null
+    },
+    "json_dict": {
+      "area": null,
+      "article_no": "T",
+      "building_name": null,
+      "cut_count": 0,
+      "days_listed": null,
+      "district": null,
+      "first_seen_at": null,
+      "floor": null,
+      "is_bargain": false,
+      "median_gap_pct": -41.0,
+      "naver_url": null,
+      "price": null,
+      "price_per_pyeong": null,
+      "price_sort_value": null,
+      "property_type": null,
+      "region": null,
+      "status": "active",
+      "tags": [],
+      "trade_type": null
+    },
+    "json_scalar": {
+      "area": null,
+      "article_no": "T",
+      "building_name": null,
+      "cut_count": 0,
+      "days_listed": null,
+      "district": null,
+      "first_seen_at": null,
+      "floor": null,
+      "is_bargain": false,
+      "median_gap_pct": -41.0,
+      "naver_url": null,
+      "price": null,
+      "price_per_pyeong": null,
+      "price_sort_value": null,
+      "property_type": null,
+      "region": null,
+      "status": "active",
+      "tags": [],
+      "trade_type": null
+    },
+    "list": {
+      "area": null,
+      "article_no": "T",
+      "building_name": null,
+      "cut_count": 0,
+      "days_listed": null,
+      "district": null,
+      "first_seen_at": null,
+      "floor": null,
+      "is_bargain": false,
+      "median_gap_pct": null,
+      "naver_url": null,
+      "price": null,
+      "price_per_pyeong": null,
+      "price_sort_value": null,
+      "property_type": null,
+      "region": null,
+      "status": "active",
+      "tags": [
+        "가격인하",
+        "급매"
+      ],
+      "trade_type": null
+    },
+    "none": {
+      "area": null,
+      "article_no": "T",
+      "building_name": null,
+      "cut_count": 0,
+      "days_listed": null,
+      "district": null,
+      "first_seen_at": null,
+      "floor": null,
+      "is_bargain": false,
+      "median_gap_pct": -41.0,
+      "naver_url": null,
+      "price": null,
+      "price_per_pyeong": null,
+      "price_sort_value": null,
+      "property_type": null,
+      "region": null,
+      "status": "active",
+      "tags": [],
+      "trade_type": null
+    },
+    "number": {
+      "area": null,
+      "article_no": "T",
+      "building_name": null,
+      "cut_count": 0,
+      "days_listed": null,
+      "district": null,
+      "first_seen_at": null,
+      "floor": null,
+      "is_bargain": false,
+      "median_gap_pct": -41.0,
+      "naver_url": null,
+      "price": null,
+      "price_per_pyeong": null,
+      "price_sort_value": null,
+      "property_type": null,
+      "region": null,
+      "status": "active",
+      "tags": [],
+      "trade_type": null
+    },
+    "tuple": {
+      "area": null,
+      "article_no": "T",
+      "building_name": null,
+      "cut_count": 0,
+      "days_listed": null,
+      "district": null,
+      "first_seen_at": null,
+      "floor": null,
+      "is_bargain": true,
+      "median_gap_pct": -10.0,
+      "naver_url": null,
+      "price": null,
+      "price_per_pyeong": null,
+      "price_sort_value": null,
+      "property_type": null,
+      "region": null,
+      "status": "active",
+      "tags": [
+        "급매"
+      ],
+      "trade_type": null
+    }
+  },
+  "watchlist_queries": {
+    "fair_price": {
+      "A1": {
+        "area": "84A",
+        "available": true,
+        "basis": "same_area",
+        "complex_avg_days": 17,
+        "count": 4,
+        "cut_count": 2,
+        "days_listed": 2,
+        "gap_pct": -11.1,
+        "max": 4132,
+        "median": 3542,
+        "min": 2165,
+        "negotiation": {
+          "level": "some",
+          "signals": [
+            "이미 2번 가격을 내렸어요"
+          ]
+        },
+        "points": [
+          {
+            "is_self": false,
+            "value": 2165
+          },
+          {
+            "is_self": true,
+            "value": 3148
+          },
+          {
+            "is_self": false,
+            "value": 3935
+          },
+          {
+            "is_self": false,
+            "value": 4132
+          }
+        ],
+        "rank": 2,
+        "sell_days": {
+          "count": 2,
+          "days": 10,
+          "scope": "complex"
+        },
+        "value": 3148
+      },
+      "A2": {
+        "area": "84A",
+        "available": true,
+        "basis": "same_area",
+        "complex_avg_days": 17,
+        "count": 4,
+        "cut_count": 0,
+        "days_listed": 30,
+        "gap_pct": 11.1,
+        "max": 4132,
+        "median": 3542,
+        "min": 2165,
+        "negotiation": {
+          "level": "high",
+          "signals": [
+            "단지 평균(17일)보다 오래 걸려 있어요",
+            "비슷한 급매는 보통 10일 안에 사라졌는데 아직 남아 있어요"
+          ]
+        },
+        "points": [
+          {
+            "is_self": false,
+            "value": 2165
+          },
+          {
+            "is_self": false,
+            "value": 3148
+          },
+          {
+            "is_self": true,
+            "value": 3935
+          },
+          {
+            "is_self": false,
+            "value": 4132
+          }
+        ],
+        "rank": 3,
+        "sell_days": {
+          "count": 2,
+          "days": 10,
+          "scope": "complex"
+        },
+        "value": 3935
+      },
+      "A5": {
+        "area": "59B",
+        "available": true,
+        "basis": "complex",
+        "complex_avg_days": 17,
+        "count": 5,
+        "cut_count": 0,
+        "days_listed": null,
+        "gap_pct": 0.0,
+        "max": 4132,
+        "median": 3922,
+        "min": 2165,
+        "negotiation": {
+          "level": "low",
+          "signals": []
+        },
+        "points": [
+          {
+            "is_self": false,
+            "value": 2165
+          },
+          {
+            "is_self": false,
+            "value": 3148
+          },
+          {
+            "is_self": true,
+            "value": 3922
+          },
+          {
+            "is_self": false,
+            "value": 3935
+          },
+          {
+            "is_self": false,
+            "value": 4132
+          }
+        ],
+        "rank": 3,
+        "sell_days": {
+          "count": 2,
+          "days": 10,
+          "scope": "complex"
+        },
+        "value": 3922
+      },
+      "A6": {
+        "available": false,
+        "reason": "매매 아파트·오피스텔만 비교할 수 있어요"
+      },
+      "B1": {
+        "available": false,
+        "reason": "같은 단지에 비교할 매물이 부족해요"
+      },
+      "B2": {
+        "available": false,
+        "reason": "매매 아파트·오피스텔만 비교할 수 있어요"
+      },
+      "NOPE": null
+    },
+    "fair_price_no_session": null,
+    "lookup": {
+      "123": {
+        "article_no": "123",
+        "status": "unknown"
+      },
+      "A1": {
+        "area": "84A",
+        "article_no": "A1",
+        "building_name": "래미안",
+        "cut_count": 2,
+        "days_listed": 2,
+        "district": "강남구",
+        "first_seen_at": "2026-10-18T09:00:00",
+        "floor": "10/20",
+        "is_bargain": true,
+        "median_gap_pct": -20.0,
+        "naver_url": "https://example.com/A1",
+        "price": "8억",
+        "price_per_pyeong": 3148,
+        "price_sort_value": 80000,
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "active",
+        "tags": [
+          "가격인하"
+        ],
+        "trade_type": "매매"
+      },
+      "A2": {
+        "area": "84A",
+        "article_no": "A2",
+        "building_name": "래미안",
+        "cut_count": 0,
+        "days_listed": 30,
+        "district": "강남구",
+        "first_seen_at": "2026-09-20T09:00:00",
+        "floor": "10/20",
+        "is_bargain": false,
+        "median_gap_pct": -0.0,
+        "naver_url": "https://example.com/A2",
+        "price": "10억",
+        "price_per_pyeong": 3935,
+        "price_sort_value": 100000,
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "active",
+        "tags": [],
+        "trade_type": "매매"
+      },
+      "A3": {
+        "area": "84A",
+        "article_no": "A3",
+        "building_name": "래미안",
+        "cut_count": 0,
+        "days_listed": 19,
+        "district": "강남구",
+        "first_seen_at": "2026-10-01T09:00:00+09:00",
+        "floor": "10/20",
+        "is_bargain": false,
+        "median_gap_pct": 5.0,
+        "naver_url": "https://example.com/A3",
+        "price": "10억",
+        "price_per_pyeong": 4132,
+        "price_sort_value": 105000,
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "active",
+        "tags": [],
+        "trade_type": "매매"
+      },
+      "A4": {
+        "area": "84A",
+        "article_no": "A4",
+        "building_name": "래미안",
+        "cut_count": 0,
+        "days_listed": null,
+        "district": "강남구",
+        "first_seen_at": null,
+        "floor": "10/20",
+        "is_bargain": false,
+        "median_gap_pct": -45.0,
+        "naver_url": "https://example.com/A4",
+        "price": "10억",
+        "price_per_pyeong": 2165,
+        "price_sort_value": 55000,
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "active",
+        "tags": [],
+        "trade_type": "매매"
+      },
+      "A5": {
+        "area": "59B",
+        "article_no": "A5",
+        "building_name": "래미안",
+        "cut_count": 0,
+        "days_listed": null,
+        "district": "강남구",
+        "first_seen_at": "garbage",
+        "floor": "10/20",
+        "is_bargain": true,
+        "median_gap_pct": -40.0,
+        "naver_url": "https://example.com/A5",
+        "price": "10억",
+        "price_per_pyeong": 3922,
+        "price_sort_value": 70000,
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "active",
+        "tags": [
+          "가격인하예정",
+          "급매"
+        ],
+        "trade_type": "매매"
+      },
+      "G1": {
+        "area": "84A",
+        "article_no": "G1",
+        "building_name": "래미안",
+        "cut_count": 1,
+        "days_listed": 18,
+        "disappeared_at": "2026-10-19T09:30:00",
+        "district": "강남구",
+        "floor": "3/20",
+        "naver_url": "https://example.com/G1",
+        "price": "9억",
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "gone",
+        "trade_type": "매매"
+      },
+      "G3": {
+        "area": "84A",
+        "article_no": "G3",
+        "building_name": "다른단지",
+        "cut_count": 0,
+        "days_listed": 10,
+        "disappeared_at": "2026-10-20T09:00:00",
+        "district": "강남구",
+        "floor": "3/20",
+        "naver_url": "https://example.com/G3",
+        "price": "9억",
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "gone",
+        "trade_type": "매매"
+      },
+      "G4": {
+        "area": "84A",
+        "article_no": "G4",
+        "building_name": "다른단지",
+        "cut_count": 0,
+        "days_listed": null,
+        "disappeared_at": "2026-10-20T09:00:00",
+        "district": "강남구",
+        "floor": "3/20",
+        "naver_url": "https://example.com/G4",
+        "price": "9억",
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "gone",
+        "trade_type": "매매"
+      },
+      "G5": {
+        "area": "84A",
+        "article_no": "G5",
+        "building_name": "다른단지",
+        "cut_count": 0,
+        "days_listed": 0,
+        "disappeared_at": "2026-10-13T09:10:00",
+        "district": "강남구",
+        "floor": "3/20",
+        "naver_url": "https://example.com/G5",
+        "price": "9억",
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "gone",
+        "trade_type": "매매"
+      },
+      "G7": {
+        "article_no": "G7",
+        "status": "unknown"
+      },
+      "NOPE": {
+        "article_no": "NOPE",
+        "status": "unknown"
+      },
+      "OLD1": {
+        "article_no": "OLD1",
+        "status": "unknown"
+      }
+    },
+    "lookup_empty": {},
+    "lookup_no_session": {
+      "A1": {
+        "article_no": "A1",
+        "status": "unknown"
+      },
+      "G1": {
+        "area": "84A",
+        "article_no": "G1",
+        "building_name": "래미안",
+        "cut_count": 1,
+        "days_listed": 18,
+        "disappeared_at": "2026-10-19T09:30:00",
+        "district": "강남구",
+        "floor": "3/20",
+        "naver_url": "https://example.com/G1",
+        "price": "9억",
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "gone",
+        "trade_type": "매매"
+      }
+    },
+    "new_bargains": [
+      {
+        "area": "84A",
+        "article_no": "A1",
+        "building_name": "래미안",
+        "cut_count": 2,
+        "district": "강남구",
+        "first_seen_at": "2026-10-18T09:00:00",
+        "floor": "10/20",
+        "is_bargain": true,
+        "median_gap_pct": -20.0,
+        "naver_url": "https://example.com/A1",
+        "price": "8억",
+        "price_per_pyeong": 3148,
+        "price_sort_value": 80000,
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "active",
+        "tags": [
+          "가격인하"
+        ],
+        "trade_type": "매매"
+      },
+      {
+        "area": "84A",
+        "article_no": "B1",
+        "building_name": "자이",
+        "cut_count": 0,
+        "district": "서초구",
+        "first_seen_at": "2026-10-10T09:00:00",
+        "floor": "10/20",
+        "is_bargain": true,
+        "median_gap_pct": -10.0,
+        "naver_url": "https://example.com/B1",
+        "price": "10억",
+        "price_per_pyeong": 3935,
+        "price_sort_value": 100000,
+        "property_type": "아파트",
+        "region": "서울특별시",
+        "status": "active",
+        "tags": [],
+        "trade_type": "매매"
+      }
+    ],
+    "new_bargains_no_session": [],
+    "sell_days_complex": {
+      "count": 2,
+      "days": 10,
+      "scope": "complex"
+    },
+    "sell_days_district": {
+      "count": 2,
+      "days": 5,
+      "scope": "complex"
+    },
+    "sell_days_none": null
+  },
+  "weekly_report_data": {
+    "all": {
+      "after_latest": {
+        "anomaly_count": 1,
+        "bargain_total": 3,
+        "bargains": [
+          {
+            "area": "59B",
+            "article_no": "A5",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.4,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A5",
+            "price": "10억"
+          },
+          {
+            "area": "84A",
+            "article_no": "A1",
+            "basis": "same_area",
+            "building_name": "래미안",
+            "discount": 0.2,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A1",
+            "price": "8억"
+          },
+          {
+            "area": "84A",
+            "article_no": "B1",
+            "basis": "complex_m2",
+            "building_name": "자이",
+            "discount": 0.1,
+            "district": "서초구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/B1",
+            "price": "10억"
+          }
+        ],
+        "fallers": [
+          [
+            "강남구",
+            "래미안",
+            8,
+            4,
+            -4
+          ],
+          [
+            "마포구",
+            "푸르지오",
+            4,
+            0,
+            -4
+          ],
+          [
+            "서초구",
+            "자이",
+            6,
+            3,
+            -3
+          ]
+        ],
+        "latest": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "previous": {
+          "crawled_at": "2026-10-13 09:10:00",
+          "session_id": "s_week",
+          "total_count": 30
+        },
+        "ratio_now": 28.000000000000004,
+        "ratio_prev": 23.333333333333332,
+        "risers": [
+          [
+            "송파구",
+            "헬리오",
+            0,
+            5,
+            5
+          ]
+        ]
+      },
+      "before_everything": null,
+      "before_latest": {
+        "anomaly_count": 0,
+        "bargain_total": 1,
+        "bargains": [
+          {
+            "area": "84A",
+            "article_no": "OLD1",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.3,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/OLD1",
+            "price": "10억"
+          }
+        ],
+        "fallers": [
+          [
+            "서초구",
+            "자이",
+            8,
+            3,
+            -5
+          ],
+          [
+            "강남구",
+            "래미안",
+            9,
+            6,
+            -3
+          ],
+          [
+            "송파구",
+            "헬리오",
+            2,
+            0,
+            -2
+          ]
+        ],
+        "latest": {
+          "crawled_at": "2026-10-19 09:30:00",
+          "session_id": "s_prev",
+          "total_count": 20
+        },
+        "previous": {
+          "crawled_at": "2026-09-01 09:00:00",
+          "session_id": "s_old",
+          "total_count": 40
+        },
+        "ratio_now": 22.727272727272727,
+        "ratio_prev": null,
+        "risers": [
+          [
+            "마포구",
+            "푸르지오",
+            0,
+            5,
+            5
+          ]
+        ]
+      },
+      "exactly_latest": {
+        "anomaly_count": 1,
+        "bargain_total": 3,
+        "bargains": [
+          {
+            "area": "59B",
+            "article_no": "A5",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.4,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A5",
+            "price": "10억"
+          },
+          {
+            "area": "84A",
+            "article_no": "A1",
+            "basis": "same_area",
+            "building_name": "래미안",
+            "discount": 0.2,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A1",
+            "price": "8억"
+          },
+          {
+            "area": "84A",
+            "article_no": "B1",
+            "basis": "complex_m2",
+            "building_name": "자이",
+            "discount": 0.1,
+            "district": "서초구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/B1",
+            "price": "10억"
+          }
+        ],
+        "fallers": [
+          [
+            "강남구",
+            "래미안",
+            8,
+            4,
+            -4
+          ],
+          [
+            "마포구",
+            "푸르지오",
+            4,
+            0,
+            -4
+          ],
+          [
+            "서초구",
+            "자이",
+            6,
+            3,
+            -3
+          ]
+        ],
+        "latest": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "previous": {
+          "crawled_at": "2026-10-13 09:10:00",
+          "session_id": "s_week",
+          "total_count": 30
+        },
+        "ratio_now": 28.000000000000004,
+        "ratio_prev": 23.333333333333332,
+        "risers": [
+          [
+            "송파구",
+            "헬리오",
+            0,
+            5,
+            5
+          ]
+        ]
+      }
+    },
+    "new_and_demo": {
+      "after_latest": {
+        "anomaly_count": 1,
+        "bargain_total": 3,
+        "bargains": [
+          {
+            "area": "59B",
+            "article_no": "A5",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.4,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A5",
+            "price": "10억"
+          },
+          {
+            "area": "84A",
+            "article_no": "A1",
+            "basis": "same_area",
+            "building_name": "래미안",
+            "discount": 0.2,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A1",
+            "price": "8억"
+          },
+          {
+            "area": "84A",
+            "article_no": "B1",
+            "basis": "complex_m2",
+            "building_name": "자이",
+            "discount": 0.1,
+            "district": "서초구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/B1",
+            "price": "10억"
+          }
+        ],
+        "fallers": null,
+        "latest": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "previous": null,
+        "ratio_now": 28.000000000000004,
+        "ratio_prev": null,
+        "risers": null
+      },
+      "before_everything": null,
+      "before_latest": null,
+      "exactly_latest": {
+        "anomaly_count": 1,
+        "bargain_total": 3,
+        "bargains": [
+          {
+            "area": "59B",
+            "article_no": "A5",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.4,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A5",
+            "price": "10억"
+          },
+          {
+            "area": "84A",
+            "article_no": "A1",
+            "basis": "same_area",
+            "building_name": "래미안",
+            "discount": 0.2,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A1",
+            "price": "8억"
+          },
+          {
+            "area": "84A",
+            "article_no": "B1",
+            "basis": "complex_m2",
+            "building_name": "자이",
+            "discount": 0.1,
+            "district": "서초구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/B1",
+            "price": "10억"
+          }
+        ],
+        "fallers": null,
+        "latest": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "previous": null,
+        "ratio_now": 28.000000000000004,
+        "ratio_prev": null,
+        "risers": null
+      }
+    },
+    "new_and_prev": {
+      "after_latest": {
+        "anomaly_count": 1,
+        "bargain_total": 3,
+        "bargains": [
+          {
+            "area": "59B",
+            "article_no": "A5",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.4,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A5",
+            "price": "10억"
+          },
+          {
+            "area": "84A",
+            "article_no": "A1",
+            "basis": "same_area",
+            "building_name": "래미안",
+            "discount": 0.2,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A1",
+            "price": "8억"
+          },
+          {
+            "area": "84A",
+            "article_no": "B1",
+            "basis": "complex_m2",
+            "building_name": "자이",
+            "discount": 0.1,
+            "district": "서초구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/B1",
+            "price": "10억"
+          }
+        ],
+        "fallers": [
+          [
+            "마포구",
+            "푸르지오",
+            5,
+            0,
+            -5
+          ],
+          [
+            "강남구",
+            "래미안",
+            6,
+            4,
+            -2
+          ]
+        ],
+        "latest": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "previous": {
+          "crawled_at": "2026-10-19 09:30:00",
+          "session_id": "s_prev",
+          "total_count": 20
+        },
+        "ratio_now": 28.000000000000004,
+        "ratio_prev": 22.727272727272727,
+        "risers": [
+          [
+            "송파구",
+            "헬리오",
+            0,
+            5,
+            5
+          ]
+        ]
+      },
+      "before_everything": null,
+      "before_latest": {
+        "anomaly_count": 0,
+        "bargain_total": 1,
+        "bargains": [
+          {
+            "area": "84A",
+            "article_no": "OLD1",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.3,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/OLD1",
+            "price": "10억"
+          }
+        ],
+        "fallers": [
+          [
+            "송파구",
+            "헬리오",
+            5,
+            0,
+            -5
+          ]
+        ],
+        "latest": {
+          "crawled_at": "2026-10-19 09:30:00",
+          "session_id": "s_prev",
+          "total_count": 20
+        },
+        "previous": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "ratio_now": 22.727272727272727,
+        "ratio_prev": 28.000000000000004,
+        "risers": [
+          [
+            "마포구",
+            "푸르지오",
+            0,
+            5,
+            5
+          ],
+          [
+            "강남구",
+            "래미안",
+            4,
+            6,
+            2
+          ]
+        ]
+      },
+      "exactly_latest": {
+        "anomaly_count": 1,
+        "bargain_total": 3,
+        "bargains": [
+          {
+            "area": "59B",
+            "article_no": "A5",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.4,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A5",
+            "price": "10억"
+          },
+          {
+            "area": "84A",
+            "article_no": "A1",
+            "basis": "same_area",
+            "building_name": "래미안",
+            "discount": 0.2,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A1",
+            "price": "8억"
+          },
+          {
+            "area": "84A",
+            "article_no": "B1",
+            "basis": "complex_m2",
+            "building_name": "자이",
+            "discount": 0.1,
+            "district": "서초구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/B1",
+            "price": "10억"
+          }
+        ],
+        "fallers": [
+          [
+            "마포구",
+            "푸르지오",
+            5,
+            0,
+            -5
+          ],
+          [
+            "강남구",
+            "래미안",
+            6,
+            4,
+            -2
+          ]
+        ],
+        "latest": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "previous": {
+          "crawled_at": "2026-10-19 09:30:00",
+          "session_id": "s_prev",
+          "total_count": 20
+        },
+        "ratio_now": 28.000000000000004,
+        "ratio_prev": 22.727272727272727,
+        "risers": [
+          [
+            "송파구",
+            "헬리오",
+            0,
+            5,
+            5
+          ]
+        ]
+      }
+    },
+    "new_and_week_late": {
+      "after_latest": {
+        "anomaly_count": 1,
+        "bargain_total": 3,
+        "bargains": [
+          {
+            "area": "59B",
+            "article_no": "A5",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.4,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A5",
+            "price": "10억"
+          },
+          {
+            "area": "84A",
+            "article_no": "A1",
+            "basis": "same_area",
+            "building_name": "래미안",
+            "discount": 0.2,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A1",
+            "price": "8억"
+          },
+          {
+            "area": "84A",
+            "article_no": "B1",
+            "basis": "complex_m2",
+            "building_name": "자이",
+            "discount": 0.1,
+            "district": "서초구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/B1",
+            "price": "10억"
+          }
+        ],
+        "fallers": [
+          [
+            "강남구",
+            "래미안",
+            7,
+            4,
+            -3
+          ]
+        ],
+        "latest": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "previous": {
+          "crawled_at": "2026-10-13 22:00:00",
+          "session_id": "s_week_late",
+          "total_count": 31
+        },
+        "ratio_now": 28.000000000000004,
+        "ratio_prev": null,
+        "risers": [
+          [
+            "송파구",
+            "헬리오",
+            0,
+            5,
+            5
+          ],
+          [
+            "서초구",
+            "자이",
+            0,
+            3,
+            3
+          ]
+        ]
+      },
+      "before_everything": null,
+      "before_latest": {
+        "anomaly_count": 0,
+        "bargain_total": 0,
+        "bargains": [],
+        "fallers": [
+          [
+            "송파구",
+            "헬리오",
+            5,
+            0,
+            -5
+          ],
+          [
+            "서초구",
+            "자이",
+            3,
+            0,
+            -3
+          ]
+        ],
+        "latest": {
+          "crawled_at": "2026-10-13 22:00:00",
+          "session_id": "s_week_late",
+          "total_count": 31
+        },
+        "previous": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "ratio_now": null,
+        "ratio_prev": 28.000000000000004,
+        "risers": [
+          [
+            "강남구",
+            "래미안",
+            4,
+            7,
+            3
+          ]
+        ]
+      },
+      "exactly_latest": {
+        "anomaly_count": 1,
+        "bargain_total": 3,
+        "bargains": [
+          {
+            "area": "59B",
+            "article_no": "A5",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.4,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A5",
+            "price": "10억"
+          },
+          {
+            "area": "84A",
+            "article_no": "A1",
+            "basis": "same_area",
+            "building_name": "래미안",
+            "discount": 0.2,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A1",
+            "price": "8억"
+          },
+          {
+            "area": "84A",
+            "article_no": "B1",
+            "basis": "complex_m2",
+            "building_name": "자이",
+            "discount": 0.1,
+            "district": "서초구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/B1",
+            "price": "10억"
+          }
+        ],
+        "fallers": [
+          [
+            "강남구",
+            "래미안",
+            7,
+            4,
+            -3
+          ]
+        ],
+        "latest": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "previous": {
+          "crawled_at": "2026-10-13 22:00:00",
+          "session_id": "s_week_late",
+          "total_count": 31
+        },
+        "ratio_now": 28.000000000000004,
+        "ratio_prev": null,
+        "risers": [
+          [
+            "송파구",
+            "헬리오",
+            0,
+            5,
+            5
+          ],
+          [
+            "서초구",
+            "자이",
+            0,
+            3,
+            3
+          ]
+        ]
+      }
+    },
+    "none": {
+      "after_latest": null,
+      "before_everything": null,
+      "before_latest": null,
+      "exactly_latest": null
+    },
+    "only_demo_and_fail": {
+      "after_latest": null,
+      "before_everything": null,
+      "before_latest": null,
+      "exactly_latest": null
+    },
+    "only_new": {
+      "after_latest": {
+        "anomaly_count": 1,
+        "bargain_total": 3,
+        "bargains": [
+          {
+            "area": "59B",
+            "article_no": "A5",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.4,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A5",
+            "price": "10억"
+          },
+          {
+            "area": "84A",
+            "article_no": "A1",
+            "basis": "same_area",
+            "building_name": "래미안",
+            "discount": 0.2,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A1",
+            "price": "8억"
+          },
+          {
+            "area": "84A",
+            "article_no": "B1",
+            "basis": "complex_m2",
+            "building_name": "자이",
+            "discount": 0.1,
+            "district": "서초구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/B1",
+            "price": "10억"
+          }
+        ],
+        "fallers": null,
+        "latest": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "previous": null,
+        "ratio_now": 28.000000000000004,
+        "ratio_prev": null,
+        "risers": null
+      },
+      "before_everything": null,
+      "before_latest": null,
+      "exactly_latest": {
+        "anomaly_count": 1,
+        "bargain_total": 3,
+        "bargains": [
+          {
+            "area": "59B",
+            "article_no": "A5",
+            "basis": null,
+            "building_name": "래미안",
+            "discount": 0.4,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A5",
+            "price": "10억"
+          },
+          {
+            "area": "84A",
+            "article_no": "A1",
+            "basis": "same_area",
+            "building_name": "래미안",
+            "discount": 0.2,
+            "district": "강남구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/A1",
+            "price": "8억"
+          },
+          {
+            "area": "84A",
+            "article_no": "B1",
+            "basis": "complex_m2",
+            "building_name": "자이",
+            "discount": 0.1,
+            "district": "서초구",
+            "floor": "10/20",
+            "naver_url": "https://example.com/B1",
+            "price": "10억"
+          }
+        ],
+        "fallers": null,
+        "latest": {
+          "crawled_at": "2026-10-20 09:00:00",
+          "session_id": "s_new",
+          "total_count": 25
+        },
+        "previous": null,
+        "ratio_now": 28.000000000000004,
+        "ratio_prev": null,
+        "risers": null
+      }
+    }
+  }
+}
