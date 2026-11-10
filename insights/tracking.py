@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from bargain import is_bargain
+from insights.sql import chunks, placeholders
 
-CHUNK = 500
 RETENTION_DAYS = 90
 
 TRACKING_TABLES_SQLITE = """
@@ -118,15 +118,6 @@ TRACKING_INDEXES = [
 ]
 
 
-def _chunks(items: Sequence, size: int = CHUNK):
-    for start in range(0, len(items), size):
-        yield items[start : start + size]
-
-
-def _placeholders(count: int) -> str:
-    return ",".join("?" * count)
-
-
 def _iso(value) -> Optional[str]:
     if value is None:
         return None
@@ -154,11 +145,11 @@ def record_price_events(
             article_nos.append(article_no)
 
     state: Dict[str, Dict] = {}
-    for chunk in _chunks(article_nos):
+    for chunk in chunks(article_nos):
         rows = conn.execute(
             "SELECT article_no, first_seen_at, last_price, last_price_sort_value, "
             "price_change_count, price_cut_count FROM listing_tracking "
-            f"WHERE article_no IN ({_placeholders(len(chunk))})",
+            f"WHERE article_no IN ({placeholders(len(chunk))})",
             chunk,
         ).fetchall()
         for row in rows:
@@ -172,10 +163,10 @@ def record_price_events(
             }
 
     seen_this_session = set()
-    for chunk in _chunks(article_nos):
+    for chunk in chunks(article_nos):
         rows = conn.execute(
             "SELECT article_no FROM listing_price_events "
-            f"WHERE session_id = ? AND article_no IN ({_placeholders(len(chunk))})",
+            f"WHERE session_id = ? AND article_no IN ({placeholders(len(chunk))})",
             [session_id] + list(chunk),
         ).fetchall()
         seen_this_session.update(row["article_no"] for row in rows)
@@ -226,20 +217,20 @@ def record_price_events(
                 (article_no, entry["first_seen_at"], now, entry["last_price"], entry["last_value"],
                  entry["changes"], entry["cuts"])
             )
-    for chunk in _chunks(new_rows):
+    for chunk in chunks(new_rows):
         conn.executemany(
             "INSERT INTO listing_tracking (article_no, first_seen_at, last_seen_at, last_price, "
             "last_price_sort_value, price_change_count, price_cut_count) VALUES (?, ?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(article_no) DO NOTHING",
             chunk,
         )
-    for chunk in _chunks(update_rows):
+    for chunk in chunks(update_rows):
         conn.executemany(
             "UPDATE listing_tracking SET last_seen_at = ?, last_price = ?, last_price_sort_value = ?, "
             "price_change_count = ?, price_cut_count = ? WHERE article_no = ?",
             chunk,
         )
-    for chunk in _chunks(events):
+    for chunk in chunks(events):
         conn.executemany(
             "INSERT INTO listing_price_events (article_no, session_id, observed_at, price, "
             "price_sort_value, prev_price, prev_price_sort_value, change_pct) "
@@ -252,10 +243,10 @@ def record_price_events(
 def mark_reappeared(conn, article_nos: Iterable[str], session_id: str, now: str) -> None:
     """새 세션에 다시 나타난 매물의 열린 소멸 기록에 reappeared_at을 찍는다."""
     nos = sorted({str(no) for no in article_nos})
-    for chunk in _chunks(nos):
+    for chunk in chunks(nos):
         conn.execute(
             "UPDATE listing_disappearances SET reappeared_at = ? "
-            f"WHERE reappeared_at IS NULL AND session_id <> ? AND article_no IN ({_placeholders(len(chunk))})",
+            f"WHERE reappeared_at IS NULL AND session_id <> ? AND article_no IN ({placeholders(len(chunk))})",
             [now, session_id] + list(chunk),
         )
 
@@ -308,7 +299,7 @@ def record_disappearances(conn, session_id: str, now: str, incomplete_scopes=Non
                 1 if is_bargain(row["bargain_discount"]) else 0, 1 if had_price_down else 0,
             )
         )
-    for chunk in _chunks(payload):
+    for chunk in chunks(payload):
         conn.executemany(
             "INSERT INTO listing_disappearances (article_no, session_id, disappeared_at, region, district, "
             "building_name, property_type, trade_type, area, floor, price, naver_url, first_seen_at, "

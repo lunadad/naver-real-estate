@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Sequence
 
 from bargain import area_number, is_bargain
 from insights.dates import days_between, days_span, parse_naive
+from insights.sql import placeholders
 
 MAX_WATCH_ITEMS = 50
 MAX_COMPARE_ITEMS = 3
@@ -34,10 +35,6 @@ def _tags(raw) -> List[str]:
     except (TypeError, ValueError):
         return []
     return list(tags) if isinstance(tags, (list, tuple)) else []
-
-
-def _placeholders(count: int) -> str:
-    return ",".join("?" * count)
 
 
 def price_per_pyeong(price_value, area) -> Optional[int]:
@@ -110,14 +107,14 @@ def lookup(conn, session_id: Optional[str], article_nos: Sequence[str], now: dat
     if session_id:
         for row in conn.execute(
             f"SELECT {LISTING_COLUMNS} FROM listings WHERE crawl_session = ? "
-            f"AND article_no IN ({_placeholders(len(nos))})",
+            f"AND article_no IN ({placeholders(len(nos))})",
             [session_id] + nos,
         ).fetchall():
             rows[str(row["article_no"])] = dict(row)
     cuts = {
         str(row["article_no"]): row["price_cut_count"]
         for row in conn.execute(
-            f"SELECT article_no, price_cut_count FROM listing_tracking WHERE article_no IN ({_placeholders(len(nos))})",
+            f"SELECT article_no, price_cut_count FROM listing_tracking WHERE article_no IN ({placeholders(len(nos))})",
             nos,
         ).fetchall()
     }
@@ -127,7 +124,7 @@ def lookup(conn, session_id: Optional[str], article_nos: Sequence[str], now: dat
         for row in conn.execute(
             "SELECT article_no, disappeared_at, region, district, building_name, property_type, trade_type, "
             "area, floor, price, naver_url, first_seen_at FROM listing_disappearances "
-            f"WHERE reappeared_at IS NULL AND article_no IN ({_placeholders(len(missing))}) "
+            f"WHERE reappeared_at IS NULL AND article_no IN ({placeholders(len(missing))}) "
             "ORDER BY disappeared_at ASC, id ASC",
             missing,
         ).fetchall():
