@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from flask import Blueprint, current_app, jsonify, render_template, request
 
 from insights import tracking as store
+from insights.dates import days_span
 from insights.price_history import build_insight
 
 bp = Blueprint("tracking", __name__)
@@ -37,13 +38,6 @@ def _normalize_days(raw, default=7) -> int:
         if value <= allowed:
             return allowed
     return ALLOWED_DAYS[-1]
-
-
-def _parse(value):
-    try:
-        return datetime.fromisoformat(str(value)).replace(tzinfo=None)
-    except (TypeError, ValueError):
-        return None
 
 
 @bp.route("/api/listings/<article_no>/history")
@@ -91,8 +85,7 @@ def disappeared_api():
         ).fetchone()["c"]
     items = []
     for row in rows:
-        first_seen, gone = _parse(row.get("first_seen_at")), _parse(row.get("disappeared_at"))
-        row["days_listed"] = max(0, (gone - first_seen).days) if first_seen and gone else None
+        row["days_listed"] = days_span(row.get("first_seen_at"), row.get("disappeared_at"))
         row["tag"] = store.disappearance_tag(row)
         row["was_bargain"] = bool(row["was_bargain"])
         row["had_price_down"] = bool(row["had_price_down"])
