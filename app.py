@@ -4,6 +4,7 @@ import logging
 import os
 import json
 import plistlib
+import sys
 from datetime import date, datetime, timedelta, timezone
 from functools import lru_cache
 from pathlib import Path
@@ -25,6 +26,10 @@ except ImportError:  # pragma: no cover - optional until dependency is installed
 
 from database import Database
 from deal_query import MAX_PRICE_LIMIT
+from views import complex as complex_view
+from views import heatmap as heatmap_view
+from views.tracking import bp as tracking_bp
+from views.watchlist import bp as watchlist_bp
 from weekly_report import format_weekly_report
 
 logging.basicConfig(
@@ -674,14 +679,6 @@ def dispatch_push_alerts(limit: int = 5):
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
-from views.tracking import bp as tracking_bp  # noqa: E402
-from views.watchlist import bp as watchlist_bp  # noqa: E402
-
-app.config["GET_DB"] = lambda: db  # 블루프린트가 (테스트에서 교체되는) 현재 db를 읽는다
-app.register_blueprint(tracking_bp)
-app.register_blueprint(watchlist_bp)
-
-
 @app.route("/")
 def index():
     return render_template("index.html", kakao_map_app_key=KAKAO_MAP_APP_KEY)
@@ -1086,14 +1083,13 @@ def update_schedule():
     )
 
 
-# ── Insight pages (views/) ───────────────────────────────────────────────────
-import sys as _sys  # noqa: E402
-
-from views import complex as complex_view  # noqa: E402
-from views import heatmap as heatmap_view  # noqa: E402
-
-complex_view.register(app, _sys.modules[__name__])
-heatmap_view.register(app, _sys.modules[__name__])
+# ── Blueprints (views/) ──────────────────────────────────────────────────────
+app.config["GET_DB"] = lambda: db  # 블루프린트가 (테스트에서 교체되는) 현재 db를 읽는다
+app.register_blueprint(tracking_bp)
+app.register_blueprint(watchlist_bp)
+# complex·heatmap은 app 모듈의 헬퍼(error_response 등)를 쓰므로 모듈 자체를 넘긴다
+complex_view.register(app, sys.modules[__name__])
+heatmap_view.register(app, sys.modules[__name__])
 
 
 # ── Startup ──────────────────────────────────────────────────────────────────
