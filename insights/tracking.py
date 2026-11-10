@@ -11,8 +11,10 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from bargain import is_bargain
 from insights.sessions import get_building_counts, get_comparison_session
+from insights import sql
 from insights.sql import LIVE_SESSION_SQL, chunks, placeholders
 
+CHUNK = sql.CHUNK  # 기존 공개 이름 유지
 RETENTION_DAYS = 90
 
 TRACKING_TABLES_SQLITE = """

@@ -7,11 +7,13 @@ from flask import Blueprint, jsonify, render_template, request
 from insights import tracking as store
 from insights.dates import days_span
 from insights.price_history import build_insight
+from views import common
 from views.common import error_response, get_db, naive_now
 
 bp = Blueprint("tracking", __name__)
 
 ALLOWED_DAYS = (1, 7, 30)
+KST = common.KST  # 기존 공개 이름 유지
 
 
 def _normalize_days(raw, default=7) -> int:
